@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mafia Role Assignment</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Setup Screen -->
+        <div id="setup-screen" class="screen active">
+            <h1>Mafia Role Assignment</h1>
+            <div class="setup-form">
+                <div class="input-group">
+                    <label for="player-count">Number of Players:</label>
+                    <input type="number" id="player-count" min="4" max="20" value="8">
+                </div>
+                <div class="roles-selection">
+                    <h2>Select Roles</h2>
+                    <div id="roles-container" class="roles-grid"></div>
+                </div>
+                <button id="start-game" class="btn">Start Game</button>
+            </div>
+        </div>
+
+        <!-- Game Screen -->
+        <div id="game-screen" class="screen">
+            <div class="role-display">
+                <div class="player-number"></div>
+                <div class="role-image"></div>
+                <div class="role-names">
+                    <h2 class="role-name"></h2>
+                    <h3 class="role-name2"></h3>
+                </div>
+            </div>
+            <button id="next-role" class="btn">Next Role</button>
+        </div>
+
+        <!-- Summary Screen -->
+        <div id="summary-screen" class="screen">
+            <h1>Role Assignments</h1>
+            <div id="summary-list" class="summary-list"></div>
+            <button id="new-game" class="btn">New Game</button>
+        </div>
+    </div>
+    <script src="roles.js"></script>
+    <script src="game.js"></script>
+</body>
+</html> 
