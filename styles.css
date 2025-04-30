@@ -235,6 +235,32 @@ h2 {
     margin: 0 auto 0.5rem;
 }
 
+.player-initials {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background-color: #4CAF50;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    margin: 0 auto 0.5rem;
+}
+
+.player-name {
+    font-weight: bold;
+    margin-bottom: 0.25rem;
+}
+
+.player-email {
+    font-size: 0.8rem;
+    color: #666;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
 .selected-players {
     margin: 1rem 0;
 }
@@ -254,13 +280,25 @@ h2 {
     border: 1px solid #ddd;
     border-radius: 4px;
     padding: 0.5rem;
+    margin-bottom: 0.5rem;
 }
 
 .selected-player-item img {
-    width: 30px;
-    height: 30px;
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
-    margin-right: 0.5rem;
+    margin-right: 0.75rem;
+}
+
+.selected-player-item .player-initials {
+    width: 40px;
+    height: 40px;
+    font-size: 1.2rem;
+    margin: 0 0.75rem 0 0;
+}
+
+.selected-player-item .player-email {
+    font-size: 0.7rem;
 }
 
 /* Registration and Login Styles */

@@ -79,8 +79,8 @@ document.addEventListener('DOMContentLoaded', () => {
     async function initializePlayerSelection() {
         playersContainer.innerHTML = '';
         
-        // Load players from database
-        const players = await dbManager.loadPlayers();
+        // Load players from database (now returns users)
+        const players = await dbManager.loadUsers();
         
         // Create a card for each player
         players.forEach(player => {
@@ -88,14 +88,19 @@ document.addEventListener('DOMContentLoaded', () => {
             playerCard.className = 'player-card';
             playerCard.dataset.id = player.id;
             
-            // Use player image if available, otherwise show placeholder
-            const imageHtml = player.image_url
-                ? `<img src="${player.image_url}" alt="${player.name}">`
-                : `<div class="player-initials">${player.name.charAt(0)}</div>`;
+            // Use player image if available, otherwise show initials
+            let imageHtml;
+            if (player.image_url) {
+                imageHtml = `<img src="${player.image_url}" alt="${player.name}">`;
+            } else {
+                const initials = player.name.charAt(0).toUpperCase();
+                imageHtml = `<div class="player-initials">${initials}</div>`;
+            }
             
             playerCard.innerHTML = `
                 ${imageHtml}
-                <div>${player.name}</div>
+                <div class="player-name">${player.name}</div>
+                <div class="player-email">${player.email || ''}</div>
             `;
             
             playerCard.addEventListener('click', () => togglePlayerSelection(player, playerCard));
@@ -133,13 +138,21 @@ document.addEventListener('DOMContentLoaded', () => {
             const playerItem = document.createElement('div');
             playerItem.className = 'selected-player-item';
             
-            const imageHtml = player.image_url
-                ? `<img src="${player.image_url}" alt="${player.name}">`
-                : `<div class="player-initials">${player.name.charAt(0)}</div>`;
+            // Use player image if available, otherwise show initials
+            let imageHtml;
+            if (player.image_url) {
+                imageHtml = `<img src="${player.image_url}" alt="${player.name}">`;
+            } else {
+                const initials = player.name.charAt(0).toUpperCase();
+                imageHtml = `<div class="player-initials">${initials}</div>`;
+            }
             
             playerItem.innerHTML = `
                 ${imageHtml}
-                <div>${index + 1}. ${player.name}</div>
+                <div>
+                    <div>${index + 1}. ${player.name}</div>
+                    <div class="player-email">${player.email || ''}</div>
+                </div>
             `;
             
             selectedPlayersList.appendChild(playerItem);

@@ -1,6 +1,6 @@
 // Supabase configuration
 const SUPABASE_URL = 'https://isagurhfcktnnldvntse.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlzYWd1cmhma2N0bm5sZHZudHNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDA0ODIyNTYsImV4cCI6MjAxNjA1ODI1Nn0.L-6B28H9yGkGgbj1KMdlSoTDeLkF8iRGJLHHBf2VEkU'; // This is a public key
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlzYWd1cmhmY2t0bm5sZHZudHNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQzNTY4NTAsImV4cCI6MjA1OTkzMjg1MH0.WYOhUCj5wD7AUCuxpDerOkwV_XvBAGapTEztRoJC2Q0'; // This is a public key
 
 // Initialize Supabase client
 let supabaseClient;
@@ -27,43 +27,136 @@ class DatabaseManager {
                 return;
             }
             
-            // Create players table if it doesn't exist
-            await this.createPlayersTableIfNotExists();
-            // Load players from database
-            await this.loadPlayers();
+            // Load users from database
+            await this.loadUsers();
         } catch (error) {
             console.error('Error initializing database:', error);
         }
     }
 
-    async createPlayersTableIfNotExists() {
+    async loadUsers() {
         try {
-            // Check if table exists, create it if it doesn't
-            const { error } = await supabaseClient
-                .from('players')
-                .select('id')
-                .limit(1);
-
-            if (error && error.code === '42P01') { // Table doesn't exist
-                await supabaseClient.rpc('create_players_table');
+            // Check if we have a profiles table and create one if needed
+            await this.createProfilesTableIfNeeded();
+            
+            // First try to get list of users from admin API (may not be available)
+            let { data: adminUsers, error: adminError } = await supabaseClient.rpc('get_users_admin');
+            
+            if (adminError || !adminUsers || adminUsers.length === 0) {
+                console.log('Admin API not available, falling back to auth users');
+                
+                // Alternatively, get all users registered in the system
+                const { data: authData, error: authError } = await supabaseClient.auth.admin.listUsers();
+                
+                if (authError) {
+                    console.error('Could not access admin users, falling back to player profiles');
+                    
+                    // As a fallback, try to get profiles from public.profiles table
+                    const { data: profiles, error: profilesError } = await supabaseClient
+                        .from('profiles')
+                        .select('*');
+                    
+                    if (profilesError) {
+                        console.error('Could not load user profiles:', profilesError);
+                    } else {
+                        this.players = (profiles || []).map(profile => ({
+                            id: profile.id,
+                            name: profile.full_name || 'User',
+                            email: profile.email || '',
+                            image_url: profile.avatar_url
+                        }));
+                    }
+                    
+                    return this.players;
+                }
+                
+                // Process regular auth data
+                this.players = (authData.users || []).map(user => ({
+                    id: user.id,
+                    name: (user.user_metadata && user.user_metadata.name) || user.email || 'User',
+                    email: user.email,
+                    image_url: user.user_metadata && user.user_metadata.avatar_url
+                }));
+            } else {
+                // Process admin users data
+                this.players = (adminUsers || []).map(user => ({
+                    id: user.id,
+                    name: (user.user_metadata && user.user_metadata.name) || user.email || 'User',
+                    email: user.email,
+                    image_url: user.user_metadata && user.user_metadata.avatar_url
+                }));
             }
+            
+            // If we still have no users, create a few sample users for testing
+            if (this.players.length === 0) {
+                this.players = [
+                    { id: 'sample1', name: 'John Doe', email: 'john@example.com', image_url: null },
+                    { id: 'sample2', name: 'Jane Smith', email: 'jane@example.com', image_url: null },
+                    { id: 'sample3', name: 'Alex Johnson', email: 'alex@example.com', image_url: null },
+                    { id: 'sample4', name: 'Sarah Williams', email: 'sarah@example.com', image_url: null }
+                ];
+            }
+            
+            return this.players;
         } catch (error) {
-            console.error('Error creating players table:', error);
+            console.error('Error loading users:', error);
+            // Create some sample users for testing
+            this.players = [
+                { id: 'sample1', name: 'John Doe', email: 'john@example.com', image_url: null },
+                { id: 'sample2', name: 'Jane Smith', email: 'jane@example.com', image_url: null },
+                { id: 'sample3', name: 'Alex Johnson', email: 'alex@example.com', image_url: null },
+                { id: 'sample4', name: 'Sarah Williams', email: 'sarah@example.com', image_url: null }
+            ];
+            return this.players;
         }
     }
 
-    async loadPlayers() {
+    async createProfilesTableIfNeeded() {
         try {
-            const { data, error } = await supabaseClient
-                .from('players')
-                .select('*');
-
-            if (error) throw error;
-            this.players = data || [];
-            return this.players;
+            // Check if profiles table exists
+            const { error } = await supabaseClient
+                .from('profiles')
+                .select('id')
+                .limit(1);
+            
+            if (error && error.code === '42P01') { // Table doesn't exist
+                console.log('Creating profiles table');
+                
+                // Create the profiles table
+                const createTableSQL = `
+                    create table if not exists public.profiles (
+                        id uuid references auth.users on delete cascade primary key,
+                        full_name text,
+                        email text,
+                        avatar_url text,
+                        created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+                        updated_at timestamp with time zone default timezone('utc'::text, now()) not null
+                    );
+                    
+                    alter table public.profiles enable row level security;
+                    
+                    create policy "Public profiles are viewable by everyone."
+                        on profiles for select
+                        using ( true );
+                    
+                    create policy "Users can insert their own profile."
+                        on profiles for insert
+                        with check ( auth.uid() = id );
+                    
+                    create policy "Users can update own profile."
+                        on profiles for update
+                        using ( auth.uid() = id );
+                `;
+                
+                // Execute the SQL (may not have permission)
+                try {
+                    await supabaseClient.rpc('exec_sql', { sql: createTableSQL });
+                } catch (sqlError) {
+                    console.error('Could not create profiles table:', sqlError);
+                }
+            }
         } catch (error) {
-            console.error('Error loading players:', error);
-            return [];
+            console.error('Error checking/creating profiles table:', error);
         }
     }
 
@@ -172,7 +265,7 @@ class DatabaseManager {
 // Create a global instance
 const dbManager = new DatabaseManager();
 
-// Initialize database when page loads and after Supabase client is ready
+// Initialize database when page loads
 document.addEventListener('DOMContentLoaded', () => {
     // Wait a bit to ensure Supabase is initialized
     setTimeout(() => {
