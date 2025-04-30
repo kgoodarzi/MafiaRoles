@@ -3,7 +3,12 @@ const SUPABASE_URL = 'https://isagurhfcktnnldvntse.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlzYWd1cmhma2N0bm5sZHZudHNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDA0ODIyNTYsImV4cCI6MjAxNjA1ODI1Nn0.L-6B28H9yGkGgbj1KMdlSoTDeLkF8iRGJLHHBf2VEkU'; // This is a public key
 
 // Initialize Supabase client
-const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+let supabaseClient;
+
+document.addEventListener('DOMContentLoaded', () => {
+    // Initialize Supabase client
+    supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+});
 
 // Database connection details for PostgreSQL
 const PG_CONNECTION_STRING = 'postgresql://postgres:postgres@db.isagurhfcktnnldvntse.supabase.co:5432/postgres';
@@ -16,6 +21,12 @@ class DatabaseManager {
 
     async initialize() {
         try {
+            // Wait for supabaseClient to be initialized
+            if (!supabaseClient) {
+                console.error('Supabase client not initialized');
+                return;
+            }
+            
             // Create players table if it doesn't exist
             await this.createPlayersTableIfNotExists();
             // Load players from database
@@ -28,13 +39,13 @@ class DatabaseManager {
     async createPlayersTableIfNotExists() {
         try {
             // Check if table exists, create it if it doesn't
-            const { error } = await supabase
+            const { error } = await supabaseClient
                 .from('players')
                 .select('id')
                 .limit(1);
 
             if (error && error.code === '42P01') { // Table doesn't exist
-                await supabase.rpc('create_players_table');
+                await supabaseClient.rpc('create_players_table');
             }
         } catch (error) {
             console.error('Error creating players table:', error);
@@ -43,7 +54,7 @@ class DatabaseManager {
 
     async loadPlayers() {
         try {
-            const { data, error } = await supabase
+            const { data, error } = await supabaseClient
                 .from('players')
                 .select('*');
 
@@ -58,7 +69,7 @@ class DatabaseManager {
 
     async addPlayer(name, image_url, user_id = null) {
         try {
-            const { data, error } = await supabase
+            const { data, error } = await supabaseClient
                 .from('players')
                 .insert([
                     { name, image_url, user_id }
@@ -80,7 +91,7 @@ class DatabaseManager {
 
     async updatePlayer(id, updates) {
         try {
-            const { data, error } = await supabase
+            const { data, error } = await supabaseClient
                 .from('players')
                 .update(updates)
                 .eq('id', id)
@@ -103,7 +114,7 @@ class DatabaseManager {
 
     async deletePlayer(id) {
         try {
-            const { error } = await supabase
+            const { error } = await supabaseClient
                 .from('players')
                 .delete()
                 .eq('id', id);
@@ -123,7 +134,7 @@ class DatabaseManager {
 
     async getPlayersByUserId(user_id) {
         try {
-            const { data, error } = await supabase
+            const { data, error } = await supabaseClient
                 .from('players')
                 .select('*')
                 .eq('user_id', user_id);
@@ -161,7 +172,10 @@ class DatabaseManager {
 // Create a global instance
 const dbManager = new DatabaseManager();
 
-// Initialize database when page loads
+// Initialize database when page loads and after Supabase client is ready
 document.addEventListener('DOMContentLoaded', () => {
-    dbManager.initialize();
+    // Wait a bit to ensure Supabase is initialized
+    setTimeout(() => {
+        dbManager.initialize();
+    }, 1000);
 }); 

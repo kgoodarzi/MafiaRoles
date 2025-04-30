@@ -6,8 +6,14 @@ class AuthManager {
 
     async initialize() {
         try {
+            // Wait for supabaseClient to be initialized
+            if (!supabaseClient) {
+                console.error('Supabase client not initialized');
+                return;
+            }
+            
             // Check if user is already logged in
-            const { data, error } = await supabase.auth.getSession();
+            const { data, error } = await supabaseClient.auth.getSession();
             if (error) throw error;
             
             if (data.session) {
@@ -16,7 +22,7 @@ class AuthManager {
             }
 
             // Listen for auth changes
-            const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+            const { data: authListener } = supabaseClient.auth.onAuthStateChange((event, session) => {
                 if (event === 'SIGNED_IN' && session) {
                     this.currentUser = session.user;
                 } else if (event === 'SIGNED_OUT') {
@@ -38,7 +44,7 @@ class AuthManager {
 
     async registerUser(email, password, name) {
         try {
-            const { data, error } = await supabase.auth.signUp({
+            const { data, error } = await supabaseClient.auth.signUp({
                 email,
                 password,
                 options: {
@@ -66,7 +72,7 @@ class AuthManager {
 
     async loginUser(email, password) {
         try {
-            const { data, error } = await supabase.auth.signInWithPassword({
+            const { data, error } = await supabaseClient.auth.signInWithPassword({
                 email,
                 password
             });
@@ -89,7 +95,7 @@ class AuthManager {
 
     async logoutUser() {
         try {
-            const { error } = await supabase.auth.signOut();
+            const { error } = await supabaseClient.auth.signOut();
             if (error) throw error;
             
             this.currentUser = null;
@@ -112,14 +118,14 @@ class AuthManager {
             const filePath = `profile-images/${fileName}`;
 
             // Upload file
-            const { error: uploadError } = await supabase.storage
+            const { error: uploadError } = await supabaseClient.storage
                 .from('profile-images')
                 .upload(filePath, file);
 
             if (uploadError) throw uploadError;
 
             // Get public URL
-            const { data } = supabase.storage
+            const { data } = supabaseClient.storage
                 .from('profile-images')
                 .getPublicUrl(filePath);
 
@@ -136,7 +142,7 @@ class AuthManager {
         }
 
         try {
-            const { data, error } = await supabase.auth.updateUser({
+            const { data, error } = await supabaseClient.auth.updateUser({
                 data: updates
             });
 
@@ -169,7 +175,10 @@ const authManager = new AuthManager();
 
 // DOM elements and event handlers for auth UI
 document.addEventListener('DOMContentLoaded', () => {
-    authManager.initialize();
+    // Wait a bit for supabaseClient to be initialized
+    setTimeout(() => {
+        authManager.initialize();
+    }, 1200);
     
     // DOM Elements
     const registerForm = document.querySelector('.tab-content.register');
