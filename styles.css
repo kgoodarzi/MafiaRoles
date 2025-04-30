@@ -12,6 +12,7 @@ body {
     justify-content: center;
     align-items: center;
     color: #333;
+    padding-bottom: 60px; /* Space for nav menu */
 }
 
 .container {
@@ -39,6 +40,27 @@ h1 {
 
 h2 {
     margin-bottom: 1rem;
+}
+
+.btn-top, .btn-bottom {
+    display: block;
+    width: fit-content;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.btn-top {
+    margin-top: 0;
+    margin-bottom: 2rem;
+}
+
+.btn-bottom {
+    margin-top: 2rem;
+    margin-bottom: 0;
+}
+
+#game-screen {
+    text-align: center;
 }
 
 .setup-form {
@@ -100,19 +122,36 @@ h2 {
     cursor: pointer;
     font-size: 1.1rem;
     transition: background-color 0.3s ease;
+    margin-top: 2rem;
 }
 
 .btn:hover {
     background-color: #45a049;
 }
 
-.role-display {
-    margin: 2rem 0;
+.btn:active {
+    background-color: #3d8b40;
 }
 
-.player-number {
+.role-display {
+    margin: 2rem 0;
+    min-height: 400px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.blank-page {
+    text-align: center;
+    padding: 2rem;
+}
+
+.role-name2 {
+    font-family: Tahoma, sans-serif;
     font-size: 1.5rem;
-    margin-bottom: 1rem;
+    color: #666;
+    direction: rtl;
 }
 
 .role-image {
@@ -138,11 +177,10 @@ h2 {
     color: #333;
 }
 
-.role-name2 {
-    font-family: Tahoma, sans-serif;
+.player-name {
     font-size: 1.5rem;
-    color: #666;
-    direction: rtl;
+    margin: 0.5rem 0;
+    color: #555;
 }
 
 .summary-list {
@@ -160,6 +198,178 @@ h2 {
 
 .summary-item:last-child {
     border-bottom: none;
+}
+
+/* Player Selection Styles */
+.players-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 1rem;
+    margin: 1rem 0;
+    max-height: 300px;
+    overflow-y: auto;
+    padding: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.player-card {
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    padding: 0.5rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+}
+
+.player-card.selected {
+    border-color: #4CAF50;
+    background-color: #f8fff8;
+}
+
+.player-card img {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 50%;
+    margin: 0 auto 0.5rem;
+}
+
+.selected-players {
+    margin: 1rem 0;
+}
+
+#selected-players-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 1rem;
+}
+
+.selected-player-item {
+    display: flex;
+    align-items: center;
+    background-color: #f8fff8;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 0.5rem;
+}
+
+.selected-player-item img {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    margin-right: 0.5rem;
+}
+
+/* Registration and Login Styles */
+.tabs {
+    display: flex;
+    margin-bottom: 2rem;
+}
+
+.tab {
+    flex: 1;
+    background-color: #f0f2f5;
+    border: none;
+    padding: 1rem;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background-color 0.3s ease;
+}
+
+.tab.active {
+    background-color: white;
+    border-bottom: 2px solid #4CAF50;
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+    text-align: left;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: bold;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1rem;
+}
+
+/* Account Screen Styles */
+.profile-info {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 2rem;
+}
+
+.profile-image {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    overflow: hidden;
+    margin-right: 1.5rem;
+    border: 2px solid #ddd;
+}
+
+.profile-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.profile-details h2 {
+    margin-bottom: 0.5rem;
+}
+
+.account-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    max-width: 300px;
+    margin: 0 auto;
+}
+
+/* Navigation Menu */
+.nav-menu {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background-color: white;
+    display: flex;
+    box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.nav-btn {
+    flex: 1;
+    background-color: white;
+    border: none;
+    padding: 1rem;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background-color 0.3s ease;
+}
+
+.nav-btn.active {
+    background-color: #f0f2f5;
+    border-top: 2px solid #4CAF50;
 }
 
 @media (max-width: 600px) {

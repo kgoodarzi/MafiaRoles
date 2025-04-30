@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mafia Role Assignment</title>
     <link rel="stylesheet" href="styles.css">
+    <!-- Supabase Client Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
     <div class="container">
@@ -24,17 +26,30 @@
             </div>
         </div>
 
+        <!-- Player Selection Screen -->
+        <div id="player-selection-screen" class="screen">
+            <h1>Select Players</h1>
+            <div id="players-container" class="players-grid"></div>
+            <div class="selected-players">
+                <h2>Selected Players</h2>
+                <div id="selected-players-list"></div>
+            </div>
+            <button id="start-assignment" class="btn">Start Role Assignment</button>
+        </div>
+
         <!-- Game Screen -->
         <div id="game-screen" class="screen">
+            <button id="proceed-button" class="btn btn-top">Proceed When Ready</button>
             <div class="role-display">
                 <div class="player-number"></div>
+                <div class="player-name"></div>
                 <div class="role-image"></div>
                 <div class="role-names">
                     <h2 class="role-name"></h2>
                     <h3 class="role-name2"></h3>
                 </div>
             </div>
-            <button id="next-role" class="btn">Next Role</button>
+            <button id="next-button" class="btn btn-bottom">Confirm</button>
         </div>
 
         <!-- Summary Screen -->
@@ -43,8 +58,73 @@
             <div id="summary-list" class="summary-list"></div>
             <button id="new-game" class="btn">New Game</button>
         </div>
+
+        <!-- User Registration Screen -->
+        <div id="user-registration-screen" class="screen">
+            <h1>User Registration</h1>
+            <div class="tabs">
+                <button class="tab active" data-tab="register">Register</button>
+                <button class="tab" data-tab="login">Login</button>
+            </div>
+            <div class="tab-content register active">
+                <div class="form-group">
+                    <label for="register-name">Name:</label>
+                    <input type="text" id="register-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="register-email">Email:</label>
+                    <input type="email" id="register-email" required>
+                </div>
+                <div class="form-group">
+                    <label for="register-password">Password:</label>
+                    <input type="password" id="register-password" required>
+                </div>
+                <div class="form-group">
+                    <label for="profile-image">Profile Image:</label>
+                    <input type="file" id="profile-image" accept="image/*">
+                </div>
+                <button id="register-btn" class="btn">Register</button>
+            </div>
+            <div class="tab-content login">
+                <div class="form-group">
+                    <label for="login-email">Email:</label>
+                    <input type="email" id="login-email" required>
+                </div>
+                <div class="form-group">
+                    <label for="login-password">Password:</label>
+                    <input type="password" id="login-password" required>
+                </div>
+                <button id="login-btn" class="btn">Login</button>
+            </div>
+        </div>
+
+        <!-- Account Screen -->
+        <div id="account-screen" class="screen">
+            <h1>Your Account</h1>
+            <div class="profile-info">
+                <div class="profile-image"></div>
+                <div class="profile-details">
+                    <h2 id="profile-name"></h2>
+                    <p id="profile-email"></p>
+                </div>
+            </div>
+            <div class="account-actions">
+                <button id="update-profile-btn" class="btn">Update Profile</button>
+                <button id="logout-btn" class="btn">Log Out</button>
+                <button id="back-to-game-btn" class="btn">Back to Game</button>
+            </div>
+        </div>
     </div>
+
+    <!-- Navigation Menu -->
+    <div class="nav-menu">
+        <button id="nav-game" class="nav-btn active">Game</button>
+        <button id="nav-account" class="nav-btn">Account</button>
+    </div>
+
     <script src="roles.js"></script>
+    <script src="database.js"></script>
+    <script src="auth.js"></script>
     <script src="game.js"></script>
 </body>
 </html> 
