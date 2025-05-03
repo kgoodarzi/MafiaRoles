@@ -135,11 +135,12 @@ h2 {
 
 .role-display {
     margin: 2rem 0;
-    min-height: 400px;
     display: flex;
     flex-direction: column;
-    justify-content: center;
     align-items: center;
+    width: 100%;
+    position: relative;
+    left: 0; /* Reset to center */
 }
 
 .blank-page {
@@ -627,11 +628,15 @@ section.selected-players .players-grid {
 
 .role-display {
     margin: 2rem 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
 }
 
 .role-image-container {
-    width: 200px;
-    height: 200px;
+    width: 250px; /* 25% larger from original 200px */
+    height: 250px; /* 25% larger from original 200px */
     margin: 0 auto 1rem;
     border-radius: 8px;
     overflow: hidden;
@@ -641,7 +646,7 @@ section.selected-players .players-grid {
 .role-image-container img {
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: contain;
 }
 
 .role-info {
@@ -1009,4 +1014,173 @@ section.selected-players .players-grid {
     overflow: visible;
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+}
+
+/* Circle buttons for player actions */
+.circle-btn {
+    width: 10vw; /* 10% of viewport width */
+    min-width: 110px; /* Minimum width to fit text */
+    height: 42px;
+    border-radius: 8px;
+    background-color: #4CAF50;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 1.1rem;
+    font-weight: bold;
+    text-decoration: none;
+    margin: 0 5px;
+    transition: all 0.3s ease;
+    border: none;
+    padding: 0 15px;
+}
+
+.circle-btn:hover {
+    background-color: #45a049;
+    transform: translateY(-2px);
+}
+
+.circle-btn:active {
+    background-color: #3d8b40;
+    transform: translateY(0);
+}
+
+.add-btn {
+    font-size: 1.5rem;
+}
+
+.refresh-btn {
+    font-size: 1.3rem;
+}
+
+.header-with-buttons {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+/* Mobile adjustments */
+@media (max-width: 600px) {
+    .circle-btn {
+        width: 42%; /* Nearly half width on small screens */
+        min-width: 0;
+        font-size: 0.9rem;
+    }
+    
+    .header-with-buttons {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    
+    .action-buttons {
+        width: 100%;
+        justify-content: space-between;
+    }
+}
+
+/* Game page player card */
+#current-player .player-card {
+    display: grid;
+    grid-template-columns: 125px 1fr;
+    grid-template-rows: auto;
+    grid-template-areas: "photo info";
+    padding: 0.75rem;
+    border-radius: 12px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    width: auto;
+    max-width: 450px;
+    margin: 0;
+    margin-left: 10px; /* Position exactly 10px from the left border */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+#current-player .player-image {
+    grid-area: photo;
+    width: 125px;
+    height: 125px;
+    overflow: hidden;
+}
+
+#current-player .player-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+    display: block;
+}
+
+#current-player .player-info {
+    grid-area: info;
+    padding-left: 1rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+#current-player .player-info h3 {
+    font-size: 1.3rem;
+    margin: 0 0 0.5rem;
+    font-weight: 600;
+    line-height: 1.3;
+}
+
+#current-player .player-info p {
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+/* Role card title in game page */
+.role-card h3 {
+    font-size: 2rem; /* Two font sizes bigger */
+    font-weight: 700;
+    margin: 1rem 0 0.5rem;
+    text-align: center;
+}
+
+.role-description {
+    font-size: 1.1rem;
+    line-height: 1.5;
+    text-align: center;
+    margin: 0 auto;
+    max-width: 80%;
+}
+
+/* Action buttons in the role reveal section */
+.role-reveal .actions {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 1.5rem;
+    position: relative;
+    left: 0; /* Reset to center */
+}
+
+/* Role hidden message */
+.role-hidden {
+    text-align: center;
+    padding: 3rem 0;
+    width: 100%;
+}
+
+/* All assigned message */
+.all-assigned {
+    text-align: center;
+    padding: 2rem 0;
+    width: 80%;
+    margin: 0 auto;
+}
+
+#current-player {
+    text-align: left; /* Ensure container aligns with player card */
+    width: 100%;
 } 

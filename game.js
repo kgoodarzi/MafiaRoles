@@ -167,16 +167,19 @@ function viewRole() {
         teamClass = 'independent';
     }
     
-    // Display role
+    // Display role with enhanced styling
     roleDisplay.innerHTML = `
         <div class="role-card ${player.role}" data-team="${teamClass}">
-            <img src="${roleImageSrc}" 
-                 alt="${roleInfo.name}" 
-                 onerror="this.src='images/default-avatar.svg'">
+            <div class="role-image-container">
+                <img src="${roleImageSrc}" 
+                     alt="${roleInfo.name}" 
+                     onerror="this.src='images/default-avatar.svg'">
+            </div>
             <h3>${roleInfo.name}</h3>
-            <p>${roleInfo.description}</p>
+            <p class="role-description">${roleInfo.description}</p>
         </div>
     `;
+    
     // Update buttons
     document.getElementById('view-role-btn').style.display = 'none';
     document.getElementById('hide-role-btn').style.display = 'block';
@@ -278,7 +281,7 @@ function showRolesSummaryTable() {
         
         // Add summary item
         summaryHtml += `
-            <div class="summary-item" data-team="${teamClass}" style="padding:12px;border-bottom:1px solid #eee;display:flex;align-items:center;background-color:${getTeamBackgroundColor(teamClass)};">
+            <div class="summary-item" data-team="${teamClass}" style="padding:12px;border-bottom:1px solid var(--border-color);display:flex;align-items:center;background-color:var(--card-bg);border-left:4px solid ${getTeamBorderColor(teamClass)};">
                 <div class="summary-avatar" style="margin-right:12px;">
                     <img src="${player.photo_url || 'images/default-avatar.svg'}" 
                          alt="${player.name}" 
@@ -287,7 +290,7 @@ function showRolesSummaryTable() {
                 </div>
                 <div class="summary-info" style="flex-grow:1;">
                     <h3 style="margin:0;font-size:1rem;">${player.name}</h3>
-                    <p class="summary-role" style="margin:0;color:#666;font-size:0.9rem;">${roleName}</p>
+                    <p class="summary-role" style="margin:0;color:var(--text-secondary);font-size:0.9rem;">${roleName}</p>
                 </div>
                 <div class="summary-role-icon" style="width:40px;height:40px;border-radius:4px;overflow:hidden;">
                     <img src="${roleImageSrc}" 
@@ -313,12 +316,25 @@ function showRolesSummaryTable() {
 function getTeamBackgroundColor(team) {
     switch(team) {
         case 'mafia':
-            return '#ffcdd2'; // Pastel red
+            return 'var(--card-bg)'; // Dark background
         case 'independent':
-            return '#e1bee7'; // Pastel purple
+            return 'var(--card-bg)'; // Dark background 
         case 'citizen':
         default:
-            return '#c8e6c9'; // Pastel green
+            return 'var(--card-bg)'; // Dark background
+    }
+}
+
+// Helper function to get border color based on team
+function getTeamBorderColor(team) {
+    switch(team) {
+        case 'mafia':
+            return '#ef4444'; // Red
+        case 'independent':
+            return '#8b5cf6'; // Purple
+        case 'citizen':
+        default:
+            return '#10b981'; // Green
     }
 }
 

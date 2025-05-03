@@ -1,0 +1,843 @@
+/* Dark Theme for Mafia Game Application */
+:root {
+    --bg-gradient-primary: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    --bg-gradient-secondary: linear-gradient(135deg, #121212 0%, #1e1e30 100%);
+    --card-bg: rgba(30, 30, 46, 0.7);
+    --card-bg-selected: rgba(79, 70, 229, 0.2);
+    --card-border: #4f46e5;
+    --text-primary: #ffffff;
+    --text-secondary: #b3b3cc;
+    --accent-primary: #4f46e5;
+    --accent-secondary: #8b5cf6;
+    --button-primary: #4f46e5;
+    --button-hover: #6366f1;
+    --button-active: #4338ca;
+    --button-secondary: #334155;
+    --button-secondary-hover: #475569;
+    --container-bg: rgba(24, 24, 36, 0.8);
+    --border-color: #3f3f5f;
+    --success-color: #10b981;
+    --danger-color: #ef4444;
+    --warning-color: #f59e0b;
+    --shadow-color: rgba(0, 0, 0, 0.4);
+}
+
+body {
+    background: var(--bg-gradient-primary);
+    color: var(--text-primary);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    position: relative;
+}
+
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: 
+        radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px), 
+        radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+    background-size: 30px 30px;
+    background-position: 0 0, 15px 15px;
+    pointer-events: none;
+    z-index: -1;
+}
+
+.container {
+    background-color: var(--container-bg);
+    box-shadow: 0 8px 32px 0 var(--shadow-color);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+}
+
+/* Glass Morphism Effects */
+.glass-effect {
+    background: rgba(24, 24, 36, 0.6);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.25);
+}
+
+.player-card, .role-card, 
+.add-player-section, .player-selection-section, 
+.selected-players-section, .role-selection-section,
+.team-section, .about-section, .current-state,
+.players-grid, .roles-grid {
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+}
+
+/* Buttons */
+.btn {
+    background-color: var(--button-primary);
+    color: white;
+    transition: all 0.3s ease;
+    border-radius: 8px;
+    border: none;
+    padding: 1rem 2rem;
+}
+
+.btn:hover {
+    background-color: var(--button-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+}
+
+.btn:active {
+    background-color: var(--button-active);
+    transform: translateY(0);
+}
+
+.btn-secondary {
+    background-color: var(--button-secondary);
+}
+
+.btn-secondary:hover {
+    background-color: var(--button-secondary-hover);
+    box-shadow: 0 4px 12px rgba(51, 65, 85, 0.3);
+}
+
+/* Cards and Grids */
+.player-card, .role-card {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.player-card:hover, .role-card:hover {
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+    transform: translateY(-2px);
+}
+
+.player-card.selected, .role-card.selected {
+    background-color: var(--card-bg-selected);
+    border-color: var(--card-border);
+    box-shadow: 0 0 15px rgba(79, 70, 229, 0.3);
+}
+
+.players-grid, .roles-grid {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+}
+
+/* Text Styles */
+h1, h2, h3, h4, h5, h6 {
+    color: var(--text-primary);
+}
+
+p, span, div {
+    color: var(--text-secondary);
+}
+
+/* Sections */
+.add-player-section, .player-selection-section, 
+.selected-players-section, .role-selection-section,
+.team-section, .about-section, .current-state {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+}
+
+/* Nav Menu */
+.nav-menu {
+    background-color: var(--card-bg);
+    border-top: 1px solid var(--border-color);
+    box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.nav-btn {
+    background-color: transparent;
+    color: var(--text-secondary);
+}
+
+.nav-btn.active {
+    background-color: var(--card-bg-selected);
+    color: var(--text-primary);
+    border-top: 2px solid var(--accent-primary);
+}
+
+/* Status indicators */
+.status-ok {
+    color: var(--success-color);
+    background-color: rgba(16, 185, 129, 0.1);
+}
+
+.status-error {
+    color: var(--danger-color);
+    background-color: rgba(239, 68, 68, 0.1);
+}
+
+.status-loading {
+    color: var(--accent-secondary);
+    background-color: rgba(139, 92, 246, 0.1);
+}
+
+/* Team Colors */
+.role-card[data-team="citizen"],
+.team-citizen, 
+.citizen-team {
+    background-color: var(--card-bg);
+    border: 2px solid #10b981;
+    box-shadow: 0 0 12px rgba(16, 185, 129, 0.5);
+}
+
+.role-card[data-team="mafia"],
+.team-mafia,
+.mafia-team {
+    background-color: var(--card-bg);
+    border: 2px solid #ef4444;
+    box-shadow: 0 0 12px rgba(239, 68, 68, 0.5);
+}
+
+.role-card[data-team="independent"],
+.team-independent,
+.independent-team {
+    background-color: var(--card-bg);
+    border: 2px solid #8b5cf6;
+    box-shadow: 0 0 12px rgba(139, 92, 246, 0.5);
+}
+
+/* Forms */
+input, select, textarea {
+    background-color: rgba(30, 30, 46, 0.5);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    border-radius: 8px;
+    padding: 0.75rem;
+}
+
+input:focus, select:focus, textarea:focus {
+    border-color: var(--accent-primary);
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2);
+}
+
+/* Overrides for specific elements */
+.splash-image {
+    border-radius: 16px;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* Role images and cards */
+.role-card img {
+    width: 100%;
+    height: 160px;
+    object-fit: contain;
+    border-radius: 8px;
+    margin-bottom: 0.5rem;
+    background-color: transparent;
+}
+
+.role-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1rem;
+    transition: transform 0.2s ease;
+    border: none;
+    box-shadow: none;
+}
+
+/* Remove all borders and box shadows from role cards */
+.role-card[data-team="citizen"],
+.role-card[data-team="mafia"],
+.role-card[data-team="independent"] {
+    border: none;
+    box-shadow: none;
+    background-color: var(--card-bg);
+}
+
+/* For role selection page - larger role image containers with no borders */
+#current-roles-list .role-image-container {
+    width: 140px;
+    height: 140px;
+    margin: 0 auto 0.5rem;
+    border-radius: 8px;
+    overflow: hidden;
+    background-color: transparent;
+    border: none;
+}
+
+#current-roles-list .role-image-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+/* For game view - larger role image containers with no borders */
+.role-image-container {
+    width: 250px;
+    height: 250px;
+    margin: 0 auto 1rem;
+    border-radius: 12px;
+    overflow: hidden;
+    background-color: transparent;
+    border: none;
+}
+
+.role-image-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+/* Player cards for player selection page */
+#players-container {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    padding: 0.5rem;
+    max-width: 100%;
+    overflow: visible !important;
+    max-height: none !important;
+    height: auto !important;
+}
+
+#players-container .player-card {
+    display: grid;
+    grid-template-columns: 125px 1fr;
+    grid-template-rows: auto auto;
+    grid-template-areas: 
+        "photo name"
+        "photo select";
+    padding: 0.75rem;
+    border-radius: 12px;
+    background-color: var(--card-bg);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    width: 100%;
+    margin-left: 0;
+}
+
+#players-container .player-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+}
+
+#players-container .player-card.selected {
+    background-color: var(--card-bg-selected);
+    border: 1px solid var(--accent-primary);
+    box-shadow: 0 0 15px rgba(79, 70, 229, 0.3);
+}
+
+#players-container .player-avatar,
+#players-container .player-photo {
+    grid-area: photo;
+    width: 125px;
+    height: 125px;
+    overflow: hidden;
+}
+
+#players-container .player-avatar img,
+#players-container .player-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 2px solid var(--accent-primary);
+}
+
+#players-container .player-info {
+    grid-area: name;
+    padding-left: 1rem;
+    align-self: flex-start;
+    padding-top: 2.25rem;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+#players-container .player-name {
+    font-size: 1.3rem;
+    margin: 0 0 1rem;
+    color: var(--text-primary);
+    font-weight: 600;
+    line-height: 1.3;
+}
+
+#players-container .player-select {
+    grid-area: select;
+    padding-left: 1rem;
+    align-self: flex-start;
+    margin-top: 0;
+}
+
+#players-container .player-checkbox {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+}
+
+#players-container .player-select label {
+    display: none;
+}
+
+#players-container .player-actions {
+    display: none; /* Hide edit actions by default */
+}
+
+/* Player cards for role selection page */
+#selected-players-list {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 1.5rem;
+    width: 100%;
+}
+
+#selected-players-list .player-card {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+    min-height: 220px;
+    text-align: center;
+}
+
+#selected-players-list .player-image {
+    width: 125px;
+    height: 125px;
+    margin-bottom: 1rem;
+}
+
+#selected-players-list .player-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 2px solid var(--accent-primary);
+}
+
+#selected-players-list .player-card .player-info {
+    text-align: center;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+#selected-players-list .player-card .player-name {
+    font-size: 1.3rem;
+    margin: 0.5rem 0 0;
+    overflow: visible;
+    text-overflow: clip;
+    white-space: normal;
+    max-width: 100%;
+    text-align: center;
+    color: var(--text-primary);
+    font-weight: 600;
+    line-height: 1.3;
+    padding: 0 0.5rem;
+}
+
+/* For player grids on role selection page only */
+.role-selection-section .players-grid,
+.selected-players .players-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 1.5rem;
+}
+
+/* For player grids on player selection page */
+.player-selection-section .players-grid,
+#players-container {
+    display: grid;
+    grid-template-columns: 1fr !important;
+    gap: 1rem;
+    max-height: none !important;
+    overflow: visible !important;
+    height: auto !important;
+}
+
+/* Container adjustments to prevent scrolling */
+.container, .player-selection-section {
+    max-width: 100%;
+    overflow: visible !important;
+    padding-left: 0;
+    padding-right: 0;
+    max-height: none !important;
+    height: auto !important;
+}
+
+/* Summary page role icons */
+.summary-role-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 2px solid var(--accent-primary);
+    background-color: var(--card-bg);
+}
+
+.summary-role-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.player-avatar img, .player-photo img {
+    border: 2px solid var(--accent-primary);
+}
+
+/* Connection status */
+#connection-status {
+    margin-bottom: 15px;
+}
+
+/* Game completion */
+.game-complete {
+    background-color: rgba(16, 185, 129, 0.1);
+    border: 1px solid var(--success-color);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--card-bg);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--accent-primary);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--button-hover);
+}
+
+/* Team summary sections */
+.team-summary {
+    padding: 1.5rem;
+    border-radius: 12px;
+    margin-bottom: 1.5rem;
+    background-color: var(--card-bg);
+}
+
+.team-summary h2 {
+    margin-bottom: 1rem;
+}
+
+.mafia-team {
+    border: 2px solid #ef4444;
+    box-shadow: 0 0 15px rgba(239, 68, 68, 0.3);
+}
+
+.mafia-team h2 {
+    color: #ef4444;
+}
+
+.citizen-team {
+    border: 2px solid #10b981;
+    box-shadow: 0 0 15px rgba(16, 185, 129, 0.3);
+}
+
+.citizen-team h2 {
+    color: #10b981;
+}
+
+.independent-team {
+    border: 2px solid #8b5cf6;
+    box-shadow: 0 0 15px rgba(139, 92, 246, 0.3);
+}
+
+.independent-team h2 {
+    color: #8b5cf6;
+}
+
+/* Summary items */
+.summary-item {
+    background-color: var(--card-bg);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.summary-item[data-team="mafia"] {
+    border-left: 4px solid #ef4444;
+}
+
+.summary-item[data-team="citizen"] {
+    border-left: 4px solid #10b981;
+}
+
+.summary-item[data-team="independent"] {
+    border-left: 4px solid #8b5cf6;
+}
+
+/* Roles grid styling for role selection page */
+#current-roles-list.roles-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+    padding: 1.5rem;
+    max-height: none;
+    overflow: visible;
+}
+
+#current-roles-list .role-card {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.5rem 1rem;
+    background-color: var(--card-bg);
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    border: none;
+}
+
+#current-roles-list .role-card h4 {
+    font-size: 1.2rem;
+    margin: 0.75rem 0 0;
+    text-align: center;
+}
+
+/* Team Colors - maintain team indicators but without borders */
+.role-card[data-team="citizen"] {
+    background-color: rgba(16, 185, 129, 0.1);
+    box-shadow: 0 0 15px rgba(16, 185, 129, 0.2);
+}
+
+.role-card[data-team="mafia"] {
+    background-color: rgba(239, 68, 68, 0.1);
+    box-shadow: 0 0 15px rgba(239, 68, 68, 0.2);
+}
+
+.role-card[data-team="independent"] {
+    background-color: rgba(139, 92, 246, 0.1);
+    box-shadow: 0 0 15px rgba(139, 92, 246, 0.2);
+}
+
+/* Remove this conflicting rule that's causing all player grids to be 2 columns */
+.players-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 1.5rem;
+}
+
+/* Player selection page main container */
+body.player-selection-page .container,
+body.player-selection-page main,
+body.player-selection-page section {
+    overflow: visible !important;
+    max-height: none !important;
+    height: auto !important;
+}
+
+/* No scrollbars on player selection page */
+.player-selection-page #players-container,
+.player-selection-page .player-selection-section,
+.player-selection-page .container,
+.player-selection-page main,
+.player-selection-page section,
+.player-selection-page .players-grid {
+    overflow: visible !important;
+    max-height: none !important;
+    height: auto !important;
+    overflow-y: visible !important;
+    overflow-x: visible !important;
+}
+
+/* Player selection page - container layout */
+.player-selection-page .player-selection {
+    position: relative;
+    padding-left: 0; /* Keep container flush with the screen edge */
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Section header stays flush left */
+.player-selection-page .player-selection .section-header {
+    padding-right: 1rem;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-left: 0;
+}
+
+/* Only the player cards are shifted right */
+.player-selection-page #players-container .player-card {
+    margin-left: 20%; /* Shift only the player cards right by 20% */
+    width: 80%; /* Make cards narrower to prevent overflow */
+}
+
+/* Keep container itself flush with the screen */
+.player-selection-page #players-container {
+    padding-left: 0;
+    width: 100%;
+}
+
+/* Keep other sections aligned normally */
+.player-selection-page .player-controls,
+.player-selection-page .game-actions {
+    padding-left: 0;
+    width: 100%;
+}
+
+/* For player selection section */
+.player-selection {
+    padding-left: 20%;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Section header for player selection */
+.player-selection .section-header {
+    padding-left: 0;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+/* Circle buttons in dark theme */
+.circle-btn {
+    background-color: var(--button-primary);
+    border: 1px solid var(--accent-primary);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    color: white;
+}
+
+.circle-btn:hover {
+    background-color: var(--button-hover);
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+}
+
+.circle-btn:active {
+    background-color: var(--button-active);
+}
+
+/* Action buttons container in header */
+.action-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.header-with-buttons {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+}
+
+/* Game page player card */
+#current-player .player-card {
+    display: grid;
+    grid-template-columns: 125px 1fr;
+    grid-template-rows: auto;
+    grid-template-areas: "photo info";
+    padding: 0.75rem;
+    border-radius: 12px;
+    background-color: var(--card-bg);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    width: auto;
+    max-width: 450px;
+    margin: 0;
+    margin-left: 10px; /* Position exactly 10px from the left border */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--border-color);
+}
+
+#current-player .player-image {
+    grid-area: photo;
+    width: 125px;
+    height: 125px;
+    overflow: hidden;
+}
+
+#current-player .player-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 2px solid var(--accent-primary);
+}
+
+#current-player .player-info {
+    grid-area: info;
+    padding-left: 1rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    height: 100%;
+}
+
+#current-player .player-info h3 {
+    font-size: 1.3rem;
+    margin: 0 0 0.5rem;
+    color: var(--text-primary);
+    font-weight: 600;
+    line-height: 1.3;
+}
+
+#current-player .player-info p {
+    font-size: 0.9rem;
+    margin: 0;
+    color: var(--text-secondary);
+}
+
+/* Role card title in game page */
+.role-card h3 {
+    font-size: 2rem; /* Two font sizes bigger */
+    font-weight: 700;
+    margin: 1rem 0 0.5rem;
+    text-align: center;
+    color: var(--text-primary);
+}
+
+.role-description {
+    font-size: 1.1rem;
+    line-height: 1.5;
+    text-align: center;
+    margin: 0 auto;
+    max-width: 80%;
+    color: var(--text-secondary);
+}
+
+/* Role display container */
+.role-display {
+    position: relative;
+    left: 0; /* Reset to center */
+}
+
+/* Action buttons in the role reveal section */
+.role-reveal .actions {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 1.5rem;
+    position: relative;
+    left: 0; /* Reset to center */
+}
+
+/* All assigned message */
+.all-assigned {
+    text-align: center;
+    padding: 2rem 0;
+    width: 80%;
+    margin: 0 auto;
+    color: var(--text-primary);
+}
+
+#current-player {
+    text-align: left; /* Ensure container aligns with player card */
+    width: 100%;
+} 

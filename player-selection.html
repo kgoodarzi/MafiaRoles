@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mafia Game - Player Selection</title>
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="dark-theme.css">
     <!-- Supabase JS -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Database Manager -->
@@ -225,7 +226,7 @@
             // Refresh button
             document.getElementById('refresh-players-btn').addEventListener('click', function() {
                 this.disabled = true;
-                this.textContent = 'Refreshing...';
+                this.textContent = '↻ Refreshing...';
                 
                 // Clear and show loading
                 const playersContainer = document.getElementById('players-container');
@@ -238,7 +239,7 @@
                 // Reload players
                 loadPlayersFromProfiles().finally(() => {
                     this.disabled = false;
-                    this.textContent = 'Refresh List';
+                    this.textContent = '↻ Refresh';
                 });
             });
             
@@ -271,7 +272,7 @@
         }
     </script>
 </head>
-<body class="player-selection">
+<body class="dark-theme player-selection-page">
     <div class="container">
         <header>
             <h1>Player Selection</h1>
@@ -280,19 +281,16 @@
 
         <main>
             <div id="connection-status"></div>
-            
-            <section class="player-controls">
-                <div class="add-player-section">
-                    <h2>Add New Player</h2>
-                    <p>Add a new player to your roster</p>
-                    <a href="add-player.html" class="btn btn-primary">Add New Player</a>
-                </div>
-            </section>
 
             <section class="player-selection">
                 <div class="section-header">
-                    <h2>Available Players</h2>
-                    <button id="refresh-players-btn" class="btn btn-small">Refresh List</button>
+                    <div class="header-with-buttons">
+                        <h2>Available Players</h2>
+                        <div class="action-buttons">
+                            <a href="add-player.html" class="circle-btn add-btn" title="Add New Player">+ Add</a>
+                            <button id="refresh-players-btn" class="circle-btn refresh-btn" title="Refresh Player List">↻ Refresh</button>
+                        </div>
+                    </div>
                 </div>
                 <div id="players-container" class="players-grid">
                     <!-- Players will be loaded here -->

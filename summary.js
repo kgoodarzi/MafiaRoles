@@ -98,6 +98,7 @@ function displayTeam(containerId, assignments) {
         const roleImg = document.createElement('img');
         roleImg.src = assignment.role.image;
         roleImg.alt = assignment.role.name;
+        roleImg.onerror = () => { roleImg.src = 'images/default-avatar.svg'; };
         
         roleIcon.appendChild(roleImg);
         assignmentItem.appendChild(roleIcon);

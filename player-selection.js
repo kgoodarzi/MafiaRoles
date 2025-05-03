@@ -125,12 +125,12 @@ function createPlayerCard(player) {
             <img src="${photoUrl}" alt="${name}" onerror="this.src='images/default-avatar.svg'">
         </div>
         <div class="player-info">
-            <h3>${name}</h3>
+            <h3 class="player-name">${name}</h3>
             ${phone ? `<p>${phone}</p>` : ''}
-        </div>
-        <div class="player-select">
-            <input type="checkbox" id="select-${id}" class="player-checkbox">
-            <label for="select-${id}"></label>
+            <div class="player-select">
+                <input type="checkbox" id="select-${id}" class="player-checkbox">
+                <label for="select-${id}">Select player</label>
+            </div>
         </div>
     `;
     

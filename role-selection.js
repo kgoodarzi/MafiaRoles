@@ -82,11 +82,13 @@ function displaySelectedPlayers() {
         const imgSrc = player.photo_url || 'images/default-avatar.svg';
         
         playerCard.innerHTML = `
-            <div class="player-image">
-                <img src="${imgSrc}" alt="${player.name}" onerror="this.src='images/default-avatar.svg'">
-            </div>
-            <div class="player-info">
-                <h3>${player.name}</h3>
+            <div class="player-container">
+                <div class="player-image">
+                    <img src="${imgSrc}" alt="${player.name}" onerror="this.src='images/default-avatar.svg'">
+                </div>
+                <div class="player-info">
+                    <h3 class="player-name">${player.name}</h3>
+                </div>
             </div>
         `;
         
@@ -256,8 +258,10 @@ function displayCurrentRoles() {
     if (rolesContainer) {
         rolesContainer.innerHTML = tempRoles.map(role => 
             `<div class='role-card' data-team='${role.team}'>
-                <img src='${role.image}' alt='${role.name}' style='width:40px;height:40px;object-fit:cover;border-radius:4px;margin-bottom:0.5rem;'>
-                <div>${role.name}</div>
+                <div class="role-image-container">
+                    <img src='${role.image}' alt='${role.name}'>
+                </div>
+                <h4>${role.name}</h4>
             </div>`
         ).join('');
     }
