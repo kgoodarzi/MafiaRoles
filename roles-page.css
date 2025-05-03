@@ -41,133 +41,255 @@ body[data-page="roles"] main {
     text-align: left !important;
 }
 
-/* Target only the roles page with attribute or class selectors */
+/* Make sure team sections are properly styled */
+.team-section {
+    margin-bottom: 30px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    clear: both !important;
+}
+
+/* Force grid layout consistent with role-selection page */
+.roles-list.roles-grid,
+.team-section .roles-list,
+#mafia-roles,
+#town-roles,
+#independent-roles {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important; 
+    gap: 1rem !important;
+    padding: 0 !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    margin: 0 auto !important;
+}
+
+/* Style role cards to match role-selection.html */
 body[data-page="roles"] .role-card,
 .roles-page .role-card,
 .team-section .roles-list .role-card {
-    width: 48% !important;              /* Slightly less than half to account for spacing */
-    max-width: 48% !important;          /* Ensure maximum is also less than half */
-    height: auto !important;            /* Allow natural height */
-    min-height: 230px !important;       /* Reasonable minimum height */
-    max-height: 300px !important;       /* Limit maximum height */
-    overflow: hidden !important;        /* Prevent content overflow */
-    margin: 5px !important;             /* Smaller margins */
-    padding: 15px !important;           /* Reasonable padding */
-    box-sizing: border-box !important;  /* Include padding in width calculations */
-    border-radius: 8px !important;      /* Consistent rounded corners */
-    display: flex !important;           /* Use flexbox for layout */
-    flex-direction: column !important;  /* Stack contents vertically */
-    align-items: center !important;     /* Center contents horizontally */
-    justify-content: flex-start !important; /* Align content to top */
-    float: left !important;             /* Use float as a fallback */
+    height: 230px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    padding: 1.5rem !important;
+    background-color: var(--card-bg) !important;
+    border-radius: 12px !important;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
+    transition: all 0.3s ease !important;
+    box-sizing: border-box !important;
+    text-align: center !important;
+    position: relative !important;
+    border-width: 4px !important;
+    margin: 0.5rem !important;
+    overflow: hidden !important;
+    float: none !important;
 }
 
-/* Fix role images to reasonable size */
+/* Team-specific styling with neon glow */
+body[data-page="roles"] .role-card[data-team="citizen"],
+.roles-page .role-card[data-team="citizen"] {
+    background-color: var(--card-bg) !important;
+    border: 4px solid #10b981 !important;
+    box-shadow: 0 0 15px rgba(16, 185, 129, 0.6), 0 0 25px rgba(16, 185, 129, 0.4), inset 0 0 10px rgba(16, 185, 129, 0.3) !important;
+    animation: citizenNeonPulse 2s infinite !important;
+}
+
+body[data-page="roles"] .role-card[data-team="mafia"],
+.roles-page .role-card[data-team="mafia"] {
+    background-color: var(--card-bg) !important;
+    border: 4px solid #ef4444 !important;
+    box-shadow: 0 0 15px rgba(239, 68, 68, 0.6), 0 0 25px rgba(239, 68, 68, 0.4), inset 0 0 10px rgba(239, 68, 68, 0.3) !important;
+    animation: mafiaNeonPulse 2s infinite !important;
+}
+
+body[data-page="roles"] .role-card[data-team="independent"],
+.roles-page .role-card[data-team="independent"] {
+    background-color: var(--card-bg) !important;
+    border: 4px solid #8b5cf6 !important;
+    box-shadow: 0 0 15px rgba(139, 92, 246, 0.6), 0 0 25px rgba(139, 92, 246, 0.4), inset 0 0 10px rgba(139, 92, 246, 0.3) !important;
+    animation: independentNeonPulse 2s infinite !important;
+}
+
+/* Fix role images to reasonable size and positioning */
 body[data-page="roles"] .role-card img,
 .roles-page .role-card img,
 .team-section .roles-list .role-card img {
-    height: 120px !important;           /* Fixed image height */
-    width: auto !important;             /* Maintain aspect ratio */
-    max-width: 100% !important;         /* Prevent overflow */
-    object-fit: contain !important;     /* Keep image proportions */
-    margin-bottom: 10px !important;     /* Space below image */
+    width: 140px !important;
+    height: 140px !important;
+    max-width: 140px !important;
+    max-height: 140px !important;
+    object-fit: contain !important;
+    margin-bottom: 10px !important;
+    border-radius: 8px !important;
 }
 
-/* Adjust role title to fit better */
+/* Team-specific image styling */
+body[data-page="roles"] .role-card[data-team="mafia"] img,
+.roles-page .role-card[data-team="mafia"] img {
+    border: 2px solid #ef4444 !important;
+    box-shadow: 0 0 8px rgba(239, 68, 68, 0.6) !important;
+}
+
+body[data-page="roles"] .role-card[data-team="citizen"] img,
+.roles-page .role-card[data-team="citizen"] img {
+    border: 2px solid #10b981 !important;
+    box-shadow: 0 0 8px rgba(16, 185, 129, 0.6) !important;
+}
+
+body[data-page="roles"] .role-card[data-team="independent"] img,
+.roles-page .role-card[data-team="independent"] img {
+    border: 2px solid #8b5cf6 !important;
+    box-shadow: 0 0 8px rgba(139, 92, 246, 0.6) !important;
+}
+
+/* Position title at bottom of card */
 body[data-page="roles"] .role-card h3,
 .roles-page .role-card h3,
 .team-section .roles-list .role-card h3,
 .role-card .role-title {
-    font-size: 1.1rem !important;       /* Smaller font size */
-    margin: 5px 0 !important;           /* Reduce margins */
-    text-align: center !important;      /* Center text */
-    width: 100% !important;             /* Full width */
+    font-size: 1.2rem !important;
+    position: absolute !important;
+    bottom: 1rem !important;
+    left: 0 !important;
+    right: 0 !important;
+    text-align: center !important;
+    z-index: 2 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+}
+
+/* Team-specific title colors */
+body[data-page="roles"] .role-card[data-team="mafia"] h3,
+.roles-page .role-card[data-team="mafia"] h3,
+.role-card[data-team="mafia"] .role-title {
+    color: #ef4444 !important;
+}
+
+body[data-page="roles"] .role-card[data-team="citizen"] h3,
+.roles-page .role-card[data-team="citizen"] h3,
+.role-card[data-team="citizen"] .role-title {
+    color: #10b981 !important;
+}
+
+body[data-page="roles"] .role-card[data-team="independent"] h3,
+.roles-page .role-card[data-team="independent"] h3,
+.role-card[data-team="independent"] .role-title {
+    color: #8b5cf6 !important;
 }
 
 /* Make role description more compact */
 body[data-page="roles"] .role-card .role-description,
 .roles-page .role-card .role-description,
 .team-section .roles-list .role-card .role-description {
-    font-size: 0.85rem !important;      /* Smaller font size */
-    line-height: 1.4 !important;        /* Tighter line height */
-    margin-top: 5px !important;         /* Less space at top */
-    max-height: 100px !important;       /* Limit height */
-    overflow-y: auto !important;        /* Allow scrolling if needed */
-    width: 100% !important;             /* Full width */
-}
-
-/* Force grid layout but also use fallback methods */
-.roles-list.roles-grid,
-.team-section .roles-list,
-#mafia-roles,
-#town-roles,
-#independent-roles {
-    display: block !important;          /* Fallback to block display */
-    width: 100% !important;             /* Full width */
-    box-sizing: border-box !important;
-    overflow: hidden !important;        /* Clearfix for floats */
-    margin: 0 auto !important;
-    padding: 0 !important;
-}
-
-/* Clearfix for floating elements */
-.roles-list.roles-grid::after,
-.team-section .roles-list::after,
-#mafia-roles::after,
-#town-roles::after,
-#independent-roles::after {
-    content: "" !important;
-    display: table !important;
-    clear: both !important;
-}
-
-/* Make sure team sections don't extend beyond viewport */
-.team-section {
-    margin-bottom: 30px !important;
+    font-size: 0.85rem !important;
+    line-height: 1.4 !important;
+    margin-top: 5px !important;
     width: 100% !important;
-    box-sizing: border-box !important;
-    padding: 0 !important;
-    overflow: hidden !important;        /* Ensure no overflow */
-    clear: both !important;             /* Clear previous floats */
+    position: absolute !important;
+    bottom: 3.5rem !important;
+    left: 0 !important;
+    right: 0 !important;
+    padding: 0 1rem !important;
+    max-height: 60px !important;
+    overflow-y: auto !important;
+    text-align: center !important;
 }
 
-/* Adjust neon effects to not overflow */
-body[data-page="roles"] .role-card::before,
-.roles-page .role-card::before {
-    border-radius: 6px !important;
+/* Neon pulse animations for each team */
+@keyframes citizenNeonPulse {
+    0% {
+        box-shadow: 0 0 15px rgba(16, 185, 129, 0.6), 0 0 25px rgba(16, 185, 129, 0.4), inset 0 0 10px rgba(16, 185, 129, 0.3);
+    }
+    50% {
+        box-shadow: 0 0 20px rgba(16, 185, 129, 0.8), 0 0 35px rgba(16, 185, 129, 0.6), inset 0 0 15px rgba(16, 185, 129, 0.5);
+    }
+    100% {
+        box-shadow: 0 0 15px rgba(16, 185, 129, 0.6), 0 0 25px rgba(16, 185, 129, 0.4), inset 0 0 10px rgba(16, 185, 129, 0.3);
+    }
 }
 
-/* Mobile adjustments - keep 2 columns but smaller cards */
+@keyframes mafiaNeonPulse {
+    0% {
+        box-shadow: 0 0 15px rgba(239, 68, 68, 0.6), 0 0 25px rgba(239, 68, 68, 0.4), inset 0 0 10px rgba(239, 68, 68, 0.3);
+    }
+    50% {
+        box-shadow: 0 0 20px rgba(239, 68, 68, 0.8), 0 0 35px rgba(239, 68, 68, 0.6), inset 0 0 15px rgba(239, 68, 68, 0.5);
+    }
+    100% {
+        box-shadow: 0 0 15px rgba(239, 68, 68, 0.6), 0 0 25px rgba(239, 68, 68, 0.4), inset 0 0 10px rgba(239, 68, 68, 0.3);
+    }
+}
+
+@keyframes independentNeonPulse {
+    0% {
+        box-shadow: 0 0 15px rgba(139, 92, 246, 0.6), 0 0 25px rgba(139, 92, 246, 0.4), inset 0 0 10px rgba(139, 92, 246, 0.3);
+    }
+    50% {
+        box-shadow: 0 0 20px rgba(139, 92, 246, 0.8), 0 0 35px rgba(139, 92, 246, 0.6), inset 0 0 15px rgba(139, 92, 246, 0.5);
+    }
+    100% {
+        box-shadow: 0 0 15px rgba(139, 92, 246, 0.6), 0 0 25px rgba(139, 92, 246, 0.4), inset 0 0 10px rgba(139, 92, 246, 0.3);
+    }
+}
+
+/* Mobile adjustments */
 @media (max-width: 768px) {
+    .roles-list.roles-grid,
+    .team-section .roles-list,
+    #mafia-roles,
+    #town-roles,
+    #independent-roles {
+        grid-template-columns: 1fr 1fr !important;
+        gap: 0.5rem !important;
+    }
+    
     body[data-page="roles"] .role-card img,
     .roles-page .role-card img,
     .team-section .roles-list .role-card img {
+        width: 100px !important;
         height: 100px !important;
+        max-width: 100px !important;
+        max-height: 100px !important;
     }
     
     body[data-page="roles"] .role-card,
     .roles-page .role-card,
     .team-section .roles-list .role-card {
-        min-height: 200px !important;
+        height: 200px !important;
         padding: 10px !important;
     }
     
     body[data-page="roles"] .role-card .role-description,
     .roles-page .role-card .role-description,
     .team-section .roles-list .role-card .role-description {
-        max-height: 70px !important;
+        bottom: 3rem !important;
+        max-height: 50px !important;
         font-size: 0.8rem !important;
     }
 }
 
 /* Very small screens - stack cards vertically */
 @media (max-width: 480px) {
+    .roles-list.roles-grid,
+    .team-section .roles-list,
+    #mafia-roles,
+    #town-roles,
+    #independent-roles {
+        grid-template-columns: 1fr !important;
+    }
+    
     body[data-page="roles"] .role-card,
     .roles-page .role-card,
     .team-section .roles-list .role-card {
         width: 95% !important;
         max-width: 95% !important;
         margin: 10px auto !important;
-        float: none !important;
     }
 } 
