@@ -1183,4 +1183,17 @@ section.selected-players .players-grid {
 #current-player {
     text-align: left; /* Ensure container aligns with player card */
     width: 100%;
+}
+
+/* Player selection page - player cards positioning */
+.player-selection-page #players-container .player-card {
+    margin-left: 10px; /* Position exactly 10px from the left border */
+    width: 95%; /* Make cards slightly narrower to prevent overflow */
+}
+
+/* For player selection section */
+.player-selection {
+    padding-left: 0; /* Reset padding to align with the 10px margin on cards */
+    width: 100%;
+    box-sizing: border-box;
 } 
