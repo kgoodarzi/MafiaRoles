@@ -178,9 +178,20 @@ h2 {
 }
 
 .player-name {
-    font-size: 1.5rem;
-    margin: 0.5rem 0;
-    color: #555;
+    font-weight: bold;
+    margin-bottom: 0.25rem;
+    font-size: 0.8rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
+.player-phone {
+    font-size: 0.7rem;
+    color: #666;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .summary-list {
@@ -203,14 +214,25 @@ h2 {
 /* Player Selection Styles */
 .players-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-    gap: 1rem;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 0.75rem;
     margin: 1rem 0;
-    max-height: 300px;
-    overflow-y: auto;
     padding: 1rem;
     border: 1px solid #ddd;
     border-radius: 4px;
+}
+
+/* Apply scrolling only on the player selection page */
+.player-selection .players-grid {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.role-config .players-grid,
+.selected-players .players-grid,
+section.selected-players .players-grid {
+    max-height: none;
+    overflow: visible;
 }
 
 .player-card {
@@ -220,6 +242,11 @@ h2 {
     cursor: pointer;
     transition: all 0.3s ease;
     text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    max-width: 100px;
+    margin: 0 auto;
 }
 
 .player-card.selected {
@@ -227,78 +254,64 @@ h2 {
     background-color: #f8fff8;
 }
 
-.player-card img {
-    width: 80px;
-    height: 80px;
-    object-fit: cover;
-    border-radius: 50%;
+.player-avatar {
+    width: 60px;
+    height: 60px;
     margin: 0 auto 0.5rem;
+    overflow: hidden;
 }
 
-.player-initials {
-    width: 80px;
-    height: 80px;
+.player-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
     border-radius: 50%;
-    background-color: #4CAF50;
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 2rem;
+}
+
+.player-photo {
+    width: 60px;
+    height: 60px;
     margin: 0 auto 0.5rem;
+    overflow: hidden;
+}
+
+.player-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
 }
 
 .player-name {
     font-weight: bold;
     margin-bottom: 0.25rem;
+    font-size: 0.9rem;
 }
 
-.player-email {
-    font-size: 0.8rem;
+.player-phone {
+    font-size: 0.7rem;
     color: #666;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
-.selected-players {
-    margin: 1rem 0;
-}
-
-#selected-players-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1rem;
-    justify-content: center;
-    margin-top: 1rem;
-}
-
-.selected-player-item {
-    display: flex;
-    align-items: center;
-    background-color: #f8fff8;
+.add-player-section {
+    margin-bottom: 2rem;
+    padding: 1rem;
     border: 1px solid #ddd;
-    border-radius: 4px;
-    padding: 0.5rem;
-    margin-bottom: 0.5rem;
+    border-radius: 8px;
+    background-color: #f8f8f8;
 }
 
-.selected-player-item img {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    margin-right: 0.75rem;
+.player-selection-section {
+    margin-bottom: 2rem;
 }
 
-.selected-player-item .player-initials {
-    width: 40px;
-    height: 40px;
-    font-size: 1.2rem;
-    margin: 0 0.75rem 0 0;
-}
-
-.selected-player-item .player-email {
-    font-size: 0.7rem;
+.actions {
+    margin-top: 2rem;
+    display: flex;
+    justify-content: center;
 }
 
 /* Registration and Login Styles */
@@ -423,4 +436,577 @@ h2 {
         width: 150px;
         height: 150px;
     }
+}
+
+/* Home page styles */
+.game-intro {
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.splash-image {
+    max-width: 100%;
+    height: auto;
+    margin-bottom: 1rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.menu-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    max-width: 300px;
+    margin: 0 auto;
+}
+
+.menu-buttons .btn {
+    width: 100%;
+    margin-top: 0;
+    text-decoration: none;
+    text-align: center;
+}
+
+/* Roles page styles */
+.roles-info {
+    margin-bottom: 2rem;
+}
+
+.team-section {
+    margin-bottom: 2rem;
+    padding: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background-color: #f8f8f8;
+}
+
+.team-image {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    margin: 1rem 0;
+}
+
+.roles-list {
+    max-height: none;
+    overflow: visible;
+}
+
+.roles-list .role-card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.roles-list .role-card img {
+    width: 100%;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 4px;
+    margin-bottom: 0.5rem;
+}
+
+.roles-list .role-card h4 {
+    margin-bottom: 0.5rem;
+}
+
+.roles-list .role-card p {
+    font-size: 0.8rem;
+    flex-grow: 1;
+}
+
+/* About page styles */
+.about-section {
+    margin-bottom: 2rem;
+    padding: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background-color: #f8f8f8;
+}
+
+.about-image {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    margin: 1rem 0;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.rules-list, .tips-list, .app-features {
+    margin-left: 1.5rem;
+    margin-top: 1rem;
+}
+
+.rules-list li, .tips-list li, .app-features li {
+    margin-bottom: 0.75rem;
+}
+
+/* Role selection page styles */
+.selected-players-section {
+    margin-bottom: 2rem;
+    padding: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background-color: #f8f8f8;
+}
+
+.selected-players-list {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 1rem;
+    max-height: none;
+    overflow: visible;
+}
+
+/* Specific style for the selected players list on role selection page */
+#selected-players-list.players-grid {
+    max-height: none;
+    overflow: visible;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.selected-player {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 80px;
+}
+
+.selected-player-avatar {
+    width: 60px;
+    height: 60px;
+    margin-bottom: 0.5rem;
+}
+
+.selected-player-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 2px solid #4CAF50;
+}
+
+.selected-player-name {
+    font-size: 0.8rem;
+    text-align: center;
+    word-break: break-word;
+}
+
+.role-selection-section {
+    margin-bottom: 2rem;
+    padding: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background-color: #f8f8f8;
+}
+
+.btn-primary {
+    background-color: #4CAF50;
+}
+
+.btn-primary:hover {
+    background-color: #45a049;
+}
+
+/* Game page styles */
+.role-reveal {
+    text-align: center;
+}
+
+.current-state {
+    padding: 2rem;
+    margin: 2rem 0;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background-color: #f8f8f8;
+}
+
+.role-display {
+    margin: 2rem 0;
+}
+
+.role-image-container {
+    width: 200px;
+    height: 200px;
+    margin: 0 auto 1rem;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 3px solid #4CAF50;
+}
+
+.role-image-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.role-info {
+    margin: 2rem 0;
+}
+
+.role-info h3 {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.role-name-rtl {
+    font-family: Arial, sans-serif;
+    font-size: 1.25rem;
+    margin-top: 0.5rem;
+    color: #555;
+    direction: rtl;
+}
+
+.game-complete {
+    padding: 2rem;
+    margin: 2rem 0;
+    border: 1px solid #4CAF50;
+    border-radius: 8px;
+    background-color: #f0f9f0;
+}
+
+.game-complete h2 {
+    color: #4CAF50;
+    margin-bottom: 1rem;
+}
+
+.game-complete .btn {
+    margin: 0.5rem;
+}
+
+/* Summary page styles */
+.summary-container {
+    margin-bottom: 2rem;
+}
+
+.team-summary {
+    margin-bottom: 2rem;
+    padding: 1rem;
+    border-radius: 8px;
+}
+
+.mafia-team {
+    background-color: #ffebee;
+    border: 1px solid #ffcdd2;
+}
+
+.citizen-team {
+    background-color: #e8f5e9;
+    border: 1px solid #c8e6c9;
+}
+
+.independent-team {
+    background-color: #fff8e1;
+    border: 1px solid #ffecb3;
+}
+
+.team-summary h2 {
+    margin-bottom: 1rem;
+    color: #333;
+}
+
+.summary-list {
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.summary-item {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem;
+    background-color: white;
+    border-bottom: 1px solid #eee;
+}
+
+.summary-item:last-child {
+    border-bottom: none;
+}
+
+.summary-avatar {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    margin-right: 1rem;
+}
+
+.summary-avatar img {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 50%;
+    display: block;
+    margin: 0 auto;
+}
+
+.summary-info {
+    flex-grow: 1;
+}
+
+.summary-info h3 {
+    margin: 0;
+    font-size: 1rem;
+}
+
+.summary-role {
+    margin: 0;
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.summary-role-icon {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-left: 1rem;
+}
+
+.summary-role-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Team-specific styles for role info */
+.team-mafia {
+    background-color: #ffebee;
+    border-color: #c62828;
+}
+
+.team-citizen {
+    background-color: #e8f5e9;
+    border-color: #2e7d32;
+}
+
+.team-independent {
+    background-color: #fff8e1;
+    border-color: #ff8f00;
+}
+
+.mafia-members {
+    margin-top: 1.5rem;
+    padding: 1rem;
+    border: 1px dashed #c62828;
+    border-radius: 4px;
+    background-color: #ffebee;
+}
+
+.mafia-members ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0.5rem 0 0;
+}
+
+.mafia-members li {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid rgba(0,0,0,0.1);
+}
+
+.mafia-members li:last-child {
+    border-bottom: none;
+}
+
+/* Add these styles for database connection status */
+#connection-status {
+    margin-bottom: 15px;
+    text-align: left;
+}
+
+.status-ok {
+    color: #2ecc71;
+    font-weight: bold;
+    padding: 5px 10px;
+    border-radius: 4px;
+    background-color: rgba(46, 204, 113, 0.1);
+    display: inline-block;
+}
+
+.status-error {
+    color: #e74c3c;
+    font-weight: bold;
+    padding: 5px 10px;
+    border-radius: 4px;
+    background-color: rgba(231, 76, 60, 0.1);
+    display: inline-block;
+}
+
+.status-loading {
+    color: #3498db;
+    font-weight: bold;
+    padding: 5px 10px;
+    border-radius: 4px;
+    background-color: rgba(52, 152, 219, 0.1);
+    display: inline-block;
+}
+
+.loading-message {
+    padding: 20px;
+    text-align: center;
+    color: #666;
+    width: 100%;
+}
+
+.error-message {
+    padding: 20px;
+    text-align: center;
+    color: #e74c3c;
+    width: 100%;
+}
+
+/* Add Player Page Styles */
+.add-player-container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 1rem;
+    background-color: #f8f8f8;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+}
+
+.avatar-upload {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.avatar-preview {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 3px solid #4CAF50;
+    position: relative;
+    cursor: pointer;
+}
+
+.avatar-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.avatar-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: rgba(0, 0, 0, 0.6);
+    color: white;
+    padding: 0.5rem;
+    text-align: center;
+    font-size: 0.8rem;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.avatar-preview:hover .avatar-overlay {
+    opacity: 1;
+}
+
+.form-help {
+    display: block;
+    font-size: 0.8rem;
+    color: #666;
+    margin-top: 0.25rem;
+}
+
+.success-message {
+    text-align: center;
+    padding: 2rem;
+}
+
+.success-message h2 {
+    color: #4CAF50;
+    margin-bottom: 1rem;
+}
+
+.success-message .actions {
+    margin-top: 2rem;
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.btn-small {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+}
+
+/* Scaled player images for role view and summary */
+.player-image img,
+.player-avatar img,
+.summary-avatar img {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 50%;
+    display: block;
+    margin: 0 auto;
+}
+
+/* Team colors */
+.role-card[data-team="citizen"],
+.team-citizen, 
+.citizen-team {
+    background-color: #c8e6c9; /* Pastel green */
+}
+
+.role-card[data-team="mafia"],
+.team-mafia,
+.mafia-team {
+    background-color: #ffcdd2; /* Pastel red */
+}
+
+.role-card[data-team="independent"],
+.team-independent,
+.independent-team {
+    background-color: #e1bee7; /* Pastel purple */
+}
+
+/* Role card team styles */
+#mafia-roles .role-card {
+    background-color: #ffcdd2; /* Pastel red */
+}
+
+#town-roles .role-card {
+    background-color: #c8e6c9; /* Pastel green */
+}
+
+#independent-roles .role-card {
+    background-color: #e1bee7; /* Pastel purple */
+}
+
+/* Team summary styles */
+.team-summary {
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+/* Role selection page specific styles for roles display */
+.current-roles-section {
+    margin-bottom: 2rem;
+}
+
+.current-roles-section .roles-grid,
+.role-config .roles-grid,
+#current-roles-list.roles-grid {
+    max-height: none;
+    overflow: visible;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
 } 

@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mafia Game - Add Player</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        // Supabase client initialization
+        const SUPABASE_URL = 'https://isagurhfcktnnldvntse.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlzYWd1cmhmY2t0bm5sZHZudHNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQzNTY4NTAsImV4cCI6MjA1OTkzMjg1MH0.WYOhUCj5wD7AUCuxpDerOkwV_XvBAGapTEztRoJC2Q0';
+        let supabaseClient;
+        
+        // Initialize on document load
+        document.addEventListener('DOMContentLoaded', function() {
+            try {
+                console.log('Initializing Supabase client...');
+                
+                // Create Supabase client
+                supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                console.log('Supabase client initialized successfully');
+                
+                // Check if profiles table exists and is accessible
+                checkProfilesTable();
+                
+                // Update connection status
+                document.getElementById('connection-status').innerHTML = 
+                    '<div class="status-ok">Database connected</div>';
+                
+                // Set up event listeners
+                document.getElementById('add-player-form').addEventListener('submit', handleAddPlayer);
+                document.getElementById('avatar-preview').addEventListener('click', () => {
+                    document.getElementById('player-avatar').click();
+                });
+                document.getElementById('player-avatar').addEventListener('change', handleAvatarPreview);
+                
+            } catch (error) {
+                console.error('Error initializing Supabase client:', error);
+                document.getElementById('connection-status').innerHTML = 
+                    '<div class="status-error">Error connecting to database</div>';
+            }
+        });
+        
+        // Check if profiles table exists and is accessible
+        async function checkProfilesTable() {
+            try {
+                console.log('Checking profiles table...');
+                const { data, error } = await supabaseClient
+                    .from('profiles')
+                    .select('count(*)', { count: 'exact', head: true });
+                    
+                if (error) {
+                    console.error('Error accessing profiles table:', error);
+                    document.getElementById('connection-status').innerHTML = 
+                        '<div class="status-error">Error accessing profiles table</div>';
+                } else {
+                    console.log('Profiles table is accessible. Count query result:', data);
+                    
+                    // Test query to see full structure
+                    const { data: sampleData, error: sampleError } = await supabaseClient
+                        .from('profiles')
+                        .select('*')
+                        .limit(1);
+                        
+                    if (sampleError) {
+                        console.error('Error getting sample profile:', sampleError);
+                    } else if (sampleData && sampleData.length > 0) {
+                        console.log('Sample profile structure:', sampleData[0]);
+                    } else {
+                        console.log('No profiles found in the table.');
+                    }
+                }
+            } catch (error) {
+                console.error('Error checking profiles table:', error);
+            }
+        }
+        
+        // Handle avatar preview
+        function handleAvatarPreview(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            if (!file.type.match('image.*')) {
+                alert('Please select an image file');
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('avatar-preview-img').src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+        
+        // Handle form submission
+        async function handleAddPlayer(event) {
+            event.preventDefault();
+            
+            const fullName = document.getElementById('player-name').value.trim();
+            const username = document.getElementById('player-username').value.trim() || `player_${Date.now()}_${Math.floor(Math.random() * 10000)}`;
+            const email = document.getElementById('player-email').value.trim() || `${fullName.toLowerCase().replace(/\s+/g, '.')}${Math.floor(Math.random() * 1000)}@example.com`;
+            const avatarFile = document.getElementById('player-avatar').files[0];
+            
+            if (!fullName) {
+                alert('Please enter a player name');
+                return;
+            }
+            
+            // Disable submit button
+            const submitBtn = document.getElementById('submit-btn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Adding...';
+            
+            try {
+                // Check if player with this name already exists
+                console.log(`Checking if player "${fullName}" already exists...`);
+                const { data: existingProfiles, error: searchError } = await supabaseClient
+                    .from('profiles')
+                    .select('id')
+                    .eq('full_name', fullName);
+                    
+                if (searchError) {
+                    console.error('Error checking for existing player:', searchError);
+                } else if (existingProfiles && existingProfiles.length > 0) {
+                    console.log('Player already exists:', existingProfiles);
+                    alert(`A player named "${fullName}" already exists!`);
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Add Player';
+                    return;
+                }
+                
+                // Handle photo upload if provided
+                let photoUrl = '';
+                if (avatarFile) {
+                    console.log('Uploading photo file...');
+                    const photoFileName = `${Date.now()}_${username}`;
+                    const { data: uploadData, error: uploadError } = await supabaseClient
+                        .storage
+                        .from('images')
+                        .upload(photoFileName, avatarFile);
+                    if (uploadError) {
+                        console.error('Error uploading photo:', uploadError);
+                        // Continue with default avatar
+                    } else if (uploadData) {
+                        console.log('Photo uploaded successfully:', uploadData);
+                        // Get public URL
+                        const { data: urlData } = await supabaseClient
+                            .storage
+                            .from('images')
+                            .getPublicUrl(photoFileName);
+                        if (urlData && urlData.publicUrl) {
+                            console.log('Photo public URL:', urlData.publicUrl);
+                            photoUrl = urlData.publicUrl;
+                        }
+                    }
+                }
+                if (!photoUrl) {
+                    photoUrl = 'images/default-avatar.svg';
+                }
+                // Prepare player data
+                const playerData = { 
+                    full_name: fullName,
+                    username: username,
+                    photo: photoUrl,
+                    email: email
+                };
+                
+                console.log('Inserting player data:', playerData);
+                
+                // Insert into profiles table
+                const { data, error } = await supabaseClient
+                    .from('profiles')
+                    .insert([playerData])
+                    .select();
+                
+                if (error) {
+                    console.error('Error inserting player:', error);
+                    throw error;
+                }
+                
+                console.log('Insert response data:', data);
+                
+                if (data && data.length > 0) {
+                    console.log('Player added successfully:', data[0]);
+                    alert(`Player ${fullName} added successfully!`);
+                    // Reset form
+                    document.getElementById('add-player-form').reset();
+                    document.getElementById('avatar-preview-img').src = 'images/default-avatar.svg';
+                    
+                    // Show success message with link to return
+                    document.getElementById('form-container').innerHTML = `
+                        <div class="success-message">
+                            <h2>Player Added Successfully!</h2>
+                            <p>The player ${fullName} has been added to the database.</p>
+                            <div class="actions">
+                                <button class="btn" onclick="document.getElementById('add-player-form').reset(); document.location.reload();">Add Another Player</button>
+                                <a href="player-selection.html" class="btn btn-primary">Return to Player Selection</a>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    console.warn('No data returned from insert operation but no error was thrown');
+                    // Even though no data was returned, the operation might have succeeded
+                    // Let's check if the player was added anyway
+                    const { data: checkData, error: checkError } = await supabaseClient
+                        .from('profiles')
+                        .select('id')
+                        .eq('full_name', fullName);
+                        
+                    if (checkError) {
+                        console.error('Error checking if player was added:', checkError);
+                    } else if (checkData && checkData.length > 0) {
+                        console.log('Player was added successfully even though no data was returned initially:', checkData);
+                        alert(`Player ${fullName} added successfully!`);
+                        // Reset form and show success message
+                        document.getElementById('add-player-form').reset();
+                        document.getElementById('avatar-preview-img').src = 'images/default-avatar.svg';
+                        
+                        document.getElementById('form-container').innerHTML = `
+                            <div class="success-message">
+                                <h2>Player Added Successfully!</h2>
+                                <p>The player ${fullName} has been added to the database.</p>
+                                <div class="actions">
+                                    <button class="btn" onclick="document.getElementById('add-player-form').reset(); document.location.reload();">Add Another Player</button>
+                                    <a href="player-selection.html" class="btn btn-primary">Return to Player Selection</a>
+                                </div>
+                            </div>
+                        `;
+                        return;
+                    }
+                    
+                    throw new Error('No data returned from insert operation');
+                }
+            } catch (error) {
+                console.error('Error adding player:', error);
+                alert(`Failed to add player: ${error.message || 'Unknown error'}`);
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Add Player';
+            }
+        }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Add New Player</h1>
+            <p>Enter player information</p>
+        </header>
+
+        <main>
+            <div id="connection-status"></div>
+            
+            <div id="form-container" class="add-player-container">
+                <form id="add-player-form" class="add-player-form">
+                    <div class="form-group avatar-upload">
+                        <div id="avatar-preview" class="avatar-preview">
+                            <img id="avatar-preview-img" src="images/default-avatar.svg" alt="Player Avatar">
+                            <div class="avatar-overlay">Click to change</div>
+                        </div>
+                        <input type="file" id="player-avatar" accept="image/*" style="display: none;">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="player-name">Full Name (required):</label>
+                        <input type="text" id="player-name" placeholder="Enter player's full name" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="player-username">Username (optional):</label>
+                        <input type="text" id="player-username" placeholder="Enter player's username">
+                        <small class="form-help">If left blank, a unique username will be generated.</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="player-email">Email (optional):</label>
+                        <input type="email" id="player-email" placeholder="Enter player's email">
+                        <small class="form-help">If left blank, a placeholder email will be used.</small>
+                    </div>
+                    
+                    <div class="actions">
+                        <a href="player-selection.html" class="btn">Cancel</a>
+                        <button type="submit" id="submit-btn" class="btn btn-primary">Add Player</button>
+                    </div>
+                </form>
+            </div>
+        </main>
+
+        <footer>
+            <p>&copy; 2025 KRS Consulting Inc.</p>
+        </footer>
+    </div>
+</body>
+</html> 

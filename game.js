@@ -1,313 +1,431 @@
-document.addEventListener('DOMContentLoaded', () => {
-    // Screen elements
-    const setupScreen = document.getElementById('setup-screen');
-    const playerSelectionScreen = document.getElementById('player-selection-screen');
-    const gameScreen = document.getElementById('game-screen');
-    const summaryScreen = document.getElementById('summary-screen');
-    
-    // Setup screen elements
-    const rolesContainer = document.getElementById('roles-container');
-    const playerCountInput = document.getElementById('player-count');
-    const startGameBtn = document.getElementById('start-game');
-    
-    // Player selection screen elements
-    const playersContainer = document.getElementById('players-container');
-    const selectedPlayersList = document.getElementById('selected-players-list');
-    const startAssignmentBtn = document.getElementById('start-assignment');
-    
-    // Game screen elements
-    const proceedBtn = document.getElementById('proceed-button');
-    const nextBtn = document.getElementById('next-button');
-    const playerNumber = gameScreen.querySelector('.player-number');
-    const playerName = gameScreen.querySelector('.player-name');
-    const roleImage = gameScreen.querySelector('.role-image');
-    const roleName = gameScreen.querySelector('.role-name');
-    const roleName2 = gameScreen.querySelector('.role-name2');
-    
-    // Summary screen elements
-    const summaryList = document.getElementById('summary-list');
-    const newGameBtn = document.getElementById('new-game');
-    
-    // Game state
-    let selectedRoles = Object.keys(roles);
-    let currentRoleIndex = 0;
-    let roleAssignments = [];
-    let isShowingBlankPage = false;
-    let selectedPlayers = [];
+// Global variables
+let gameState = null;
+let currentPlayerIndex = 0;
+let allRolesAssigned = false;
 
-    // Set player count to 12
-    playerCountInput.value = 12;
-
-    // Initialize role cards
-    initializeRoleCards();
-
-    // Function to initialize role cards
-    function initializeRoleCards() {
-        rolesContainer.innerHTML = '';
-        Object.entries(roles).forEach(([key, role]) => {
-            const roleCard = document.createElement('div');
-            roleCard.className = 'role-card selected';
-            roleCard.dataset.role = key;
-            roleCard.innerHTML = `
-                <img src="${role.image}" alt="${role.name}">
-                <div>${role.name}</div>
-                <div>${role.name2}</div>
-            `;
-            roleCard.addEventListener('click', () => toggleRoleSelection(key, roleCard));
-            rolesContainer.appendChild(roleCard);
-        });
+// Initialize page when DOM is loaded
+document.addEventListener('DOMContentLoaded', async function() {
+    console.log("Game page loaded");
+    
+    // Check for Supabase client
+    if (!window.supabase) {
+        console.error("Supabase client not initialized");
+        document.getElementById('game-status').textContent = 
+            "Error: Database connection not available";
+        return;
     }
+    
+    // Wait for database manager to initialize
+    console.log("Waiting for database initialization...");
+    await waitForDatabaseInit();
+    
+    // Load game state from localStorage
+    loadGameState();
+    
+    // Set up event listeners
+    document.getElementById('view-role-btn').addEventListener('click', viewRole);
+    document.getElementById('hide-role-btn').addEventListener('click', hideRole);
+    document.getElementById('next-player-btn').addEventListener('click', nextPlayer);
+    document.getElementById('start-game-btn').addEventListener('click', startGame);
+});
 
-    // Function to toggle role selection
-    function toggleRoleSelection(roleKey, card) {
-        const role = roles[roleKey];
-        const index = selectedRoles.indexOf(roleKey);
+// Wait for database initialization
+async function waitForDatabaseInit() {
+    const maxAttempts = 10;
+    let attempts = 0;
+    
+    while (attempts < maxAttempts) {
+        if (window.dbManager && window.dbManager.initialized) {
+            console.log("Database manager initialized");
+            return true;
+        }
         
-        if (index === -1) {
-            if (!role.repeatable && selectedRoles.some(r => r === roleKey)) {
-                return;
-            }
-            selectedRoles.push(roleKey);
-            card.classList.add('selected');
+        await new Promise(resolve => setTimeout(resolve, 500));
+        attempts++;
+    }
+    
+    console.error("Database manager initialization timed out");
+    return false;
+}
+
+// Load game state from localStorage
+function loadGameState() {
+    try {
+        const storedGameState = localStorage.getItem('gameState');
+        if (storedGameState) {
+            gameState = JSON.parse(storedGameState);
+            console.log("Game state loaded:", gameState);
+            
+            // Initialize the role reveal process
+            initializeRoleReveal();
         } else {
-            selectedRoles.splice(index, 1);
-            card.classList.remove('selected');
+            console.warn("No game state found in localStorage");
+            document.getElementById('game-status').textContent = 
+                "Error: No game data found. Please start a new game.";
+        }
+    } catch (error) {
+        console.error("Error loading game state:", error);
+        document.getElementById('game-status').textContent = 
+            "Error loading game data. Please start a new game.";
+    }
+}
+
+// Initialize the role reveal process
+function initializeRoleReveal() {
+    if (!gameState || !gameState.players || gameState.players.length === 0) {
+        console.error("Invalid game state");
+        return;
+    }
+    
+    // Set initial status
+    document.getElementById('game-status').textContent = "Players are ready to view their roles";
+    
+    // Show the first player
+    showCurrentPlayer();
+}
+
+// Show the current player's information (without revealing role)
+function showCurrentPlayer() {
+    if (!gameState || !gameState.players || currentPlayerIndex >= gameState.players.length) {
+        console.error("Invalid game state or player index");
+        return;
+    }
+    
+    const player = gameState.players[currentPlayerIndex];
+    const playerElement = document.getElementById('current-player');
+    
+    // Display player info
+    playerElement.innerHTML = `
+        <div class="player-card">
+            <div class="player-image">
+                <img src="${player.photo_url || 'images/default-avatar.svg'}" 
+                     alt="${player.name}" 
+                     onerror="this.src='images/default-avatar.svg'">
+            </div>
+            <div class="player-info">
+                <h3>${player.name}</h3>
+                <p>Player ${currentPlayerIndex + 1} of ${gameState.players.length}</p>
+            </div>
+        </div>
+    `;
+    
+    // Reset role display
+    document.getElementById('role-display').innerHTML = `
+        <div class="role-hidden">
+            <p>Click "View Your Role" to see your assigned role</p>
+        </div>
+    `;
+    
+    // Show appropriate buttons
+    document.getElementById('view-role-btn').style.display = 'block';
+    document.getElementById('hide-role-btn').style.display = 'none';
+    document.getElementById('next-player-btn').style.display = 'none';
+    document.getElementById('start-game-btn').style.display = 'none';
+}
+
+// View the current player's role
+function viewRole() {
+    if (!gameState || !gameState.players || currentPlayerIndex >= gameState.players.length) {
+        console.error("Invalid game state or player index");
+        return;
+    }
+    
+    const player = gameState.players[currentPlayerIndex];
+    const roleDisplay = document.getElementById('role-display');
+    
+    // Get role information - handle special case for 'mafia' role
+    let roleId = player.role;
+    // Convert 'mafia' to 'regular_mafia' for compatibility with old saved games
+    if (roleId === 'mafia') {
+        roleId = 'regular_mafia';
+    }
+    
+    const roleInfo = getRoleInfo(roleId);
+    // Use image from images folder with prefix 'Role - '
+    let roleImageName = roleId.charAt(0).toUpperCase() + roleId.slice(1);
+    if (roleId === 'regular_mafia') {
+        roleImageName = 'Mafia';  // Special case for mafia image
+    }
+    const roleImageSrc = `images/Role - ${roleImageName}.jpg`;
+    
+    // Get team for role
+    let teamClass = 'citizen'; // Default team
+    
+    // Try to get team from ROLES array
+    if (typeof getRoleById === 'function') {
+        const role = getRoleById(roleId);
+        if (role) {
+            teamClass = role.team;
         }
     }
-
-    // Function to initialize player selection
-    async function initializePlayerSelection() {
-        playersContainer.innerHTML = '';
-        
-        // Load players from database (now returns users)
-        const players = await dbManager.loadUsers();
-        
-        // Create a card for each player
-        players.forEach(player => {
-            const playerCard = document.createElement('div');
-            playerCard.className = 'player-card';
-            playerCard.dataset.id = player.id;
-            
-            // Use player image if available, otherwise show initials
-            let imageHtml;
-            if (player.image_url) {
-                imageHtml = `<img src="${player.image_url}" alt="${player.name}">`;
-            } else {
-                const initials = player.name.charAt(0).toUpperCase();
-                imageHtml = `<div class="player-initials">${initials}</div>`;
-            }
-            
-            playerCard.innerHTML = `
-                ${imageHtml}
-                <div class="player-name">${player.name}</div>
-                <div class="player-email">${player.email || ''}</div>
-            `;
-            
-            playerCard.addEventListener('click', () => togglePlayerSelection(player, playerCard));
-            playersContainer.appendChild(playerCard);
-        });
+    
+    // Fallback for known roles if getRoleById is not available or fails
+    if (roleId === 'godfather' || roleId === 'regular_mafia' || roleId === 'bomber' || 
+        roleId === 'magician' || roleId === 'al-capon') {
+        teamClass = 'mafia';
+    } else if (roleId === 'zodiac') {
+        teamClass = 'independent';
     }
+    
+    // Display role
+    roleDisplay.innerHTML = `
+        <div class="role-card ${player.role}" data-team="${teamClass}">
+            <img src="${roleImageSrc}" 
+                 alt="${roleInfo.name}" 
+                 onerror="this.src='images/default-avatar.svg'">
+            <h3>${roleInfo.name}</h3>
+            <p>${roleInfo.description}</p>
+        </div>
+    `;
+    // Update buttons
+    document.getElementById('view-role-btn').style.display = 'none';
+    document.getElementById('hide-role-btn').style.display = 'block';
+    document.getElementById('next-player-btn').style.display = 'block';
+}
 
-    // Function to toggle player selection
-    function togglePlayerSelection(player, card) {
-        const playerCount = parseInt(playerCountInput.value);
-        const isSelected = card.classList.contains('selected');
+// Hide the current player's role
+function hideRole() {
+    // Reset role display
+    document.getElementById('role-display').innerHTML = `
+        <div class="role-hidden">
+            <p>Role is now hidden</p>
+        </div>
+    `;
+    
+    // Update buttons
+    document.getElementById('view-role-btn').style.display = 'block';
+    document.getElementById('hide-role-btn').style.display = 'none';
+    document.getElementById('next-player-btn').style.display = 'block';
+}
+
+// Move to the next player
+function nextPlayer() {
+    currentPlayerIndex++;
+    // Check if all players have seen their roles
+    if (currentPlayerIndex >= gameState.players.length) {
+        allRolesAssigned = true;
+        // Show game start button
+        document.getElementById('game-status').textContent = "All roles have been revealed";
+        document.getElementById('current-player').innerHTML = `
+            <div class="all-assigned">
+                <h3>All players have seen their roles</h3>
+                <p>You can now start the game</p>
+            </div>
+        `;
+        document.getElementById('role-display').innerHTML = '';
+        // Show the summary table of player roles
+        showRolesSummaryTable();
+        // Update buttons
+        document.getElementById('view-role-btn').style.display = 'none';
+        document.getElementById('hide-role-btn').style.display = 'none';
+        document.getElementById('next-player-btn').style.display = 'none';
+        document.getElementById('start-game-btn').style.display = 'block';
+    } else {
+        // Show the next player
+        showCurrentPlayer();
+    }
+}
+
+// Show a table of all players and their roles after all roles are revealed
+function showRolesSummaryTable() {
+    if (!gameState || !gameState.players) return;
+    
+    // Create a more visually appealing summary container
+    let summaryHtml = `
+        <div class="summary-container" style="margin-top:2rem;">
+            <h3 style="margin-bottom:1rem;">Role Assignments</h3>
+            <div class="summary-list" style="border:1px solid #ddd;border-radius:8px;overflow:hidden;">
+    `;
+    
+    gameState.players.forEach(player => {
+        let roleId = player.role;
+        let teamClass = 'citizen';  // Default team class
         
-        if (isSelected) {
-            // Remove from selection
-            selectedPlayers = selectedPlayers.filter(p => p.id !== player.id);
-            card.classList.remove('selected');
-            updateSelectedPlayersList();
+        // Try to get team from ROLES array
+        if (typeof getRoleById === 'function') {
+            const role = getRoleById(roleId);
+            if (role) {
+                teamClass = role.team;
+            }
+        }
+        
+        // Fallback for known roles if getRoleById is not available or fails
+        if (roleId === 'mafia' || roleId === 'godfather' || roleId === 'bomber' || 
+            roleId === 'al-capon' || roleId === 'magician' || roleId === 'regular_mafia') {
+            if (teamClass !== 'mafia') {
+                teamClass = 'mafia';
+            }
+        } else if (roleId === 'zodiac') {
+            teamClass = 'independent';
+        }
+        
+        // For image path and proper role name
+        let roleImageName = roleId;
+        let roleName = "";
+        
+        // Get role info to get proper name
+        const roleInfo = getRoleInfo(roleId);
+        roleName = roleInfo.name;
+        
+        // Special case for 'mafia' and 'regular_mafia'
+        if (roleId === 'mafia' || roleId === 'regular_mafia') {
+            roleImageName = 'Mafia';
         } else {
-            // Add to selection if not at max players
-            if (selectedPlayers.length < playerCount) {
-                selectedPlayers.push(player);
-                card.classList.add('selected');
-                updateSelectedPlayersList();
-            } else {
-                alert(`Maximum ${playerCount} players can be selected`);
-            }
+            roleImageName = roleId.charAt(0).toUpperCase() + roleId.slice(1);
         }
-    }
-
-    // Function to update the selected players list
-    function updateSelectedPlayersList() {
-        selectedPlayersList.innerHTML = '';
         
-        selectedPlayers.forEach((player, index) => {
-            const playerItem = document.createElement('div');
-            playerItem.className = 'selected-player-item';
-            
-            // Use player image if available, otherwise show initials
-            let imageHtml;
-            if (player.image_url) {
-                imageHtml = `<img src="${player.image_url}" alt="${player.name}">`;
-            } else {
-                const initials = player.name.charAt(0).toUpperCase();
-                imageHtml = `<div class="player-initials">${initials}</div>`;
-            }
-            
-            playerItem.innerHTML = `
-                ${imageHtml}
-                <div>
-                    <div>${index + 1}. ${player.name}</div>
-                    <div class="player-email">${player.email || ''}</div>
+        const roleImageSrc = `images/Role - ${roleImageName}.jpg`;
+        
+        // Add summary item
+        summaryHtml += `
+            <div class="summary-item" data-team="${teamClass}" style="padding:12px;border-bottom:1px solid #eee;display:flex;align-items:center;background-color:${getTeamBackgroundColor(teamClass)};">
+                <div class="summary-avatar" style="margin-right:12px;">
+                    <img src="${player.photo_url || 'images/default-avatar.svg'}" 
+                         alt="${player.name}" 
+                         style="width:50px;height:50px;object-fit:cover;border-radius:50%;"
+                         onerror="this.src='images/default-avatar.svg'">
                 </div>
-            `;
-            
-            selectedPlayersList.appendChild(playerItem);
-        });
-    }
-
-    // Function to start the game and go to player selection
-    function startGame() {
-        const playerCount = parseInt(playerCountInput.value);
-        if (playerCount < 4 || playerCount > 20) {
-            alert('Please select between 4 and 20 players');
-            return;
-        }
-
-        if (selectedRoles.length === 0) {
-            alert('Please select at least one role');
-            return;
-        }
-
-        // Fill remaining slots with citizens if needed
-        while (selectedRoles.length < playerCount) {
-            selectedRoles.push('citizen');
-        }
-
-        // Go to player selection screen
-        initializePlayerSelection();
-        showScreen('player-selection-screen');
-    }
-
-    // Function to start role assignment
-    function startRoleAssignment() {
-        const playerCount = parseInt(playerCountInput.value);
-        
-        // Check if enough players selected
-        if (selectedPlayers.length < playerCount) {
-            alert(`Please select ${playerCount} players`);
-            return;
-        }
-
-        // Randomize role assignments
-        roleAssignments = [];
-        
-        const shuffledRoles = [...selectedRoles];
-        for (let i = shuffledRoles.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [shuffledRoles[i], shuffledRoles[j]] = [shuffledRoles[j], shuffledRoles[i]];
-        }
-        
-        // Pair players with roles
-        for (let i = 0; i < playerCount; i++) {
-            roleAssignments.push({
-                player: selectedPlayers[i],
-                role: shuffledRoles[i]
-            });
-        }
-
-        currentRoleIndex = 0;
-        showScreen('game-screen');
-        showBlankPage();
-    }
-
-    // Function to show blank page
-    function showBlankPage() {
-        playerNumber.textContent = '';
-        playerName.textContent = '';
-        roleImage.innerHTML = '';
-        roleName.textContent = '';
-        roleName2.textContent = '';
-        
-        proceedBtn.style.display = 'block';
-        nextBtn.style.display = 'none';
-        
-        isShowingBlankPage = true;
-    }
-
-    // Function to show the next role
-    function showRole() {
-        if (currentRoleIndex >= roleAssignments.length) {
-            showSummary();
-            return;
-        }
-        
-        const assignment = roleAssignments[currentRoleIndex];
-        const role = roles[assignment.role];
-        const player = assignment.player;
-
-        playerNumber.textContent = `Player ${currentRoleIndex + 1}`;
-        playerName.textContent = player.name;
-        roleImage.innerHTML = `<img src="${role.image}" alt="${role.name}">`;
-        roleName.textContent = role.name;
-        roleName2.textContent = role.name2;
-        
-        proceedBtn.style.display = 'none';
-        nextBtn.style.display = 'block';
-        
-        currentRoleIndex++;
-        isShowingBlankPage = false;
-    }
-
-    // Function to show the summary
-    function showSummary() {
-        showScreen('summary-screen');
-
-        summaryList.innerHTML = '';
-
-        roleAssignments.forEach((assignment, index) => {
-            const role = roles[assignment.role];
-            const player = assignment.player;
-            const summaryItem = document.createElement('div');
-            summaryItem.className = 'summary-item';
-            
-            // Create player image element
-            const playerImageHtml = player.image_url
-                ? `<img src="${player.image_url}" alt="${player.name}" style="width: 30px; height: 30px; border-radius: 50%; margin-right: 10px;">`
-                : `<div style="width: 30px; height: 30px; border-radius: 50%; background-color: #ddd; display: flex; align-items: center; justify-content: center; margin-right: 10px;">${player.name.charAt(0)}</div>`;
-            
-            summaryItem.innerHTML = `
-                <div style="display: flex; align-items: center;">
-                    ${playerImageHtml}
-                    ${player.name}
+                <div class="summary-info" style="flex-grow:1;">
+                    <h3 style="margin:0;font-size:1rem;">${player.name}</h3>
+                    <p class="summary-role" style="margin:0;color:#666;font-size:0.9rem;">${roleName}</p>
                 </div>
-                <div>${role.name} (${role.name2})</div>
-            `;
-            summaryList.appendChild(summaryItem);
-        });
+                <div class="summary-role-icon" style="width:40px;height:40px;border-radius:4px;overflow:hidden;">
+                    <img src="${roleImageSrc}" 
+                         alt="${roleName}" 
+                         style="width:100%;height:100%;object-fit:cover;"
+                         onerror="this.src='images/default-avatar.svg'">
+                </div>
+            </div>
+        `;
+    });
+    
+    summaryHtml += `
+            </div>
+        </div>
+    `;
+    
+    // Insert summary below the all-assigned message
+    const currentPlayerDiv = document.getElementById('current-player');
+    currentPlayerDiv.innerHTML += summaryHtml;
+}
+
+// Helper function to get background color based on team
+function getTeamBackgroundColor(team) {
+    switch(team) {
+        case 'mafia':
+            return '#ffcdd2'; // Pastel red
+        case 'independent':
+            return '#e1bee7'; // Pastel purple
+        case 'citizen':
+        default:
+            return '#c8e6c9'; // Pastel green
     }
+}
 
-    // Function to reset the game
-    function resetGame() {
-        selectedRoles = Object.keys(roles);
-        currentRoleIndex = 0;
-        roleAssignments = [];
-        isShowingBlankPage = false;
-        selectedPlayers = [];
-        
-        // Reset role cards
-        document.querySelectorAll('.role-card').forEach(card => {
-            card.classList.add('selected');
-        });
-
-        showScreen('setup-screen');
+// Start the actual game
+function startGame() {
+    if (!allRolesAssigned) {
+        console.error("Not all roles have been assigned yet");
+        return;
     }
+    // Update game phase
+    gameState.gamePhase = 'night';
+    gameState.currentRound = 1;
+    // Save updated game state
+    localStorage.setItem('gameState', JSON.stringify(gameState));
+    // Display game info
+    document.querySelector('.role-reveal').style.display = 'none';
+    document.getElementById('game-info').style.display = 'block';
+    renderGamePhase();
+}
 
-    // Helper function to show a screen
-    function showScreen(screenId) {
-        document.querySelectorAll('.screen').forEach(screen => {
-            screen.classList.remove('active');
-        });
-        document.getElementById(screenId).classList.add('active');
+// Render the current game phase and actions
+function renderGamePhase() {
+    const phase = gameState.gamePhase;
+    const round = gameState.currentRound;
+    let phaseTitle = '';
+    let phaseDesc = '';
+    if (phase === 'night') {
+        phaseTitle = `Night Phase - Round ${round}`;
+        phaseDesc = 'The Mafia and special roles can now perform their actions.';
+    } else if (phase === 'day') {
+        phaseTitle = `Day Phase - Round ${round}`;
+        phaseDesc = 'Players discuss and vote to eliminate a suspect.';
+    } else {
+        phaseTitle = `Game Phase`;
+        phaseDesc = '';
     }
+    document.getElementById('game-phase').innerHTML = `
+        <h2>${phaseTitle}</h2>
+        <p>${phaseDesc}</p>
+    `;
+    document.getElementById('game-actions').innerHTML = `
+        <button id="next-phase-btn" class="btn btn-primary">Next Phase</button>
+        <button id="reset-btn" class="btn" style="margin-left:1rem;">Back to Home (reset)</button>
+    `;
+    document.getElementById('next-phase-btn').onclick = nextPhase;
+    document.getElementById('reset-btn').onclick = function() {
+        // Clear game state and go back to home
+        // (No need to save players, DatabaseManager handles that)
+        localStorage.removeItem('gameState');
+        localStorage.removeItem('selectedPlayers');
+        window.location.href = 'index.html';
+    };
+}
 
-    // Event listeners
-    startGameBtn.addEventListener('click', startGame);
-    startAssignmentBtn.addEventListener('click', startRoleAssignment);
-    proceedBtn.addEventListener('click', showRole);
-    nextBtn.addEventListener('click', showBlankPage);
-    newGameBtn.addEventListener('click', resetGame);
-}); 
+// Advance to the next phase (cycle night/day, increment round)
+function nextPhase() {
+    if (gameState.gamePhase === 'night') {
+        gameState.gamePhase = 'day';
+    } else {
+        gameState.gamePhase = 'night';
+        gameState.currentRound++;
+    }
+    localStorage.setItem('gameState', JSON.stringify(gameState));
+    renderGamePhase();
+}
+
+// Helper function to get role information
+function getRoleInfo(roleId) {
+    // Try to get the role info from the ROLES array (from roles.js)
+    if (typeof getRoleById === 'function') {
+        const role = getRoleById(roleId);
+        if (role) {
+            return {
+                name: role.name,
+                description: role.description,
+                image: role.image
+            };
+        }
+    }
+    
+    // Fallback to hardcoded roles if getRoleById is not available
+    const roleInfo = {
+        mafia: {
+            name: 'Mafia',
+            description: 'Eliminate citizens without being caught. You know who the other mafia members are.',
+            image: 'images/roles/mafia.png'
+        },
+        detective: {
+            name: 'Detective',
+            description: 'Investigate one player each night to determine if they are mafia.',
+            image: 'images/roles/detective.png'
+        },
+        doctor: {
+            name: 'Doctor',
+            description: 'Save one player each night from being eliminated by the mafia.',
+            image: 'images/roles/doctor.png'
+        },
+        civilian: {
+            name: 'Civilian',
+            description: 'Work with other players to identify the mafia during the day.',
+            image: 'images/roles/civilian.png'
+        }
+    };
+    
+    return roleInfo[roleId] || {
+        name: roleId.charAt(0).toUpperCase() + roleId.slice(1),
+        description: 'This role is not defined in detail.',
+        image: 'images/default-avatar.svg'
+    };
+} 

@@ -3,47 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mafia Game - Homepage</title>
+    <title>Mafia Game - Game Play</title>
     <link rel="stylesheet" href="styles.css">
     <!-- Supabase JS -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- Simplified database connection -->
     <script>
-        // Simple database connection
-        const SUPABASE_URL = 'https://isagurhfcktnnldvntse.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlzYWd1cmhmY2t0bm5sZHZudHNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQzNTY4NTAsImV4cCI6MjA1OTkzMjg1MH0.WYOhUCj5wD7AUCuxpDerOkwV_XvBAGapTEztRoJC2Q0';
-        
-        document.addEventListener('DOMContentLoaded', function() {
-            try {
-                console.log('Initializing Supabase client...');
-                window.supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-                console.log('Supabase client initialized successfully');
-            } catch (error) {
-                console.error('Error initializing Supabase client:', error);
-            }
-        });
+        // Create global variable for debugging
+        window.supabaseLoaded = true;
     </script>
+    <!-- Database manager -->
+    <script src="database.js"></script>
+    <!-- Roles JS -->
+    <script src="roles.js"></script>
+    <!-- Game JS -->
+    <script src="game.js"></script>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>Welcome to Mafia Game</h1>
-            <p>Choose an option to begin</p>
+            <h1>Game Play</h1>
+            <p id="game-status">Assigning roles to players...</p>
         </header>
 
         <main>
             <div id="connection-status"></div>
             
-            <div class="game-intro">
-                <img src="images/Splash.jpg" alt="Mafia Game" class="splash-image">
-                <p>Experience the ultimate party game of deception, strategy, and social deduction.</p>
-            </div>
+            <!-- Role reveal section -->
+            <section class="role-reveal">
+                <div id="current-player"></div>
+                <div id="role-display" class="role-display">
+                    <!-- Role information will be shown here -->
+                </div>
+                <div class="actions">
+                    <button id="view-role-btn" class="btn">View Your Role</button>
+                    <button id="hide-role-btn" class="btn" style="display: none;">Hide Role</button>
+                    <button id="next-player-btn" class="btn" style="display: none;">Next Player</button>
+                    <button id="start-game-btn" class="btn btn-primary" style="display: none;">Start Game</button>
+                </div>
+            </section>
             
-            <div class="menu-buttons">
-                <a href="player-selection.html" class="btn btn-primary">Start Game</a>
-                <a href="roles.html" class="btn">Character Roles</a>
-                <a href="about.html" class="btn">About the Game</a>
-            </div>
+            <!-- Game information section -->
+            <section id="game-info" style="display: none;">
+                <div id="game-phase"></div>
+                <div id="game-actions"></div>
+            </section>
         </main>
 
         <footer>

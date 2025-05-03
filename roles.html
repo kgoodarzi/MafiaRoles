@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mafia Game - Roles Information</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        // Create global variable for debugging
+        window.supabaseLoaded = true;
+    </script>
+    <!-- Database manager -->
+    <script src="database.js"></script>
+    <!-- Roles JS -->
+    <script src="roles.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Mafia Game Roles</h1>
+            <p>Information about all possible roles in the game</p>
+        </header>
+
+        <main>
+            <div id="connection-status"></div>
+            
+            <!-- Mafia Team -->
+            <section class="team-section">
+                <h2>Mafia Team</h2>
+                <p>
+                    The Mafia team knows each other and works together to eliminate town members
+                    without getting caught.
+                </p>
+                <div class="roles-list roles-grid" id="mafia-roles">
+                    <!-- Mafia roles will be populated here dynamically -->
+                </div>
+            </section>
+
+            <!-- Town Team -->
+            <section class="team-section">
+                <h2>Town Team</h2>
+                <p>
+                    The Town team's objective is to identify and eliminate all Mafia members
+                    through logical deduction and careful observation.
+                </p>
+                <div class="roles-list roles-grid" id="town-roles">
+                    <!-- Town roles will be populated here dynamically -->
+                </div>
+            </section>
+
+            <!-- Independent Roles -->
+            <section class="team-section">
+                <h2>Independent Roles</h2>
+                <p>
+                    Independent roles have their own unique victory conditions and generally
+                    operate outside the framework of the two main teams.
+                </p>
+                <div class="roles-list roles-grid" id="independent-roles">
+                    <!-- Independent roles will be populated here dynamically -->
+                </div>
+            </section>
+
+            <div class="actions">
+                <a href="index.html" class="btn">Back to Home</a>
+            </div>
+        </main>
+
+        <footer>
+            <p>&copy; 2025 KRS Consulting Inc.</p>
+        </footer>
+    </div>
+</body>
+<script>
+    // Simple connection status check
+    document.addEventListener('DOMContentLoaded', function() {
+        const statusElem = document.getElementById('connection-status');
+        if (!statusElem) return;
+        
+        statusElem.innerHTML = '<div class="status-loading">Checking database connection...</div>';
+        
+        // Check for Supabase client after a delay
+        setTimeout(function() {
+            if (window.supabase) {
+                statusElem.innerHTML = '<div class="status-ok">Database connected</div>';
+                console.log('Database connected successfully');
+            } else {
+                statusElem.innerHTML = '<div class="status-error">Not connected to database</div>';
+                console.error('Supabase client not initialized');
+            }
+        }, 2000);
+    });
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Display all roles with images
+    if (typeof ROLES !== 'undefined' && Array.isArray(ROLES)) {
+        const mafiaContainer = document.getElementById('mafia-roles');
+        const townContainer = document.getElementById('town-roles');
+        const independentContainer = document.getElementById('independent-roles');
+        ROLES.forEach(role => {
+            const roleCard = document.createElement('div');
+            roleCard.className = 'role-card';
+            roleCard.setAttribute('data-team', role.team);
+            const roleImageName = role.name;
+            const roleImageSrc = `images/Role - ${roleImageName}.jpg`;
+            roleCard.innerHTML = `
+                <img src="${roleImageSrc}" alt="${role.name}" onerror="this.src='images/default-avatar.svg'">
+                <h4>${role.name}</h4>
+                <p>${role.description}</p>
+            `;
+            // Custom team mapping
+            if (role.name === 'Godfather' || role.name === 'Magician' || role.name === 'Bomber') {
+                mafiaContainer.appendChild(roleCard);
+            } else if (role.name === 'Professional' || role.team === 'citizen') {
+                townContainer.appendChild(roleCard);
+            } else if (role.name === 'Zodiac' || role.team === 'independent') {
+                independentContainer.appendChild(roleCard);
+            }
+        });
+    }
+});
+</script>
+</html> 

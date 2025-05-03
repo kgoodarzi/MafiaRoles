@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mafia Game - Role Selection</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Include roles.js first so getEnabledRoles is available -->
+    <script src="roles.js"></script>
+    <!-- External database manager -->
+    <script src="database.js"></script>
+    <!-- Role selection JS -->
+    <script src="role-selection.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Role Selection</h1>
+            <p>Configure the roles for this game</p>
+        </header>
+
+        <main>
+            <div id="connection-status"></div>
+            
+            <section class="role-config">
+                <h2>Game Configuration</h2>
+                <div class="players-summary">
+                    <p>Total Players: <span id="total-players">0</span></p>
+                </div>
+                <!-- Show current roles that will be assigned -->
+                <div class="current-roles-section">
+                    <h3>Roles to be assigned</h3>
+                    <div id="current-roles-list" class="roles-list roles-grid"></div>
+                </div>
+                <div class="role-validation">
+                    <p id="role-validation-message"></p>
+                </div>
+            </section>
+
+            <section class="selected-players">
+                <h2>Selected Players</h2>
+                <div id="selected-players-list" class="players-grid">
+                    <!-- Selected players will be shown here -->
+                </div>
+            </section>
+
+            <section class="game-actions">
+                <div id="game-controls">
+                    <a href="player-selection.html" class="btn">Back to Player Selection</a>
+                    <button id="assign-roles-btn" class="btn btn-primary">Assign Roles</button>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>&copy; 2025 KRS Consulting Inc.</p>
+        </footer>
+    </div>
+
+    <script>
+        // Simple connection status check
+        document.addEventListener('DOMContentLoaded', function() {
+            const statusElem = document.getElementById('connection-status');
+            if (!statusElem) return;
+            
+            statusElem.innerHTML = '<div class="status-loading">Checking database connection...</div>';
+            
+            // Check for Supabase client after a delay
+            setTimeout(function() {
+                if (window.supabase) {
+                    statusElem.innerHTML = '<div class="status-ok">Database connected</div>';
+                    console.log('Database connected successfully');
+                } else {
+                    statusElem.innerHTML = '<div class="status-error">Not connected to database</div>';
+                    console.error('Supabase client not initialized');
+                }
+            }, 2000);
+        });
+    </script>
+</body>
+</html> 

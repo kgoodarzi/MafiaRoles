@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Player</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        const SUPABASE_URL = 'https://isagurhfcktnnldvntse.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlzYWd1cmhmY2t0bm5sZHZudHNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQzNTY4NTAsImV4cCI6MjA1OTkzMjg1MH0.WYOhUCj5wD7AUCuxpDerOkwV_XvBAGapTEztRoJC2Q0';
+        let supabaseClient;
+        let currentPlayer = null;
+        
+        document.addEventListener('DOMContentLoaded', async function() {
+            supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+            const params = new URLSearchParams(window.location.search);
+            const username = params.get('username');
+            if (!username) {
+                document.getElementById('edit-player-form').innerHTML = '<p class="status-error">No player selected.</p>';
+                return;
+            }
+            // Fetch player data
+            const { data, error } = await supabaseClient
+                .from('profiles')
+                .select('username, full_name, photo, email')
+                .eq('username', username)
+                .single();
+            if (error || !data) {
+                document.getElementById('edit-player-form').innerHTML = '<p class="status-error">Player not found.</p>';
+                return;
+            }
+            currentPlayer = data;
+            // Prefill form
+            document.getElementById('player-username').value = data.username || '';
+            document.getElementById('player-fullname').value = data.full_name || '';
+            document.getElementById('player-email').value = data.email || '';
+            document.getElementById('avatar-preview-img').src = data.photo || 'images/default-avatar.svg';
+        });
+
+        // Handle avatar preview
+        function handleAvatarPreview(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            if (!file.type.match('image.*')) {
+                alert('Please select an image file');
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('avatar-preview-img').src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Handle form submission
+        async function handleEditPlayer(event) {
+            event.preventDefault();
+            const username = document.getElementById('player-username').value.trim();
+            const fullName = document.getElementById('player-fullname').value.trim();
+            const email = document.getElementById('player-email').value.trim();
+            const avatarFile = document.getElementById('player-avatar').files[0];
+            let photoUrl = currentPlayer.photo || 'images/default-avatar.svg';
+            try {
+                // Handle avatar upload if provided
+                if (avatarFile) {
+                    const photoFileName = `${Date.now()}_${username}`;
+                    console.log('Uploading file to images bucket:', photoFileName, avatarFile);
+                    const { data: uploadData, error: uploadError } = await supabaseClient
+                        .storage
+                        .from('images')
+                        .upload(photoFileName, avatarFile, { upsert: true });
+                    if (uploadError) {
+                        console.error('Error uploading photo:', uploadError);
+                        alert('Error uploading photo: ' + uploadError.message);
+                        return;
+                    } else if (uploadData) {
+                        console.log('Upload data:', uploadData);
+                        const { data: urlData, error: urlError } = await supabaseClient
+                            .storage
+                            .from('images')
+                            .getPublicUrl(photoFileName);
+                        if (urlError) {
+                            console.error('Error getting public URL:', urlError);
+                            alert('Error getting public URL: ' + urlError.message);
+                            return;
+                        }
+                        console.log('Public URL data:', urlData);
+                        if (urlData && urlData.publicUrl) {
+                            photoUrl = urlData.publicUrl;
+                        } else {
+                            alert('Failed to get public URL for uploaded image.');
+                            return;
+                        }
+                    }
+                }
+                console.log('Final photoUrl to be saved:', photoUrl);
+                console.log('Updating where username =', currentPlayer.username);
+                // Update player in profiles table using original username as filter
+                const { data: updateData, error: updateError } = await supabaseClient
+                    .from('profiles')
+                    .update({
+                        username: username,
+                        full_name: fullName,
+                        email: email,
+                        photo: photoUrl
+                    })
+                    .eq('username', currentPlayer.username);
+                console.log('Update response:', updateData, updateError);
+                if (updateError) {
+                    console.error('Error updating player:', updateError);
+                    alert('Error updating player: ' + updateError.message);
+                    return;
+                }
+                if (!updateData || updateData.length === 0) {
+                    alert('No player record was updated. Please check the username filter and try again.');
+                    return;
+                }
+                alert('Player updated successfully!');
+                window.location.href = 'player-selection.html';
+            } catch (err) {
+                console.error('Unexpected error in handleEditPlayer:', err);
+                alert('Unexpected error: ' + (err.message || err));
+            }
+        }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Edit Player</h1>
+            <p>Edit the selected player's information</p>
+        </header>
+        <main>
+            <form id="edit-player-form" class="add-player-form" onsubmit="handleEditPlayer(event)">
+                <div class="form-group avatar-upload">
+                    <div id="avatar-preview" class="avatar-preview">
+                        <img id="avatar-preview-img" src="images/default-avatar.svg" alt="Player Avatar">
+                        <div class="avatar-overlay">Click to change</div>
+                    </div>
+                    <input type="file" id="player-avatar" accept="image/*" style="display: none;" onchange="handleAvatarPreview(event)">
+                </div>
+                <div class="form-group">
+                    <label for="player-username">Username:</label>
+                    <input type="text" id="player-username" required>
+                </div>
+                <div class="form-group">
+                    <label for="player-fullname">Full Name:</label>
+                    <input type="text" id="player-fullname" required>
+                </div>
+                <div class="form-group">
+                    <label for="player-email">Email:</label>
+                    <input type="email" id="player-email">
+                </div>
+                <div class="actions">
+                    <a href="player-selection.html" class="btn">Cancel</a>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </main>
+        <footer>
+            <p>&copy; 2025 KRS Consulting Inc.</p>
+        </footer>
+    </div>
+    <script>
+        // Avatar preview click handler
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('avatar-preview').addEventListener('click', function() {
+                document.getElementById('player-avatar').click();
+            });
+        });
+    </script>
+</body>
+</html> 
