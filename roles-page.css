@@ -1,0 +1,94 @@
+/* Roles Page Specific Styling */
+
+/* Target only the roles page with attribute or class selectors */
+body[data-page="roles"] .role-card,
+.roles-page .role-card,
+.team-section .roles-list .role-card {
+    width: auto !important;             /* Allow cards to fit container */
+    max-width: 100% !important;         /* Prevent overflow */
+    height: auto !important;            /* Allow natural height */
+    min-height: 230px !important;       /* Reasonable minimum height */
+    max-height: 300px !important;       /* Limit maximum height */
+    overflow: hidden !important;        /* Prevent content overflow */
+    margin: 10px !important;            /* Provide consistent margins */
+    padding: 15px !important;           /* Reasonable padding */
+    box-sizing: border-box !important;  /* Include padding in width calculations */
+    border-radius: 8px !important;      /* Consistent rounded corners */
+    display: flex !important;           /* Use flexbox for layout */
+    flex-direction: column !important;  /* Stack contents vertically */
+    align-items: center !important;     /* Center contents horizontally */
+}
+
+/* Fix role images to reasonable size */
+body[data-page="roles"] .role-card img,
+.roles-page .role-card img,
+.team-section .roles-list .role-card img {
+    height: 120px !important;           /* Fixed image height */
+    width: auto !important;             /* Maintain aspect ratio */
+    max-width: 100% !important;         /* Prevent overflow */
+    object-fit: contain !important;     /* Keep image proportions */
+    margin-bottom: 10px !important;     /* Space below image */
+}
+
+/* Adjust role title to fit better */
+body[data-page="roles"] .role-card h3,
+.roles-page .role-card h3,
+.team-section .roles-list .role-card h3,
+.role-card .role-title {
+    font-size: 1.1rem !important;       /* Smaller font size */
+    margin: 5px 0 !important;           /* Reduce margins */
+    text-align: center !important;      /* Center text */
+}
+
+/* Make role description more compact */
+body[data-page="roles"] .role-card .role-description,
+.roles-page .role-card .role-description,
+.team-section .roles-list .role-card .role-description {
+    font-size: 0.85rem !important;      /* Smaller font size */
+    line-height: 1.4 !important;        /* Tighter line height */
+    margin-top: 5px !important;         /* Less space at top */
+    max-height: 100px !important;       /* Limit height */
+    overflow-y: auto !important;        /* Allow scrolling if needed */
+}
+
+/* Adjust the roles grid to fit 3 cards per row on larger screens */
+.roles-list.roles-grid {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)) !important;
+    gap: 15px !important;
+    padding: 10px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+/* Make sure team sections don't extend beyond viewport */
+.team-section {
+    margin-bottom: 30px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+/* Responsive adjustments for smaller screens */
+@media (max-width: 768px) {
+    .roles-list.roles-grid {
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)) !important;
+    }
+    
+    body[data-page="roles"] .role-card img,
+    .roles-page .role-card img,
+    .team-section .roles-list .role-card img {
+        height: 100px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .roles-list.roles-grid {
+        grid-template-columns: 1fr 1fr !important;
+    }
+    
+    body[data-page="roles"] .role-card,
+    .roles-page .role-card,
+    .team-section .roles-list .role-card {
+        min-height: 200px !important;
+    }
+} 
