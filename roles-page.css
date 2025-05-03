@@ -4,8 +4,8 @@
 body[data-page="roles"] .role-card,
 .roles-page .role-card,
 .team-section .roles-list .role-card {
-    width: auto !important;             /* Allow cards to fit container */
-    max-width: 100% !important;         /* Prevent overflow */
+    width: calc(50% - 20px) !important; /* Exactly half width minus margins */
+    max-width: calc(50% - 20px) !important; /* Ensure maximum is also half width */
     height: auto !important;            /* Allow natural height */
     min-height: 230px !important;       /* Reasonable minimum height */
     max-height: 300px !important;       /* Limit maximum height */
@@ -17,6 +17,7 @@ body[data-page="roles"] .role-card,
     display: flex !important;           /* Use flexbox for layout */
     flex-direction: column !important;  /* Stack contents vertically */
     align-items: center !important;     /* Center contents horizontally */
+    justify-content: flex-start !important; /* Align content to top */
 }
 
 /* Fix role images to reasonable size */
@@ -38,6 +39,7 @@ body[data-page="roles"] .role-card h3,
     font-size: 1.1rem !important;       /* Smaller font size */
     margin: 5px 0 !important;           /* Reduce margins */
     text-align: center !important;      /* Center text */
+    width: 100% !important;             /* Full width */
 }
 
 /* Make role description more compact */
@@ -49,16 +51,29 @@ body[data-page="roles"] .role-card .role-description,
     margin-top: 5px !important;         /* Less space at top */
     max-height: 100px !important;       /* Limit height */
     overflow-y: auto !important;        /* Allow scrolling if needed */
+    width: 100% !important;             /* Full width */
 }
 
-/* Adjust the roles grid to fit 3 cards per row on larger screens */
-.roles-list.roles-grid {
+/* Force the roles grid to be exactly 2 columns */
+.roles-list.roles-grid,
+.team-section .roles-list,
+#mafia-roles,
+#town-roles,
+#independent-roles {
     display: grid !important;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)) !important;
-    gap: 15px !important;
-    padding: 10px !important;
-    width: 100% !important;
+    grid-template-columns: 1fr 1fr !important; /* Exactly 2 columns */
+    gap: 0 !important;                 /* No gap between items */
+    padding: 0 !important;             /* No padding */
+    width: 100% !important;            /* Full width */
     box-sizing: border-box !important;
+    justify-content: space-between !important;
+}
+
+/* Make sure container doesn't restrict width */
+.container {
+    width: 100% !important;
+    max-width: 1200px !important;
+    padding: 1rem !important;
 }
 
 /* Make sure team sections don't extend beyond viewport */
@@ -66,29 +81,67 @@ body[data-page="roles"] .role-card .role-description,
     margin-bottom: 30px !important;
     width: 100% !important;
     box-sizing: border-box !important;
+    padding: 0 !important;
 }
 
-/* Responsive adjustments for smaller screens */
+/* Adjust neon effects to not overflow */
+body[data-page="roles"] .role-card::before,
+.roles-page .role-card::before {
+    border-radius: 6px !important;
+}
+
+/* Make role cards in each section align in rows */
+.team-section .roles-list {
+    width: 100% !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+}
+
+/* Ensure consistent margin/padding on cards */
+body[data-page="roles"] main,
+.roles-page main {
+    width: 100% !important;
+    padding: 0 !important;
+}
+
+/* Mobile adjustments - keep 2 columns but smaller cards */
 @media (max-width: 768px) {
-    .roles-list.roles-grid {
-        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)) !important;
-    }
-    
     body[data-page="roles"] .role-card img,
     .roles-page .role-card img,
     .team-section .roles-list .role-card img {
         height: 100px !important;
-    }
-}
-
-@media (max-width: 480px) {
-    .roles-list.roles-grid {
-        grid-template-columns: 1fr 1fr !important;
     }
     
     body[data-page="roles"] .role-card,
     .roles-page .role-card,
     .team-section .roles-list .role-card {
         min-height: 200px !important;
+        padding: 10px !important;
+    }
+    
+    body[data-page="roles"] .role-card .role-description,
+    .roles-page .role-card .role-description,
+    .team-section .roles-list .role-card .role-description {
+        max-height: 70px !important;
+        font-size: 0.8rem !important;
+    }
+}
+
+/* Very small screens - stack cards vertically */
+@media (max-width: 480px) {
+    .roles-list.roles-grid,
+    .team-section .roles-list,
+    #mafia-roles,
+    #town-roles,
+    #independent-roles {
+        grid-template-columns: 1fr !important; /* Single column */
+    }
+    
+    body[data-page="roles"] .role-card,
+    .roles-page .role-card,
+    .team-section .roles-list .role-card {
+        width: 95% !important;
+        max-width: 95% !important;
+        margin: 10px auto !important;
     }
 } 
