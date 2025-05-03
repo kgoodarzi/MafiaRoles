@@ -147,11 +147,28 @@
                 const teamClass = role.team === 'mafia' ? 'team-mafia' : 
                                  (role.team === 'citizen' ? 'team-citizen' : 'team-independent');
                                  
-                roleCard.innerHTML = `
-                    <img src="${roleImageSrc}" alt="${role.name}" onerror="this.src='images/default-avatar.svg'">
-                    <h3 class="role-title">${role.name}</h3>
-                    <p class="role-description">${role.description}</p>
-                `;
+                // Create elements with appropriate structure matching role-selection.html
+                const imageContainer = document.createElement('div');
+                imageContainer.className = 'role-image-container';
+                
+                const img = document.createElement('img');
+                img.src = roleImageSrc;
+                img.alt = role.name;
+                img.onerror = function() { this.src = 'images/default-avatar.svg'; };
+                
+                const title = document.createElement('h3');
+                title.className = 'role-title';
+                title.textContent = role.name;
+                
+                const description = document.createElement('p');
+                description.className = 'role-description';
+                description.textContent = role.description;
+                
+                // Assemble the card
+                imageContainer.appendChild(img);
+                roleCard.appendChild(imageContainer);
+                roleCard.appendChild(description);
+                roleCard.appendChild(title);
                 
                 // Custom team mapping
                 if (role.team === 'mafia') {
