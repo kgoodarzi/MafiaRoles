@@ -1,16 +1,33 @@
 /* Roles Page Specific Styling */
 
+/* Make sure the body shows the top of the page */
+body.roles-page {
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+    overflow-x: hidden !important; /* Prevent horizontal scrolling */
+}
+
+/* Ensure the container has proper spacing */
+body.roles-page .container,
+body[data-page="roles"] .container {
+    width: 95% !important;
+    max-width: 1200px !important;
+    margin: 0 auto !important;
+    padding: 1rem !important;
+    overflow: visible !important;
+}
+
 /* Target only the roles page with attribute or class selectors */
 body[data-page="roles"] .role-card,
 .roles-page .role-card,
 .team-section .roles-list .role-card {
-    width: calc(50% - 20px) !important; /* Exactly half width minus margins */
-    max-width: calc(50% - 20px) !important; /* Ensure maximum is also half width */
+    width: 48% !important;              /* Slightly less than half to account for spacing */
+    max-width: 48% !important;          /* Ensure maximum is also less than half */
     height: auto !important;            /* Allow natural height */
     min-height: 230px !important;       /* Reasonable minimum height */
     max-height: 300px !important;       /* Limit maximum height */
     overflow: hidden !important;        /* Prevent content overflow */
-    margin: 10px !important;            /* Provide consistent margins */
+    margin: 5px !important;             /* Smaller margins */
     padding: 15px !important;           /* Reasonable padding */
     box-sizing: border-box !important;  /* Include padding in width calculations */
     border-radius: 8px !important;      /* Consistent rounded corners */
@@ -18,6 +35,7 @@ body[data-page="roles"] .role-card,
     flex-direction: column !important;  /* Stack contents vertically */
     align-items: center !important;     /* Center contents horizontally */
     justify-content: flex-start !important; /* Align content to top */
+    float: left !important;             /* Use float as a fallback */
 }
 
 /* Fix role images to reasonable size */
@@ -54,26 +72,29 @@ body[data-page="roles"] .role-card .role-description,
     width: 100% !important;             /* Full width */
 }
 
-/* Force the roles grid to be exactly 2 columns */
+/* Force grid layout but also use fallback methods */
 .roles-list.roles-grid,
 .team-section .roles-list,
 #mafia-roles,
 #town-roles,
 #independent-roles {
-    display: grid !important;
-    grid-template-columns: 1fr 1fr !important; /* Exactly 2 columns */
-    gap: 0 !important;                 /* No gap between items */
-    padding: 0 !important;             /* No padding */
-    width: 100% !important;            /* Full width */
+    display: block !important;          /* Fallback to block display */
+    width: 100% !important;             /* Full width */
     box-sizing: border-box !important;
-    justify-content: space-between !important;
+    overflow: hidden !important;        /* Clearfix for floats */
+    margin: 0 auto !important;
+    padding: 0 !important;
 }
 
-/* Make sure container doesn't restrict width */
-.container {
-    width: 100% !important;
-    max-width: 1200px !important;
-    padding: 1rem !important;
+/* Clearfix for floating elements */
+.roles-list.roles-grid::after,
+.team-section .roles-list::after,
+#mafia-roles::after,
+#town-roles::after,
+#independent-roles::after {
+    content: "" !important;
+    display: table !important;
+    clear: both !important;
 }
 
 /* Make sure team sections don't extend beyond viewport */
@@ -82,6 +103,8 @@ body[data-page="roles"] .role-card .role-description,
     width: 100% !important;
     box-sizing: border-box !important;
     padding: 0 !important;
+    overflow: hidden !important;        /* Ensure no overflow */
+    clear: both !important;             /* Clear previous floats */
 }
 
 /* Adjust neon effects to not overflow */
@@ -90,18 +113,12 @@ body[data-page="roles"] .role-card::before,
     border-radius: 6px !important;
 }
 
-/* Make role cards in each section align in rows */
-.team-section .roles-list {
-    width: 100% !important;
-    margin: 0 auto !important;
-    padding: 0 !important;
-}
-
 /* Ensure consistent margin/padding on cards */
 body[data-page="roles"] main,
 .roles-page main {
     width: 100% !important;
     padding: 0 !important;
+    overflow: visible !important;
 }
 
 /* Mobile adjustments - keep 2 columns but smaller cards */
@@ -129,19 +146,12 @@ body[data-page="roles"] main,
 
 /* Very small screens - stack cards vertically */
 @media (max-width: 480px) {
-    .roles-list.roles-grid,
-    .team-section .roles-list,
-    #mafia-roles,
-    #town-roles,
-    #independent-roles {
-        grid-template-columns: 1fr !important; /* Single column */
-    }
-    
     body[data-page="roles"] .role-card,
     .roles-page .role-card,
     .team-section .roles-list .role-card {
         width: 95% !important;
         max-width: 95% !important;
         margin: 10px auto !important;
+        float: none !important;
     }
 } 
