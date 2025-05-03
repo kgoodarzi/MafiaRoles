@@ -1,0 +1,1514 @@
+/* Neon Glow Effects */
+
+/* Define the glowing color variables */
+:root {
+    --neon-green: #0fa;
+    --neon-red: #f14;
+    --neon-purple: #c6f;
+    --neon-blue: #0cf;
+    
+    --glow-spread: 5px;
+    --glow-intensity: 0.7;
+    --glow-radius: 8px;
+}
+
+/* Glow Animation */
+@keyframes neonPulse {
+    0% {
+        filter: drop-shadow(0 0 var(--glow-spread) var(--glow-color)) 
+               drop-shadow(0 0 calc(var(--glow-spread) * 1.5) var(--glow-color));
+    }
+    50% {
+        filter: drop-shadow(0 0 calc(var(--glow-spread) * 2) var(--glow-color)) 
+               drop-shadow(0 0 calc(var(--glow-spread) * 3) var(--glow-color));
+    }
+    100% {
+        filter: drop-shadow(0 0 var(--glow-spread) var(--glow-color)) 
+               drop-shadow(0 0 calc(var(--glow-spread) * 1.5) var(--glow-color));
+    }
+}
+
+/* Player card neon styling */
+.player-card {
+    position: relative;
+    border: 2px solid transparent;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+/* Add pseudo-element for the glow effect to avoid layout shifts */
+.player-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: -1;
+    border-radius: inherit;
+    transition: all 0.3s ease;
+}
+
+/* Green neon glow for selected player cards */
+.player-card.selected {
+    border-color: var(--neon-green);
+}
+
+.player-card.selected::before {
+    --glow-color: var(--neon-green);
+    animation: neonPulse 2s infinite;
+}
+
+/* Purple neon glow for the current player in game view */
+#current-player .player-card {
+    border-color: var(--neon-purple);
+}
+
+#current-player .player-card::before {
+    --glow-color: var(--neon-purple);
+    animation: neonPulse 2s infinite;
+}
+
+/* Role card neon effects */
+.role-card {
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.role-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: -1;
+    border-radius: inherit;
+    transition: all 0.3s ease;
+}
+
+/* Team-specific neon glows */
+.role-card[data-team="mafia"], 
+#mafia-roles .role-card,
+.team-mafia {
+    border-color: var(--neon-red);
+}
+
+.role-card[data-team="mafia"]::before,
+#mafia-roles .role-card::before,
+.team-mafia::before {
+    --glow-color: var(--neon-red);
+    animation: neonPulse 2s infinite;
+}
+
+.role-card[data-team="citizen"],
+#town-roles .role-card,
+.team-citizen {
+    border-color: var(--neon-green);
+}
+
+.role-card[data-team="citizen"]::before,
+#town-roles .role-card::before,
+.team-citizen::before {
+    --glow-color: var(--neon-green);
+    animation: neonPulse 2s infinite;
+}
+
+.role-card[data-team="independent"],
+#independent-roles .role-card,
+.team-independent {
+    border-color: var(--neon-purple);
+}
+
+.role-card[data-team="independent"]::before,
+#independent-roles .role-card::before,
+.team-independent::before {
+    --glow-color: var(--neon-purple);
+    animation: neonPulse 2s infinite;
+}
+
+/* Apply neon effect to selected role cards */
+.role-card.selected {
+    border-color: var(--neon-blue);
+}
+
+.role-card.selected::before {
+    --glow-color: var(--neon-blue);
+    animation: neonPulse 2s infinite;
+}
+
+/* Neon buttons */
+.btn-primary {
+    position: relative;
+    overflow: hidden;
+    border: 2px solid var(--neon-green);
+}
+
+.btn-primary::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: -1;
+    border-radius: inherit;
+    --glow-color: var(--neon-green);
+    animation: neonPulse 2s infinite;
+}
+
+/* Neon status indicator */
+#connection-status.status-ok {
+    border: 1px solid var(--neon-green);
+}
+
+#connection-status.status-ok::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: -1;
+    border-radius: inherit;
+    --glow-color: var(--neon-green);
+    animation: neonPulse 2s infinite;
+}
+
+#connection-status.status-error {
+    border: 1px solid var(--neon-red);
+}
+
+#connection-status.status-error::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: -1;
+    border-radius: inherit;
+    --glow-color: var(--neon-red);
+    animation: neonPulse 2s infinite;
+}
+
+#connection-status.status-warning {
+    border: 1px solid var(--neon-purple);
+}
+
+#connection-status.status-warning::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: -1;
+    border-radius: inherit;
+    --glow-color: var(--neon-purple);
+    animation: neonPulse 2s infinite;
+}
+
+/* Dark mode enhancements */
+.dark-theme .player-card,
+.dark-theme .role-card,
+.dark-theme #connection-status {
+    --glow-intensity: 1;
+    --glow-spread: 7px;
+}
+
+/* Make neon effects more visible on dark backgrounds */
+.dark-theme .neon-text-green {
+    color: var(--neon-green);
+    text-shadow: 0 0 5px var(--neon-green), 0 0 10px var(--neon-green);
+}
+
+.dark-theme .neon-text-red {
+    color: var(--neon-red);
+    text-shadow: 0 0 5px var(--neon-red), 0 0 10px var(--neon-red);
+}
+
+.dark-theme .neon-text-purple {
+    color: var(--neon-purple);
+    text-shadow: 0 0 5px var(--neon-purple), 0 0 10px var(--neon-purple);
+}
+
+/* Reduce animation when user prefers reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    .player-card::before,
+    .role-card::before,
+    .btn-primary::before,
+    #connection-status::before {
+        animation: none;
+    }
+}
+
+/* Specific enhancements for roles page */
+.roles-list .role-card {
+    position: relative;
+    border-width: 3px;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+    transition: all 0.4s ease;
+    padding: 16px;
+    margin: 12px;
+    height: auto;
+    min-height: 300px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.roles-list .role-card img {
+    height: 120px;
+    object-fit: cover;
+    margin-bottom: 10px;
+    border-radius: 6px;
+}
+
+/* Enhance the border glow effect for role cards */
+.roles-list .role-card[data-team="mafia"] {
+    border-color: var(--neon-red);
+    box-shadow: 0 0 10px var(--neon-red), inset 0 0 5px var(--neon-red);
+}
+
+.roles-list .role-card[data-team="citizen"] {
+    border-color: var(--neon-green);
+    box-shadow: 0 0 10px var(--neon-green), inset 0 0 5px var(--neon-green);
+}
+
+.roles-list .role-card[data-team="independent"] {
+    border-color: var(--neon-purple);
+    box-shadow: 0 0 10px var(--neon-purple), inset 0 0 5px var(--neon-purple);
+}
+
+.roles-list .role-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+}
+
+.roles-list .role-card::before {
+    border-radius: 8px;
+    opacity: 0.8;
+}
+
+.roles-list .role-card:hover::before {
+    opacity: 1;
+}
+
+/* Extra intense glow for team section headers */
+.team-section h2.neon-text-red {
+    color: var(--neon-red);
+    text-shadow: 0 0 5px var(--neon-red), 
+                 0 0 10px var(--neon-red),
+                 0 0 20px var(--neon-red);
+}
+
+.team-section h2.neon-text-green {
+    color: var(--neon-green);
+    text-shadow: 0 0 5px var(--neon-green), 
+                 0 0 10px var(--neon-green),
+                 0 0 20px var(--neon-green);
+}
+
+.team-section h2.neon-text-purple {
+    color: var(--neon-purple);
+    text-shadow: 0 0 5px var(--neon-purple), 
+                 0 0 10px var(--neon-purple),
+                 0 0 20px var(--neon-purple);
+}
+
+/* Team indicator border around role images */
+.role-card[data-team="mafia"] img {
+    border: 2px solid var(--neon-red);
+    box-shadow: 0 0 8px var(--neon-red);
+}
+
+.role-card[data-team="citizen"] img {
+    border: 2px solid var(--neon-green);
+    box-shadow: 0 0 8px var(--neon-green);
+}
+
+.role-card[data-team="independent"] img {
+    border: 2px solid var(--neon-purple);
+    box-shadow: 0 0 8px var(--neon-purple);
+}
+
+/* Role title and description styling - using more specific selectors to override h3 styles */
+.roles-list .role-card h3.role-title,
+.team-section .roles-list .role-card h3.role-title,
+.dark-theme .roles-list .role-card h3.role-title,
+h3.role-title {
+    font-size: 1.0rem !important; /* Using !important to ensure override */
+    margin: 5px 0 2px !important;
+    font-weight: bold !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    color: inherit !important; /* Make sure color isn't being overridden */
+}
+
+.role-team {
+    font-size: 0.1rem;
+    font-weight: normal;
+    margin: 5px 0;
+    opacity: 0.85;
+}
+
+.role-description {
+    font-size: 0.85rem;
+    line-height: 1.4;
+    margin-top: 3px;
+    color: rgba(0, 0, 0, 0.85);
+    flex-grow: 0;
+}
+
+/* Apply standard (non-neon) text colors to role titles */
+.roles-list .role-card[data-team="mafia"] h3.role-title,
+.dark-theme .roles-list .role-card[data-team="mafia"] h3.role-title {
+    color: var(--neon-red) !important;
+    text-shadow: none !important;
+}
+
+.roles-list .role-card[data-team="citizen"] h3.role-title,
+.dark-theme .roles-list .role-card[data-team="citizen"] h3.role-title {
+    color: var(--neon-green) !important;
+    text-shadow: none !important;
+}
+
+.roles-list .role-card[data-team="independent"] h3.role-title,
+.dark-theme .roles-list .role-card[data-team="independent"] h3.role-title {
+    color: var(--neon-purple) !important;
+    text-shadow: none !important;
+}
+
+/* Remove hover glow effect for role titles */
+.roles-list .role-card[data-team="mafia"]:hover h3.role-title,
+.dark-theme .roles-list .role-card[data-team="mafia"]:hover h3.role-title {
+    text-shadow: none !important;
+}
+
+.roles-list .role-card[data-team="citizen"]:hover h3.role-title,
+.dark-theme .roles-list .role-card[data-team="citizen"]:hover h3.role-title {
+    text-shadow: none !important;
+}
+
+.roles-list .role-card[data-team="independent"]:hover h3.role-title,
+.dark-theme .roles-list .role-card[data-team="independent"]:hover h3.role-title {
+    text-shadow: none !important;
+}
+
+/* Role selection page styling - updated selectors with maximum specificity to override dark-theme.css */
+body #current-roles-list .role-card {
+    position: relative;
+    border-width: 3px !important;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.3) !important;
+    transition: all 0.3s ease;
+    padding: 12px;
+    margin: 10px;
+    overflow: hidden;
+    background-color: transparent !important;
+    border-style: solid !important; /* Force border style to be solid */
+    width: 90vw !important; /* Make cards almost full screen width */
+    max-width: 90vw !important;
+}
+
+/* Apply team-specific borders and glows to role cards on selection page */
+body #current-roles-list .role-card[data-team="mafia"] {
+    border-color: var(--neon-red) !important;
+    box-shadow: 0 0 10px var(--neon-red), inset 0 0 5px var(--neon-red) !important;
+    border: 3px solid var(--neon-red) !important; /* Explicitly set all border properties */
+}
+
+body #current-roles-list .role-card[data-team="citizen"] {
+    border-color: var(--neon-green) !important;
+    box-shadow: 0 0 10px var(--neon-green), inset 0 0 5px var(--neon-green) !important;
+    border: 3px solid var(--neon-green) !important; /* Explicitly set all border properties */
+}
+
+body #current-roles-list .role-card[data-team="independent"] {
+    border-color: var(--neon-purple) !important;
+    box-shadow: 0 0 10px var(--neon-purple), inset 0 0 5px var(--neon-purple) !important;
+    border: 3px solid var(--neon-purple) !important; /* Explicitly set all border properties */
+}
+
+/* Role selection page glow animations */
+body #current-roles-list .role-card[data-team="mafia"]::before {
+    --glow-color: var(--neon-red);
+    animation: neonPulse 2s infinite;
+    content: '' !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    z-index: -1 !important;
+    border-radius: inherit !important;
+}
+
+body #current-roles-list .role-card[data-team="citizen"]::before {
+    --glow-color: var(--neon-green);
+    animation: neonPulse 2s infinite;
+    content: '' !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    z-index: -1 !important;
+    border-radius: inherit !important;
+}
+
+body #current-roles-list .role-card[data-team="independent"]::before {
+    --glow-color: var(--neon-purple);
+    animation: neonPulse 2s infinite;
+    content: '' !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    z-index: -1 !important;
+    border-radius: inherit !important;
+}
+
+/* CSS fix to override dark-theme.css line 668 "border: none;" */
+html body #current-roles-list .role-card {
+    border-width: 3px !important;
+    border-style: solid !important;
+    width: 90vw !important; /* Make cards almost full screen width */
+    max-width: 90vw !important;
+}
+
+/* Role selection page hover effects */
+body #current-roles-list .role-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* Role title colors for role selection page without neon glow */
+body #current-roles-list .role-card[data-team="mafia"] h4,
+body.dark-theme #current-roles-list .role-card[data-team="mafia"] h4 {
+    color: var(--neon-red) !important;
+    text-shadow: none !important;
+    font-size: 1.2rem !important;
+    margin-top: 8px !important;
+    font-weight: bold !important;
+}
+
+body #current-roles-list .role-card[data-team="citizen"] h4,
+body.dark-theme #current-roles-list .role-card[data-team="citizen"] h4 {
+    color: var(--neon-green) !important;
+    text-shadow: none !important;
+    font-size: 1.2rem !important;
+    margin-top: 8px !important;
+    font-weight: bold !important;
+}
+
+body #current-roles-list .role-card[data-team="independent"] h4,
+body.dark-theme #current-roles-list .role-card[data-team="independent"] h4 {
+    color: var(--neon-purple) !important;
+    text-shadow: none !important;
+    font-size: 1.2rem !important;
+    margin-top: 8px !important;
+    font-weight: bold !important;
+}
+
+/* Fix for role images on selection page */
+body #current-roles-list .role-card .role-image-container {
+    width: 260px !important; /* Increased from 140px - almost 2x larger */
+    height: 260px !important; /* Increased from 140px - almost 2x larger */
+    margin: 0 auto 0.5rem !important;
+    border-radius: 8px !important;
+    overflow: hidden !important;
+    background-color: transparent !important;
+    border: none !important;
+}
+
+body #current-roles-list .role-card .role-image-container img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: contain !important;
+    border: 2px solid transparent !important;
+}
+
+body #current-roles-list .role-card[data-team="mafia"] .role-image-container img {
+    border-color: var(--neon-red) !important;
+    box-shadow: 0 0 8px var(--neon-red) !important;
+}
+
+body #current-roles-list .role-card[data-team="citizen"] .role-image-container img {
+    border-color: var(--neon-green) !important;
+    box-shadow: 0 0 8px var(--neon-green) !important;
+}
+
+body #current-roles-list .role-card[data-team="independent"] .role-image-container img {
+    border-color: var(--neon-purple) !important;
+    box-shadow: 0 0 8px var(--neon-purple) !important;
+}
+
+/* Extra styling for selected roles in the selection page */
+body #current-roles-list .role-card.selected {
+    border-color: var(--neon-blue) !important;
+    box-shadow: 0 0 15px var(--neon-blue), inset 0 0 8px var(--neon-blue) !important;
+    transform: translateY(-5px);
+    border: 3px solid var(--neon-blue) !important; /* Explicitly set all border properties */
+}
+
+body #current-roles-list .role-card.selected::before {
+    --glow-color: var(--neon-blue);
+    animation: neonPulse 1.5s infinite;
+    opacity: 1;
+}
+
+/* Override for dark-theme.css specific styling with max specificity */
+html body.dark-theme #current-roles-list .role-card[data-team="mafia"] {
+    border: 3px solid var(--neon-red) !important;
+}
+
+html body.dark-theme #current-roles-list .role-card[data-team="citizen"] {
+    border: 3px solid var(--neon-green) !important;
+}
+
+html body.dark-theme #current-roles-list .role-card[data-team="independent"] {
+    border: 3px solid var(--neon-purple) !important;
+}
+
+/* Adjust cards for responsive fit with further reduced height */
+#current-roles-list .role-card {
+    height: 300px !important; /* Increased height to accommodate larger images */
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Center horizontally */
+    justify-content: flex-start; /* Start from top */
+    padding: 1.5rem;
+    background-color: var(--card-bg);
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+    width: 90vw !important; /* Full screen width */
+    max-width: 90vw !important;
+    text-align: center; /* Ensure all content is centered */
+    position: relative; /* Allow absolute positioning of children */
+    border-width: 4px !important; /* Increase border width */
+}
+
+/* Roles grid styling for role selection page */
+#current-roles-list.roles-grid {
+    display: grid;
+    grid-template-columns: 1fr !important; /* Change to single column */
+    gap: 2rem; /* Increase gap between cards */
+    padding: 1.5rem;
+    max-height: none;
+    overflow: visible;
+    width: 100%;
+    box-sizing: border-box;
+    margin-left: 0; /* Remove the negative margin */
+}
+
+/* Styling for role cards on assign pages */
+.roles-list .role-card {
+    width: 90vw !important; /* Almost full screen width */
+    max-width: 90vw !important;
+    height: 300px !important; /* Increased height to fit larger image */
+    margin: 0 auto 1rem !important; /* Center cards */
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    position: relative !important;
+}
+
+.roles-list .role-card .role-image-container {
+    width: 260px !important; /* About 2x larger */
+    height: 260px !important; /* About 2x larger */
+    margin: 0 auto 0.5rem !important;
+    position: relative !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+}
+
+.roles-list .role-card .role-image-container img {
+    max-width: 100% !important;
+    max-height: 100% !important;
+    object-fit: contain !important;
+}
+
+/* Ensure the roles grid on assign pages displays cards in a single column */
+.roles-list {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    width: 100% !important;
+    padding: 1rem !important;
+    box-sizing: border-box !important;
+}
+
+/* Reset the previous general role card styling that might be too broad */
+[class*="assign"] .role-card,
+body [class*="assign"] .role-card,
+html body [class*="assign"] .role-card {
+    width: auto;
+    max-width: none;
+    height: auto;
+    border-width: initial;
+    border-style: initial;
+}
+
+[class*="assign"] .role-card .role-image-container,
+body [class*="assign"] .role-card .role-image-container,
+html body [class*="assign"] .role-card .role-image-container {
+    width: auto;
+    height: auto;
+    margin: initial;
+}
+
+/* Super-specific targeting for role cards during individual player assignment */
+body .role-reveal .role-card,
+body .role-display .role-card,
+html body .role-reveal .role-card,
+html body .role-display .role-card,
+body[data-page="game"] .role-card,
+#game-view .role-card {
+    width: 98vw !important; /* Almost full screen width */
+    max-width: 98vw !important;
+    height: 500px !important; /* Even taller for larger image */
+    margin: 0 auto 1rem !important; /* Center cards */
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important; /* Center content vertically */
+    position: relative !important;
+    border-width: 6px !important; /* Thicker border */
+    border-style: solid !important;
+    padding: 20px !important;
+    box-sizing: border-box !important;
+    z-index: 100 !important; /* Ensure it's above other elements */
+    transform: scale(1) !important; /* Reset any scaling */
+}
+
+/* Super-sized role images during individual assignment */
+body .role-reveal .role-image-container,
+body .role-display .role-image-container,
+html body .role-reveal .role-image-container,
+html body .role-display .role-image-container,
+body[data-page="game"] .role-image-container,
+#game-view .role-image-container {
+    width: 450px !important; /* Much larger image - about 3x original size */
+    height: 450px !important;
+    margin: 0 auto 1rem !important;
+    position: relative !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    z-index: 101 !important; /* Above the card */
+}
+
+/* Style role images in the assignment view */
+body .role-reveal .role-image-container img,
+body .role-display .role-image-container img,
+html body .role-reveal .role-image-container img,
+html body .role-display .role-image-container img,
+body[data-page="game"] .role-image-container img,
+#game-view .role-image-container img {
+    max-width: 100% !important;
+    max-height: 100% !important;
+    width: auto !important;
+    height: auto !important;
+    object-fit: contain !important;
+    border-width: 4px !important; /* Thicker border for images */
+    border-radius: 8px !important;
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.5) !important; /* Add shadow for depth */
+}
+
+/* Make team-specific styles more pronounced */
+body .role-reveal .role-card[data-team="mafia"] .role-image-container img,
+#game-view .role-card[data-team="mafia"] .role-image-container img {
+    border-color: var(--neon-red) !important;
+    box-shadow: 0 0 20px var(--neon-red) !important;
+}
+
+body .role-reveal .role-card[data-team="citizen"] .role-image-container img,
+#game-view .role-card[data-team="citizen"] .role-image-container img {
+    border-color: var(--neon-green) !important;
+    box-shadow: 0 0 20px var(--neon-green) !important;
+}
+
+body .role-reveal .role-card[data-team="independent"] .role-image-container img,
+#game-view .role-card[data-team="independent"] .role-image-container img {
+    border-color: var(--neon-purple) !important;
+    box-shadow: 0 0 20px var(--neon-purple) !important;
+}
+
+/* Specificially target only the individual player role assignment screen */
+.role-reveal .role-image-container,
+.role-display .role-image-container,
+body[data-page="game"] .role-image-container:not(#current-roles-list .role-image-container) {
+    width: 400px !important; /* Much larger image size */
+    height: 400px !important;
+    margin: 0 auto 1rem !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    position: relative !important;
+    z-index: 2 !important;
+}
+
+/* Make images fill their containers better */
+.role-reveal .role-image-container img,
+.role-display .role-image-container img,
+body[data-page="game"] .role-image-container:not(#current-roles-list .role-image-container) img {
+    max-width: 95% !important;
+    max-height: 95% !important;
+    width: auto !important;
+    height: auto !important;
+    object-fit: contain !important;
+    border-width: 3px !important; /* Maintain border width */
+}
+
+/* Make team-specific borders more pronounced on assignment screen */
+.role-reveal .role-card[data-team="mafia"] .role-image-container img,
+.role-display .role-card[data-team="mafia"] .role-image-container img,
+body[data-page="game"] .role-card[data-team="mafia"] .role-image-container:not(#current-roles-list .role-image-container) img {
+    border-color: var(--neon-red) !important;
+    box-shadow: 0 0 20px var(--neon-red) !important;
+}
+
+.role-reveal .role-card[data-team="citizen"] .role-image-container img,
+.role-display .role-card[data-team="citizen"] .role-image-container img,
+body[data-page="game"] .role-card[data-team="citizen"] .role-image-container:not(#current-roles-list .role-image-container) img {
+    border-color: var(--neon-green) !important;
+    box-shadow: 0 0 20px var(--neon-green) !important;
+}
+
+.role-reveal .role-card[data-team="independent"] .role-image-container img,
+.role-display .role-card[data-team="independent"] .role-image-container img,
+body[data-page="game"] .role-card[data-team="independent"] .role-image-container:not(#current-roles-list .role-image-container) img {
+    border-color: var(--neon-purple) !important;
+    box-shadow: 0 0 20px var(--neon-purple) !important;
+}
+
+/* Target the role card in the role reveal specifically */
+.role-reveal .role-card,
+.role-display .role-card {
+    width: 90vw !important; /* Make card nearly full width */
+    max-width: 500px !important; /* Set a reasonable maximum */
+    min-width: 350px !important;
+    padding: 20px !important;
+    margin: 0 auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    position: relative !important;
+}
+
+/* Ensure image container remains large */
+.role-reveal .role-image-container,
+.role-display .role-image-container {
+    width: 400px !important; /* Much larger image size */
+    height: 400px !important;
+    margin: 0 auto 1rem !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    position: relative !important;
+    z-index: 2 !important;
+}
+
+/* Make images fill their containers properly */
+.role-reveal .role-image-container img,
+.role-display .role-image-container img {
+    max-width: 95% !important;
+    max-height: 95% !important;
+    width: auto !important;
+    height: auto !important;
+    object-fit: contain !important;
+    border-width: 3px !important; /* Maintain border width */
+}
+
+/* End of new styling */
+
+/* Apply role card width directly to the card element with highest specificity */
+html body .role-reveal .role-card,
+html body .role-display .role-card,
+body[data-page="game"] .role-card:not(#current-roles-list .role-card),
+.role-card[data-team]:not(#current-roles-list .role-card)[class*="role-reveal"],
+.role-card[data-team]:not(#current-roles-list .role-card)[class*="role-display"] {
+    width: 90vw !important; /* Make card nearly full width */
+    max-width: 500px !important; /* Set a reasonable maximum */
+    min-width: 350px !important;
+    padding: 20px !important;
+    margin: 0 auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    position: relative !important;
+    height: auto !important; /* Override fixed height */
+    box-sizing: border-box !important;
+}
+
+/* Direct inline style simulation for max specificity */
+#game-view .role-card,
+.role-reveal > .role-card,
+.role-display > .role-card {
+    width: 90vw !important; /* Make card nearly full width */
+    max-width: 500px !important; /* Set a reasonable maximum */
+    min-width: 350px !important;
+    padding: 20px !important;
+    margin: 0 auto !important;
+    height: auto !important;
+}
+
+/* Ensure the parent container doesn't constrain width */
+.role-reveal, 
+.role-display {
+    width: 100% !important;
+    max-width: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+/* Apply !important to all sizing properties on the child elements */
+.role-reveal .role-card *,
+.role-display .role-card * {
+    box-sizing: border-box !important;
+}
+
+/* Set a fixed width for debugging purposes */
+.role-reveal .role-card,
+.role-display .role-card {
+    width: 500px !important; /* Force exact width for debugging */
+}
+
+/* Force width on immediate children to prevent shrinking */
+.role-reveal .role-card > *,
+.role-display .role-card > * {
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+/* Target any parent containers that might be limiting width */
+body[data-page="game"] .container,
+body[data-page="game"] main,
+body[data-page="game"] section,
+.role-reveal-container,
+body[data-page="game"] .role-reveal-wrapper,
+.game-view,
+#game-view,
+.role-display-container,
+.game-content,
+.role-section {
+    max-width: none !important;
+    width: 100% !important;
+    padding: 0 !important;
+    margin: 0 auto !important;
+    overflow: visible !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+}
+
+/* Use attribute selectors to catch any role card variations */
+[class*="role-card"],
+[id*="role-card"],
+.role-card,
+div[class*="role"][class*="card"] {
+    width: 90vw !important;
+    max-width: 500px !important;
+    min-width: 350px !important;
+}
+
+/* Apply debugging border to visualize */
+.role-reveal .role-card,
+.role-display .role-card {
+    border: 5px solid yellow !important;
+    width: 500px !important;
+    position: relative !important;
+}
+
+/* Fix specifically for role assignment page */
+body:not(.role-selection-page) .role-card,
+body:not(.roles-page) .role-card {
+    width: 500px !important;
+    max-width: 90vw !important;
+    min-width: 350px !important;
+}
+
+/* EMERGENCY FIX: Direct element targeting for role cards */
+
+/* Reset any existing width constraints */
+.role-card {
+    min-width: initial !important;
+    max-width: initial !important;
+}
+
+/* Target styles for game screen specifically */
+body:not([class*="selection"]):not([class*="roles-page"]) .role-card {
+    width: 500px !important;
+    min-width: 500px !important;
+    max-width: 90vw !important;
+    padding: 20px !important;
+    box-sizing: border-box !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    border-width: 5px !important;
+}
+
+/* Target based on screen/view identifiers */
+#game-screen .role-card,
+#role-assignment .role-card,
+#reveal-role .role-card {
+    width: 500px !important;
+    min-width: 500px !important;
+    max-width: 90vw !important;
+}
+
+/* Break out of any flex containers */
+.role-reveal,
+.role-display {
+    min-width: 500px !important;
+    width: 500px !important;
+    max-width: 90vw !important;
+}
+
+/* Try to identify if there's a wrapper or container with fixed width */
+.container .role-card,
+main .role-card,
+section .role-card,
+.main-content .role-card {
+    width: 500px !important;
+    min-width: 500px !important;
+    max-width: 90vw !important;
+}
+
+/* Add diagnostic styles to visualize layout issues */
+.role-reveal .role-card,
+.role-display .role-card {
+    outline: 10px solid red !important;
+}
+
+/* Target individual player role assignments */
+[data-player-id] .role-card,
+[data-player] .role-card,
+.player-role .role-card {
+    width: 500px !important; 
+    min-width: 500px !important;
+    max-width: 90vw !important;
+}
+
+/* FINAL SOLUTION: Force width using pseudo-elements and transforms */
+
+/* Create a forcing container */
+.role-reveal,
+.role-display {
+    position: relative !important;
+    transform-style: preserve-3d !important;
+    perspective: 1000px !important;
+    display: block !important;
+    width: 100% !important;
+}
+
+/* Force role-card wider with ::after pseudo-element */
+.role-reveal .role-card::after,
+.role-display .role-card::after {
+    content: "" !important;
+    display: block !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 500px !important;
+    height: 100% !important;
+    z-index: -999 !important;
+    background: transparent !important;
+    pointer-events: none !important;
+}
+
+/* Stretch the card directly using transform */
+.role-reveal .role-card,
+.role-display .role-card {
+    transform: scaleX(2.5) !important; /* Make 2.5x wider */
+    transform-origin: center center !important;
+    height: auto !important;
+    min-height: 400px !important;
+}
+
+/* Keep internal content from being stretched */
+.role-reveal .role-card *,
+.role-display .role-card * {
+    transform: scaleX(0.4) !important; /* Counter-balance the parent stretch */
+    transform-origin: center center !important;
+}
+
+/* Ensure the image maintains proper dimensions */
+.role-reveal .role-image-container,
+.role-display .role-image-container {
+    transform: scaleX(0.4) scale(2) !important; /* Counter parent + make larger */
+    height: 300px !important;
+    width: 300px !important;
+    margin: 20px auto !important;
+}
+
+/* ULTIMATE SOLUTION - DIRECT INLINE STYLE OVERRIDES */
+
+/* Target the specific assign context */
+body .role-reveal,
+body .role-display,
+html body .role-reveal,
+html body .role-display {
+    display: block !important;
+    width: 100% !important;
+    overflow: visible !important;
+    box-sizing: border-box !important;
+    padding: 0 !important;
+    margin: 0 auto !important;
+}
+
+/* Direct targeting of the role card element */
+body .role-card[data-team],
+html body .role-card[data-team],
+body .role-reveal .role-card,
+html body .role-reveal .role-card,
+body .role-display .role-card,
+html body .role-display .role-card {
+    width: 90vw !important;
+    max-width: 500px !important; 
+    min-width: 350px !important;
+    height: auto !important;
+    min-height: 400px !important;
+    display: block !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    position: relative !important;
+    box-sizing: border-box !important;
+    padding: 20px !important;
+}
+
+/* Override the !important flag in the base style.css */
+body .role-card,
+.role-card {
+    max-width: 500px !important;
+    width: 90vw !important;
+}
+
+/* Add a hard reset that gets applied last */
+@keyframes forceWidth {
+    0% { width: 90vw; max-width: 500px; min-width: 350px; }
+    100% { width: 90vw; max-width: 500px; min-width: 350px; }
+}
+
+.role-reveal .role-card,
+.role-display .role-card {
+    animation: forceWidth 0.1s forwards !important;
+    animation-iteration-count: infinite !important;
+}
+
+/* Create a wrapper div with JS */
+@media screen {
+    .role-reveal .role-card::before {
+        content: "/* ROLE CARD SHOULD BE WIDE */";
+        position: fixed;
+        top: -9999px;
+        left: -9999px;
+    }
+}
+
+/* VERTICAL FILL SOLUTION */
+
+/* Ensure the role-display container takes up full viewport height */
+.role-display,
+.role-reveal {
+    min-height: 100vh !important;
+    height: 100vh !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+    padding: 20px !important;
+    box-sizing: border-box !important;
+    overflow: auto !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    z-index: 9999 !important;
+}
+
+/* Make the role-card take maximum vertical space */
+.role-display .role-card,
+.role-reveal .role-card {
+    min-height: 80vh !important;
+    height: 80vh !important;
+    max-height: 80vh !important;
+    width: 90vw !important;
+    max-width: 800px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+    margin: 0 auto !important;
+    position: relative !important;
+    overflow: visible !important;
+    padding: 30px !important;
+}
+
+/* Super-size the role image */
+.role-display .role-image-container,
+.role-reveal .role-image-container {
+    width: 80% !important;
+    height: 60% !important;
+    max-width: 600px !important;
+    max-height: 600px !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    margin: 0 auto !important;
+    position: relative !important;
+}
+
+.role-display .role-image-container img,
+.role-reveal .role-image-container img {
+    max-width: 100% !important;
+    max-height: 100% !important;
+    object-fit: contain !important;
+}
+
+/* Adjust title position and size */
+.role-display .role-card h3,
+.role-reveal .role-card h3 {
+    font-size: 3rem !important;
+    margin: 20px 0 !important;
+}
+
+/* Create a fullscreen overlay */
+body.role-assignment-page::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0,0,0,0.8);
+    z-index: 9995;
+}
+
+/* Force the role display to be full screen */
+.role-display,
+.role-reveal {
+    background-color: rgba(0,0,0,0.9) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+}
+
+/* Try to identify specific page selectors */
+body[data-page="game"],
+body[data-view="role-assignment"],
+body.game-page,
+body.role-page {
+    overflow: hidden !important;
+    height: 100vh !important;
+    width: 100vw !important;
+    position: relative !important;
+}
+
+/* Clear any height constraints on container elements */
+body .container,
+body main,
+body section,
+#game-view,
+#game-screen,
+.game-content,
+.role-content,
+[class*="role-container"],
+[id*="role-container"] {
+    min-height: 100vh !important;
+    height: 100vh !important;
+    max-height: none !important;
+    overflow: visible !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* Create fullscreen modal effect */
+.role-display,
+.role-reveal {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+}
+
+/* Force absolute sizing on the role card */
+html body .role-display .role-card,
+html body .role-reveal .role-card {
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    width: 90vw !important;
+    height: 90vh !important;
+    max-width: 800px !important;
+    max-height: 900px !important;
+    min-height: 600px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    padding: 30px !important;
+    box-sizing: border-box !important;
+    overflow: visible !important;
+    z-index: 10000 !important;
+}
+
+/* Super-size the role image */
+html body .role-display .role-card .role-image-container,
+html body .role-reveal .role-card .role-image-container {
+    width: 70% !important;
+    height: 70% !important;
+    margin: 0 auto !important;
+    flex-grow: 1 !important;
+    flex-shrink: 0 !important;
+    position: relative !important;
+}
+
+/* Keep team coloring on images */
+html body .role-display .role-card[data-team="mafia"] .role-image-container img,
+html body .role-reveal .role-card[data-team="mafia"] .role-image-container img {
+    border: 5px solid var(--neon-red) !important;
+    box-shadow: 0 0 30px var(--neon-red) !important;
+}
+
+html body .role-display .role-card[data-team="citizen"] .role-image-container img,
+html body .role-reveal .role-card[data-team="citizen"] .role-image-container img {
+    border: 5px solid var(--neon-green) !important;
+    box-shadow: 0 0 30px var(--neon-green) !important;
+}
+
+html body .role-display .role-card[data-team="independent"] .role-image-container img,
+html body .role-reveal .role-card[data-team="independent"] .role-image-container img {
+    border: 5px solid var(--neon-purple) !important;
+    box-shadow: 0 0 30px var(--neon-purple) !important;
+}
+
+/* ADDITIONAL FULLSCREEN FIXES */
+
+/* Target any element with "role" in its class name */
+[class*="role"] {
+    box-sizing: border-box !important;
+}
+
+/* Target specific elements by their role in the document */
+.role-display, 
+.role-reveal, 
+[class*="role-reveal"],
+[class*="role-display"],
+[class*="role-assign"],
+[class*="role-view"],
+[id*="role-reveal"],
+[id*="role-display"],
+.role-content,
+#role-display, 
+#role-reveal,
+#role-assignment {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    z-index: 9990 !important;
+    background-color: rgba(0, 0, 0, 0.8) !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: hidden !important;
+}
+
+/* Target role cards within these containers */
+.role-display .role-card, 
+.role-reveal .role-card,
+[class*="role-reveal"] .role-card,
+[class*="role-display"] .role-card,
+[class*="role-assign"] .role-card,
+[class*="role-view"] .role-card,
+[id*="role-reveal"] .role-card,
+[id*="role-display"] .role-card,
+.role-content .role-card,
+#role-display .role-card, 
+#role-reveal .role-card,
+#role-assignment .role-card {
+    width: 95vw !important;
+    height: 95vh !important;
+    max-width: 1000px !important;
+    max-height: 95vh !important;
+    min-height: 70vh !important;
+    position: relative !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+    padding: 20px !important;
+    margin: 0 auto !important;
+    box-sizing: border-box !important;
+    overflow: visible !important;
+    z-index: 9995 !important;
+}
+
+/* Make the role image very large */
+.role-card .role-image-container,
+[class*="role"] .role-image-container {
+    flex: 1 1 auto !important;
+    width: 80% !important;
+    height: 80% !important;
+    min-height: 400px !important;
+    margin: 10px auto !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+/* Make role image fill container but maintain aspect ratio */
+.role-card .role-image-container img,
+[class*="role"] .role-image-container img {
+    max-width: 90% !important;
+    max-height: 90% !important;
+    object-fit: contain !important;
+    border-width: 5px !important;
+}
+
+/* Push game actions to bottom of card */
+.role-reveal .actions,
+.role-display .actions,
+[class*="role"] .actions {
+    margin-top: auto !important;
+    padding-top: 20px !important;
+    width: 100% !important;
+}
+
+/* SIMPLE HEIGHT INCREASE */
+
+/* Target all role cards directly */
+.role-card {
+    height: 600px !important;
+    min-height: 600px !important;
+}
+
+/* Target role cards specifically in the assignment view context */
+.role-display .role-card,
+.role-reveal .role-card {
+    height: 600px !important;
+    min-height: 600px !important;
+}
+
+/* Even higher specificity */
+html body .role-card,
+html body .role-display .role-card,
+html body .role-reveal .role-card {
+    height: 600px !important;
+    min-height: 600px !important;
+}
+
+/* Adjust image container for larger card */
+.role-card .role-image-container {
+    height: 400px !important;
+    min-height: 400px !important;
+}
+
+/* DIRECT HEIGHT TARGETING WITH !IMPORTANT FLAGS */
+
+/* Force all role cards to 600px height minimum */
+.role-card, 
+.roles-grid .role-card, 
+#current-roles-list .role-card, 
+.role-display .role-card,
+.role-reveal .role-card,
+body .role-card,
+html body .role-card {
+    min-height: 600px !important;
+    height: 600px !important;
+}
+
+/* Force heightened importance with aggressive selector */
+div.role-card {
+    min-height: 600px !important;
+    height: 600px !important;
+}
+
+/* Target any specific role identifiers */
+[data-team="mafia"],
+[data-team="citizen"],
+[data-team="independent"] {
+    min-height: 600px !important;
+    height: 600px !important;
+}
+
+/* Target direct element */
+#role-assignment-card,
+#role-display-card,
+#role-reveal-card,
+#game-role-card {
+    min-height: 600px !important;
+    height: 600px !important;
+}
+
+/* Force inline properties to be overridden with fixed pixel value */
+@media screen {
+    .role-card {
+        height: 600px !important;
+        min-height: 600px !important;
+    }
+}
+
+/* PARENT CONTAINER TARGETING */
+
+/* Ensure proper display modes on all role containers */
+body, html, main, .container, section {
+    min-height: 100vh;
+    height: 100vh;
+}
+
+/* Set all role related elements to block with height */
+div[class*="role"],
+div[id*="role"],
+section[class*="role"],
+section[id*="role"] {
+    display: block !important;
+    position: relative !important;
+    height: auto !important;
+    min-height: 600px !important;
+}
+
+/* Target specifically the role card with attribute selector */
+div[class="role-card"],
+div[class*="role-card"],
+div[id*="role-card"] {
+    display: block !important;
+    position: relative !important;
+    height: 600px !important;
+    min-height: 600px !important;
+    max-height: none !important;
+}
+
+/* Special fix for 220x303 role cards */
+.role-card[style*="height: 303px"],
+.role-card[style*="height:303px"],
+.role-card[style*="height: 220px"],
+.role-card[style*="height:220px"] {
+    height: 600px !important;
+    min-height: 600px !important;
+    max-height: none !important;
+}
+
+/* Override any max-height constraints */
+.role-card {
+    max-height: none !important;
+} 

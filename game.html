@@ -8,18 +8,22 @@
     <link rel="stylesheet" href="dark-theme.css">
     <!-- Supabase JS -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script>
-        // Create global variable for debugging
-        window.supabaseLoaded = true;
-    </script>
+    <!-- Supabase initialization -->
+    <script src="supabase-init.js"></script>
+    <!-- Connection status -->
+    <script src="connection-status.js"></script>
     <!-- Database manager -->
     <script src="database.js"></script>
     <!-- Roles JS -->
     <script src="roles.js"></script>
     <!-- Game JS -->
     <script src="game.js"></script>
+    <!-- Connection Status -->
+    
 </head>
 <body class="dark-theme">
+    <div id="connection-status"></div>
+    
     <div class="container">
         <header>
             <h1>Game Play</h1>
@@ -27,8 +31,6 @@
         </header>
 
         <main>
-            <div id="connection-status"></div>
-            
             <!-- Role reveal section -->
             <section class="role-reveal">
                 <div id="current-player"></div>
@@ -54,26 +56,5 @@
             <p>&copy; 2025 KRS Consulting Inc.</p>
         </footer>
     </div>
-
-    <script>
-        // Simple connection status check
-        document.addEventListener('DOMContentLoaded', function() {
-            const statusElem = document.getElementById('connection-status');
-            if (!statusElem) return;
-            
-            statusElem.innerHTML = '<div class="status-loading">Checking database connection...</div>';
-            
-            // Check for Supabase client after a delay
-            setTimeout(function() {
-                if (window.supabase) {
-                    statusElem.innerHTML = '<div class="status-ok">Database connected</div>';
-                    console.log('Database connected successfully');
-                } else {
-                    statusElem.innerHTML = '<div class="status-error">Not connected to database</div>';
-                    console.error('Supabase client not initialized');
-                }
-            }, 2000);
-        });
-    </script>
 </body>
 </html> 

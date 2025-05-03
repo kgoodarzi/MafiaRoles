@@ -6,18 +6,22 @@
     <title>Mafia Game - Character Roles</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="dark-theme.css">
+    <!-- Neon effects -->
+    <link rel="stylesheet" href="neon-effects.css">
     <!-- Supabase JS -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script>
-        // Create global variable for debugging
-        window.supabaseLoaded = true;
-    </script>
+    <!-- Supabase initialization -->
+    <script src="supabase-init.js"></script>
+    <!-- Connection status -->
+    <script src="connection-status.js"></script>
     <!-- Database manager -->
     <script src="database.js"></script>
     <!-- Roles JS -->
     <script src="roles.js"></script>
 </head>
 <body class="dark-theme">
+    <div id="connection-status"></div>
+    
     <div class="container">
         <header>
             <h1>Mafia Game Roles</h1>
@@ -25,8 +29,6 @@
         </header>
 
         <main>
-            <div id="connection-status"></div>
-            
             <!-- Mafia Team -->
             <section class="team-section">
                 <h2>Mafia Team</h2>
@@ -72,55 +74,58 @@
             <p>&copy; 2025 KRS Consulting Inc.</p>
         </footer>
     </div>
-</body>
-<script>
-    // Simple connection status check
+    
+    <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const statusElem = document.getElementById('connection-status');
-        if (!statusElem) return;
-        
-        statusElem.innerHTML = '<div class="status-loading">Checking database connection...</div>';
-        
-        // Check for Supabase client after a delay
-        setTimeout(function() {
-            if (window.supabase) {
-                statusElem.innerHTML = '<div class="status-ok">Database connected</div>';
-                console.log('Database connected successfully');
-            } else {
-                statusElem.innerHTML = '<div class="status-error">Not connected to database</div>';
-                console.error('Supabase client not initialized');
-            }
-        }, 2000);
+        // Display all roles with images
+        if (typeof ROLES !== 'undefined' && Array.isArray(ROLES)) {
+            const mafiaContainer = document.getElementById('mafia-roles');
+            const townContainer = document.getElementById('town-roles');
+            const independentContainer = document.getElementById('independent-roles');
+            
+            ROLES.forEach(role => {
+                const roleCard = document.createElement('div');
+                roleCard.className = 'role-card';
+                
+                // Set team data attribute for neon effect
+                roleCard.setAttribute('data-team', role.team);
+                
+                const roleImageName = role.name;
+                const roleImageSrc = role.image || `images/Role - ${roleImageName}.jpg`;
+                
+                // Add team-specific class name
+                const teamClass = role.team === 'mafia' ? 'team-mafia' : 
+                                 (role.team === 'citizen' ? 'team-citizen' : 'team-independent');
+                                 
+                roleCard.innerHTML = `
+                    <img src="${roleImageSrc}" alt="${role.name}" onerror="this.src='images/default-avatar.svg'">
+                    <h3 class="role-title">${role.name}</h3>
+                    <p class="role-description">${role.description}</p>
+                `;
+                
+                // Custom team mapping
+                if (role.team === 'mafia') {
+                    mafiaContainer.appendChild(roleCard);
+                } else if (role.team === 'citizen') {
+                    townContainer.appendChild(roleCard);
+                } else if (role.team === 'independent') {
+                    independentContainer.appendChild(roleCard);
+                }
+            });
+            
+            // Add neon headers to team sections
+            document.querySelectorAll('.team-section h2').forEach(header => {
+                const text = header.textContent.trim();
+                if (text === 'Mafia Team') {
+                    header.className = 'neon-text-red';
+                } else if (text === 'Town Team') {
+                    header.className = 'neon-text-green';
+                } else if (text === 'Independent Roles') {
+                    header.className = 'neon-text-purple';
+                }
+            });
+        }
     });
-</script>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Display all roles with images
-    if (typeof ROLES !== 'undefined' && Array.isArray(ROLES)) {
-        const mafiaContainer = document.getElementById('mafia-roles');
-        const townContainer = document.getElementById('town-roles');
-        const independentContainer = document.getElementById('independent-roles');
-        ROLES.forEach(role => {
-            const roleCard = document.createElement('div');
-            roleCard.className = 'role-card';
-            roleCard.setAttribute('data-team', role.team);
-            const roleImageName = role.name;
-            const roleImageSrc = `images/Role - ${roleImageName}.jpg`;
-            roleCard.innerHTML = `
-                <img src="${roleImageSrc}" alt="${role.name}" onerror="this.src='images/default-avatar.svg'">
-                <h4>${role.name}</h4>
-                <p>${role.description}</p>
-            `;
-            // Custom team mapping
-            if (role.name === 'Godfather' || role.name === 'Magician' || role.name === 'Bomber') {
-                mafiaContainer.appendChild(roleCard);
-            } else if (role.name === 'Professional' || role.team === 'citizen') {
-                townContainer.appendChild(roleCard);
-            } else if (role.name === 'Zodiac' || role.team === 'independent') {
-                independentContainer.appendChild(roleCard);
-            }
-        });
-    }
-});
-</script>
+    </script>
+</body>
 </html> 

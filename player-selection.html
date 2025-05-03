@@ -8,301 +8,51 @@
     <link rel="stylesheet" href="dark-theme.css">
     <!-- Supabase JS -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Supabase initialization -->
+    <script src="supabase-init.js"></script>
     <!-- Database Manager -->
     <script src="database.js"></script>
     <!-- Player Selection JS -->
     <script src="player-selection.js"></script>
-    <!-- Simplified player selection JS -->
-    <script>
-        // Supabase client initialization
-        const SUPABASE_URL = 'https://isagurhfcktnnldvntse.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlzYWd1cmhmY2t0bm5sZHZudHNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQzNTY4NTAsImV4cCI6MjA1OTkzMjg1MH0.WYOhUCj5wD7AUCuxpDerOkwV_XvBAGapTEztRoJC2Q0';
-        let supabaseClient;
-        let selectedPlayers = [];
-        
-        // Initialize on document load
-        document.addEventListener('DOMContentLoaded', function() {
-            try {
-                console.log('Initializing Supabase client...');
-                
-                // Create Supabase client
-                supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-                console.log('Supabase client initialized successfully');
-                
-                // Initialize or get the database manager
-                if (!window.dbManager) {
-                    console.log('Creating new DatabaseManager instance');
-                    window.dbManager = new DatabaseManager();
-                    window.dbManager.initialize().then(() => {
-                        console.log('Database manager initialized with', window.dbManager.players.length, 'players');
-                        loadPlayersFromProfiles();
-                    }).catch(error => {
-                        console.error('Error initializing database manager:', error);
-                        loadDefaultPlayers();
-                    });
-                } else {
-                    console.log('Using existing DatabaseManager instance');
-                    loadPlayersFromProfiles();
-                }
-                
-                // Update connection status
-                document.getElementById('connection-status').innerHTML = 
-                    '<div class="status-ok">Database connected</div>';
-                
-            } catch (error) {
-                console.error('Error initializing Supabase client:', error);
-                document.getElementById('connection-status').innerHTML = 
-                    '<div class="status-error">Error connecting to database</div>';
-                    
-                // Fall back to default players
-                loadDefaultPlayers();
-            }
-        });
-        
-        // Load players from Supabase profiles table
-        async function loadPlayersFromProfiles() {
-            try {
-                console.log('Loading players from database manager...');
-                
-                if (window.dbManager && window.dbManager.players.length > 0) {
-                    console.log(`Using ${window.dbManager.players.length} players from dbManager`);
-                    
-                    // Use the players from dbManager
-                    const players = window.dbManager.players.map(player => ({
-                        id: player.id || player.username,
-                        name: player.name || player.full_name,
-                        photo_url: player.photo_url || player.photo
-                    }));
-                    
-                    // Display players
-                    displayPlayers(players);
-                    setupEventListeners();
-                    
-                    // Load selected players
-                    selectedPlayers = window.dbManager.getSelectedPlayers();
-                    document.getElementById('selected-count').textContent = selectedPlayers.length;
-                    
-                    return;
-                }
-                
-                console.log('Falling back to direct Supabase query...');
-                // Query only username, full_name, photo from the profiles table
-                const { data: playerData, error: playerError } = await supabaseClient
-                    .from('profiles')
-                    .select('username, full_name, photo');
-                
-                if (playerError) {
-                    console.error('Error loading players:', playerError);
-                    loadDefaultPlayers();
-                    return;
-                }
-                
-                if (playerData && playerData.length > 0) {
-                    console.log(`Loaded ${playerData.length} players from database:`, playerData);
-                    // Map players data to player format, handling missing data
-                    const players = playerData.map(player => ({
-                        id: player.username || Date.now() + Math.floor(Math.random() * 1000),
-                        name: player.full_name || player.username || 'Player ' + Math.floor(Math.random() * 1000),
-                        photo: player.photo || 'images/default-avatar.svg'
-                    }));
-                    displayPlayers(players);
-                    setupEventListeners();
-                } else {
-                    console.log('No players found, loading default players');
-                    loadDefaultPlayers();
-                }
-            } catch (error) {
-                console.error('Error in loadPlayersFromProfiles:', error);
-                loadDefaultPlayers();
-            }
-        }
-        
-        // Load default players
-        function loadDefaultPlayers() {
-            const defaultPlayers = [
-                { id: 1, name: 'Alice', photo_url: 'images/default-avatar.svg' },
-                { id: 2, name: 'Bob', photo_url: 'images/default-avatar.svg' },
-                { id: 3, name: 'Charlie', photo_url: 'images/default-avatar.svg' },
-                { id: 4, name: 'David', photo_url: 'images/default-avatar.svg' },
-                { id: 5, name: 'Emily', photo_url: 'images/default-avatar.svg' },
-                { id: 6, name: 'Frank', photo_url: 'images/default-avatar.svg' }
-            ];
-            
-            console.log('Using default players');
-            displayPlayers(defaultPlayers);
-            setupEventListeners();
-        }
-        
-        // Display players in the UI
-        function displayPlayers(players) {
-            const playersContainer = document.getElementById('players-container');
-            playersContainer.innerHTML = '';
-            
-            players.forEach(player => {
-                const playerCard = document.createElement('div');
-                playerCard.className = 'player-card';
-                playerCard.dataset.id = player.id;
-                
-                // Prefer player.photo, then avatar_url, then default
-                const imgSrc = player.photo || player.photo_url || 'images/default-avatar.svg';
-                
-                playerCard.innerHTML = `
-                    <div class="player-avatar">
-                        <img src="${imgSrc}" alt="${player.name}" onerror="this.src='images/default-avatar.svg'">
-                    </div>
-                    <div class="player-info">
-                        <h3 class="player-name">${player.name}</h3>
-                    </div>
-                    <div class="player-select">
-                        <input type="checkbox" id="select-${player.id}" class="player-checkbox">
-                    </div>
-                    <div class="player-actions">
-                        <a href="edit-player.html?username=${encodeURIComponent(player.id)}" class="btn btn-small btn-edit">Edit</a>
-                    </div>
-                `;
-                
-                // Check if this player is already selected
-                const isSelected = selectedPlayers.some(p => p.id === player.id);
-                if (isSelected) {
-                    const checkbox = playerCard.querySelector('input[type="checkbox"]');
-                    checkbox.checked = true;
-                    playerCard.classList.add('selected');
-                }
-                
-                playersContainer.appendChild(playerCard);
-            });
-            
-            // Update selected count
-            document.getElementById('selected-count').textContent = selectedPlayers.length;
-            
-            // Update continue button
-            const continueBtn = document.getElementById('continue-btn');
-            continueBtn.disabled = selectedPlayers.length < 4;
-        }
-        
-        // Attach event listeners to a player card
-        function attachPlayerCardEventListeners(card) {
-            card.addEventListener('click', function(e) {
-                if (e.target.type === 'checkbox') return;
-                const checkbox = this.querySelector('input[type="checkbox"]');
-                checkbox.checked = !checkbox.checked;
-                const event = new Event('change');
-                checkbox.dispatchEvent(event);
-            });
-            
-            const checkbox = card.querySelector('input[type="checkbox"]');
-            checkbox.addEventListener('change', function() {
-                const playerId = this.closest('.player-card').dataset.id;
-                const playerCard = this.closest('.player-card');
-                const playerName = playerCard.querySelector('.player-name').textContent;
-                const playerPhoto = playerCard.querySelector('img').src;
-                
-                if (this.checked) {
-                    if (!selectedPlayers.some(p => p.id === playerId)) {
-                        selectedPlayers.push({
-                            id: playerId,
-                            name: playerName,
-                            photo_url: playerPhoto
-                        });
-                        playerCard.classList.add('selected');
-                    }
-                } else {
-                    selectedPlayers = selectedPlayers.filter(p => p.id !== playerId);
-                    playerCard.classList.remove('selected');
-                }
-                
-                document.getElementById('selected-count').textContent = selectedPlayers.length;
-                document.getElementById('continue-btn').disabled = selectedPlayers.length < 4;
-            });
-        }
-        
-        // Set up event listeners
-        function setupEventListeners() {
-            // Player selection
-            document.querySelectorAll('.player-card').forEach(card => {
-                attachPlayerCardEventListeners(card);
-            });
-            
-            // Refresh button
-            document.getElementById('refresh-players-btn').addEventListener('click', function() {
-                this.disabled = true;
-                this.textContent = '↻ Refreshing...';
-                
-                // Clear and show loading
-                const playersContainer = document.getElementById('players-container');
-                playersContainer.innerHTML = `
-                    <div class="player-card loading">
-                        <p>Loading players...</p>
-                    </div>
-                `;
-                
-                // Reload players
-                loadPlayersFromProfiles().finally(() => {
-                    this.disabled = false;
-                    this.textContent = '↻ Refresh';
-                });
-            });
-            
-            // Continue button
-            document.getElementById('continue-btn').addEventListener('click', function() {
-                if (selectedPlayers.length < 4) {
-                    alert('Please select at least 4 players to continue');
-                    return;
-                }
-                
-                // Save selected players to localStorage
-                localStorage.setItem('selectedPlayers', JSON.stringify(selectedPlayers));
-                
-                // Also save to database if dbManager is available
-                if (window.dbManager) {
-                    console.log('Saving selected players to database before continuing');
-                    
-                    // Update the dbManager selected players
-                    window.dbManager.selectedPlayers = [...selectedPlayers];
-                    
-                    // Save to database (don't await, let it happen in background)
-                    window.dbManager.updatePreviouslySelectedFlag()
-                        .then(() => console.log('Database update completed'))
-                        .catch(err => console.error('Error updating database:', err));
-                }
-                
-                // Redirect to role selection
-                window.location.href = 'role-selection.html';
-            });
-        }
-    </script>
+    <!-- Connection Status -->
+    <script src="connection-status.js"></script>
+    <!-- Connection Diagnostic (for debugging) -->
+    <script src="connection-diagnostic.js"></script>
 </head>
 <body class="dark-theme player-selection-page">
+    <div id="connection-status"></div>
+    
     <div class="container">
         <header>
             <h1>Player Selection</h1>
-            <p>Select players for this game session</p>
+            <p>Select players for the game</p>
         </header>
 
         <main>
-            <div id="connection-status"></div>
-
             <section class="player-selection">
-                <div class="section-header">
-                    <div class="header-with-buttons">
-                        <h2>Available Players</h2>
-                        <div class="action-buttons">
-                            <a href="add-player.html" class="circle-btn add-btn" title="Add New Player">+ Add</a>
-                            <button id="refresh-players-btn" class="circle-btn refresh-btn" title="Refresh Player List">↻ Refresh</button>
+                <div class="header-with-buttons">
+                    <h2>Available Players</h2>
+                    <div class="action-buttons">
+                        <a href="add-player.html" class="circle-btn add-btn">+</a>
+                        <button id="refresh-btn" class="circle-btn refresh-btn">↻</button>
+                    </div>
+                </div>
+                
+                <div class="player-selection-section">
+                    <div id="players-container" class="players-grid">
+                        <!-- Loading indicator -->
+                        <div class="loading-container">
+                            <div class="loading-spinner"></div>
+                            <p>Loading players...</p>
                         </div>
                     </div>
                 </div>
-                <div id="players-container" class="players-grid">
-                    <!-- Players will be loaded here -->
-                    <div class="player-card loading">
-                        <p>Loading players...</p>
-                    </div>
+                
+                <div class="player-controls">
+                    <p>Selected: <span id="selected-count">0</span> players</p>
                 </div>
-            </section>
-
-            <section class="game-actions">
-                <h2>Selected Players: <span id="selected-count">0</span></h2>
-                <div id="game-controls">
+                
+                <div class="game-actions">
                     <a href="index.html" class="btn">Back to Home</a>
                     <button id="continue-btn" class="btn btn-primary" disabled>Continue to Role Selection</button>
                 </div>

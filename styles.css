@@ -818,49 +818,96 @@ section.selected-players .players-grid {
 
 /* Add these styles for database connection status */
 #connection-status {
-    margin-bottom: 15px;
-    text-align: left;
+    position: fixed;
+    top: 15px;
+    right: 15px;
+    margin: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background-color: white;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+#connection-status:hover {
+    transform: scale(1.1);
+}
+
+#connection-status .status-icon {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#connection-status .status-tooltip {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 10px;
+    padding: 8px 12px;
+    background-color: white;
+    border-radius: 6px;
+    white-space: nowrap;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    opacity: 0;
+    transform: translateY(-10px);
+    pointer-events: none;
+    transition: all 0.3s ease;
+}
+
+#connection-status:hover .status-tooltip {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.status-ok .status-icon {
+    background-color: rgba(46, 204, 113, 0.1);
+    color: #2ecc71;
+}
+
+.status-error .status-icon {
+    background-color: rgba(231, 76, 60, 0.1);
+    color: #e74c3c;
+}
+
+.status-loading .status-icon {
+    background-color: rgba(52, 152, 219, 0.1);
+    color: #3498db;
+}
+
+.status-warning .status-icon {
+    background-color: rgba(241, 196, 15, 0.1);
+    color: #f1c40f;
 }
 
 .status-ok {
     color: #2ecc71;
     font-weight: bold;
-    padding: 5px 10px;
-    border-radius: 4px;
-    background-color: rgba(46, 204, 113, 0.1);
-    display: inline-block;
 }
 
 .status-error {
     color: #e74c3c;
     font-weight: bold;
-    padding: 5px 10px;
-    border-radius: 4px;
-    background-color: rgba(231, 76, 60, 0.1);
-    display: inline-block;
 }
 
 .status-loading {
     color: #3498db;
     font-weight: bold;
-    padding: 5px 10px;
-    border-radius: 4px;
-    background-color: rgba(52, 152, 219, 0.1);
-    display: inline-block;
 }
 
-.loading-message {
-    padding: 20px;
-    text-align: center;
-    color: #666;
-    width: 100%;
-}
-
-.error-message {
-    padding: 20px;
-    text-align: center;
-    color: #e74c3c;
-    width: 100%;
+.status-warning {
+    color: #f1c40f;
+    font-weight: bold;
 }
 
 /* Add Player Page Styles */
@@ -966,32 +1013,38 @@ section.selected-players .players-grid {
 .role-card[data-team="citizen"],
 .team-citizen, 
 .citizen-team {
-    background-color: #c8e6c9; /* Pastel green */
+    background-color: white;
+    border: 2px solid #4CAF50;
 }
 
 .role-card[data-team="mafia"],
 .team-mafia,
 .mafia-team {
-    background-color: #ffcdd2; /* Pastel red */
+    background-color: white;
+    border: 2px solid #e74c3c;
 }
 
 .role-card[data-team="independent"],
 .team-independent,
 .independent-team {
-    background-color: #e1bee7; /* Pastel purple */
+    background-color: white;
+    border: 2px solid #8b5cf6;
 }
 
 /* Role card team styles */
 #mafia-roles .role-card {
-    background-color: #ffcdd2; /* Pastel red */
+    background-color: white;
+    border: 2px solid #e74c3c;
 }
 
 #town-roles .role-card {
-    background-color: #c8e6c9; /* Pastel green */
+    background-color: white;
+    border: 2px solid #4CAF50;
 }
 
 #independent-roles .role-card {
-    background-color: #e1bee7; /* Pastel purple */
+    background-color: white;
+    border: 2px solid #8b5cf6;
 }
 
 /* Team summary styles */
@@ -1196,4 +1249,42 @@ section.selected-players .players-grid {
     padding-left: 0; /* Reset padding to align with the 10px margin on cards */
     width: 100%;
     box-sizing: border-box;
+}
+
+/* Loading spinner and container */
+.loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 30px;
+    text-align: center;
+}
+
+.loading-spinner {
+    width: 50px;
+    height: 50px;
+    border: 5px solid rgba(255, 255, 255, 0.2);
+    border-top-color: #10b981;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 15px;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.error-message {
+    color: #ef4444;
+    background-color: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: 8px;
+    padding: 15px;
+    margin: 20px 0;
+    text-align: center;
+    width: 100%;
 } 

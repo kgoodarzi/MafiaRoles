@@ -2,39 +2,203 @@ console.log('Player selection page loaded');
 
 // Wait for DOM content to load
 document.addEventListener('DOMContentLoaded', async function() {
-    console.log('DOM content loaded');
+    console.log('DOM content loaded in player-selection.js');
     
-    // Remove any existing debug tools
-    const debugTools = document.getElementById('debug-tools');
-    if (debugTools) {
-        debugTools.remove();
+    // Initialize refresh button
+    const refreshBtn = document.getElementById('refresh-btn');
+    if (refreshBtn) {
+        refreshBtn.addEventListener('click', function() {
+            console.log('Refresh button clicked');
+            location.reload();
+        });
     }
-    
-    // Check if Supabase is available
-    if (typeof supabase === 'undefined') {
-        console.error('Supabase client not found!');
-        alert('Database connection failed. Please check your console for details.');
-        return;
+
+    // Initialize back button if needed
+    const backBtn = document.querySelector('a[href="index.html"]');
+    if (backBtn) {
+        console.log('Back to Home button found');
+    } else {
+        console.log('Back to Home button not found, will be added by the displayPlayers function');
     }
-    
-    // Storage bucket will be checked by the DatabaseManager when needed
-    console.log('Waiting for database initialization...');
-    // Set a timeout to handle database initialization issues
-    const initTimeout = setTimeout(() => {
-        alert('Database initialization timeout. Please refresh the page.');
-    }, 10000);
-    
-    // Wait for the database manager to load players
-    const checkInterval = setInterval(() => {
-        if (window.dbManager && window.dbManager.players.length > 0) {
-            clearInterval(checkInterval);
-            clearTimeout(initTimeout);
-            console.log(`${window.dbManager.players.length} players loaded, displaying now`);
+
+    // Show loading indicator
+    const playersContainer = document.getElementById('players-container');
+    if (playersContainer) {
+        playersContainer.innerHTML = `
+            <div class="loading-container">
+                <div class="loading-spinner"></div>
+                <p>Loading players...</p>
+            </div>
+        `;
+    }
+
+    try {
+        // Listen for the supabaseInitialized event
+        document.addEventListener('supabaseInitialized', function() {
+            console.log('Supabase initialized event received in player-selection.js');
+        });
+        
+        // Listen for custom event when dbManager is ready
+        document.addEventListener('dbManagerReady', function(event) {
+            console.log('dbManagerReady event received:', event.detail || {});
+            clearTimeout(initTimeout); // Clear timeout since database manager is ready
             displayPlayers();
             setupEventListeners();
+        });
+
+        // Set a timeout to handle database initialization issues
+        const initTimeout = setTimeout(() => {
+            console.error('Database initialization timeout');
+            
+            // Check if dbManager already exists in some form
+            if (window.dbManager) {
+                console.log('Database manager exists but may not be fully initialized');
+                
+                if (!window.dbManager.players || window.dbManager.players.length === 0) {
+                    console.log('No players found in database manager, loading default players');
+                    loadDefaultPlayers();
+                } else {
+                    console.log(`Found ${window.dbManager.players.length} players in database manager`);
+                    displayPlayers();
+                    setupEventListeners();
+                }
+            } else {
+                console.log('Database manager does not exist, creating fallback');
+                loadDefaultPlayers();
+            }
+        }, 10000); // 10 seconds timeout
+        
+        // Check if dbManager already exists and has players
+        if (window.dbManager && window.dbManager.players && window.dbManager.players.length > 0) {
+            clearTimeout(initTimeout);
+            console.log(`Database manager already exists with ${window.dbManager.players.length} players`);
+            displayPlayers();
+            setupEventListeners();
+            return;
         }
-    }, 500);
+        
+        // If dbManager exists but doesn't have players, try initializing it
+        if (window.dbManager && (!window.dbManager.players || window.dbManager.players.length === 0)) {
+            console.log('Database manager exists but has no players. Trying to initialize...');
+            
+            if (typeof window.dbManager.initialize === 'function' && !window.dbManager.initializationInProgress) {
+                try {
+                    console.log('Calling database manager initialize()');
+                    await window.dbManager.initialize();
+                    
+                    // Check if players were loaded
+                    if (window.dbManager.players && window.dbManager.players.length > 0) {
+                        clearTimeout(initTimeout);
+                        console.log(`${window.dbManager.players.length} players loaded from initialize()`);
+                        displayPlayers();
+                        setupEventListeners();
+                        return;
+                    } else {
+                        console.log('No players were loaded from initialize()');
+                    }
+                } catch (initError) {
+                    console.error('Error initializing database manager:', initError);
+                }
+            } else {
+                console.log('Cannot initialize database manager: method not available or initialization in progress');
+            }
+        }
+        
+        // Wait for the database manager to load players if it's not already loaded
+        const checkInterval = setInterval(() => {
+            if (window.dbManager) {
+                if (window.dbManager.players && window.dbManager.players.length > 0) {
+                    clearInterval(checkInterval);
+                    clearTimeout(initTimeout);
+                    console.log(`${window.dbManager.players.length} players loaded, displaying now`);
+                    displayPlayers();
+                    setupEventListeners();
+                } else if (window.dbManager.initialized) {
+                    // If dbManager is initialized but no players were found, load defaults
+                    clearInterval(checkInterval);
+                    clearTimeout(initTimeout);
+                    console.log('Database manager initialized but no players found');
+                    
+                    // Try one more time to explicitly load players
+                    if (typeof window.dbManager.loadPlayers === 'function') {
+                        window.dbManager.loadPlayers().then(players => {
+                            if (players && players.length > 0) {
+                                console.log(`${players.length} players loaded from explicit call`);
+                                displayPlayers();
+                                setupEventListeners();
+                            } else {
+                                loadDefaultPlayers();
+                            }
+                        }).catch(err => {
+                            console.error('Error loading players:', err);
+                            loadDefaultPlayers();
+                        });
+                    } else {
+                        loadDefaultPlayers();
+                    }
+                }
+            }
+        }, 500);
+    } catch (error) {
+        console.error('Error in player selection initialization:', error);
+        showError('Error initializing: ' + error.message);
+        loadDefaultPlayers();
+    }
 });
+
+// Show error message in players container
+function showError(message) {
+    const playersContainer = document.getElementById('players-container');
+    if (playersContainer) {
+        playersContainer.innerHTML = `<div class="error-message">${message}</div>`;
+    }
+}
+
+// Load default players when database fails
+function loadDefaultPlayers() {
+    console.log('Loading default players');
+    const defaultPlayers = [
+        { id: '1', name: 'Alice', photo_url: 'images/default-avatar.svg' },
+        { id: '2', name: 'Bob', photo_url: 'images/default-avatar.svg' },
+        { id: '3', name: 'Charlie', photo_url: 'images/default-avatar.svg' },
+        { id: '4', name: 'David', photo_url: 'images/default-avatar.svg' },
+        { id: '5', name: 'Emily', photo_url: 'images/default-avatar.svg' },
+        { id: '6', name: 'Frank', photo_url: 'images/default-avatar.svg' }
+    ];
+    
+    // Create a simple dbManager if it doesn't exist
+    if (!window.dbManager) {
+        window.dbManager = {
+            players: defaultPlayers,
+            selectedPlayers: [],
+            getSelectedPlayers: function() {
+                return this.selectedPlayers;
+            },
+            togglePlayerSelection: function(playerId) {
+                const playerIndex = this.selectedPlayers.findIndex(p => p.id === playerId);
+                const player = this.players.find(p => p.id === playerId);
+                
+                if (playerIndex === -1 && player) {
+                    this.selectedPlayers.push(player);
+                } else if (playerIndex !== -1) {
+                    this.selectedPlayers.splice(playerIndex, 1);
+                }
+                
+                return this.selectedPlayers.length;
+            },
+            saveSelectedPlayers: function() {
+                localStorage.setItem('selectedPlayers', JSON.stringify(this.selectedPlayers));
+                return this.selectedPlayers;
+            }
+        };
+    } else {
+        // If dbManager exists but has no players, add the default ones
+        window.dbManager.players = defaultPlayers;
+    }
+    
+    displayPlayers();
+    setupEventListeners();
+}
 
 // Display players in the grid
 function displayPlayers() {
@@ -44,7 +208,7 @@ function displayPlayers() {
     playersContainer.innerHTML = '';
     
     if (!window.dbManager) {
-        playersContainer.innerHTML = '<div class="error-message">Database manager not initialized</div>';
+        showError('Database manager not initialized');
         return;
     }
     
@@ -52,7 +216,7 @@ function displayPlayers() {
     console.log('DEBUG: Raw players data:', window.dbManager.players);
     
     if (!window.dbManager.players || !window.dbManager.players.length) {
-        playersContainer.innerHTML = '<div class="error-message">No players found</div>';
+        showError('No players found');
         return;
     }
     
@@ -115,7 +279,7 @@ function createPlayerCard(player) {
     } else {
         name = player.name || player.full_name || player.player_name || 'Unknown Player';
         phone = player.phone || player.phone_number || '';
-        photoUrl = player.photo_url || player.photoUrl || player.avatar || 'images/default-avatar.svg';
+        photoUrl = player.photo_url || player.photoUrl || player.avatar || player.photo || 'images/default-avatar.svg';
     }
     
     console.log('Player properties:', { id, name, phone, photoUrl });
@@ -170,6 +334,12 @@ function setupEventListeners() {
             
             // Toggle selected class on the card
             this.closest('.player-card').classList.toggle('selected', isSelected);
+            
+            // Update continue button state
+            const continueBtn = document.getElementById('continue-btn');
+            if (continueBtn) {
+                continueBtn.disabled = selectedCount < 4;
+            }
         });
     });
     
@@ -272,8 +442,17 @@ function setupEventListeners() {
             
             // Save selected players and redirect
             console.log('DEBUG: Saving selected players before navigating to role-selection.html');
-            window.dbManager.saveSelectedPlayers();
-            window.location.href = 'role-selection.html';
+            
+            try {
+                window.dbManager.saveSelectedPlayers();
+                window.location.href = 'role-selection.html';
+            } catch (error) {
+                console.error('Error saving selected players:', error);
+                
+                // Try to save to localStorage directly as fallback
+                localStorage.setItem('selectedPlayers', JSON.stringify(selectedPlayers));
+                window.location.href = 'role-selection.html';
+            }
         });
     }
 } 

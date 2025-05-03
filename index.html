@@ -8,33 +8,21 @@
     <link rel="stylesheet" href="dark-theme.css">
     <!-- Supabase JS -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- Simplified database connection -->
-    <script>
-        // Simple database connection
-        const SUPABASE_URL = 'https://isagurhfcktnnldvntse.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlzYWd1cmhmY2t0bm5sZHZudHNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQzNTY4NTAsImV4cCI6MjA1OTkzMjg1MH0.WYOhUCj5wD7AUCuxpDerOkwV_XvBAGapTEztRoJC2Q0';
-        
-        document.addEventListener('DOMContentLoaded', function() {
-            try {
-                console.log('Initializing Supabase client...');
-                window.supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-                console.log('Supabase client initialized successfully');
-            } catch (error) {
-                console.error('Error initializing Supabase client:', error);
-            }
-        });
-    </script>
+    <!-- Supabase initialization -->
+    <script src="supabase-init.js"></script>
+    <!-- Connection status -->
+    <script src="connection-status.js"></script>
 </head>
 <body class="dark-theme">
+    <div id="connection-status"></div>
+    
     <div class="container">
         <header>
             <h1>Welcome to Mafia Game</h1>
             <p>Choose an option to begin</p>
         </header>
 
-        <main>
-            <div id="connection-status"></div>
-            
+        <main>            
             <div class="game-intro">
                 <img src="images/Splash.jpg" alt="Mafia Game" class="splash-image">
                 <p>Experience the ultimate party game of deception, strategy, and social deduction.</p>
@@ -51,26 +39,42 @@
             <p>&copy; 2025 KRS Consulting Inc.</p>
         </footer>
     </div>
-
+    
+    <!-- Debugging script to help troubleshoot Supabase initialization -->
     <script>
-        // Simple connection status check
-        document.addEventListener('DOMContentLoaded', function() {
-            const statusElem = document.getElementById('connection-status');
-            if (!statusElem) return;
-            
-            statusElem.innerHTML = '<div class="status-loading">Checking database connection...</div>';
-            
-            // Check for Supabase client after a delay
-            setTimeout(function() {
-                if (window.supabase) {
-                    statusElem.innerHTML = '<div class="status-ok">Database connected</div>';
-                    console.log('Database connected successfully');
-                } else {
-                    statusElem.innerHTML = '<div class="status-error">Not connected to database</div>';
-                    console.error('Supabase client not initialized');
+    // Add a backup initialization in case the main one fails
+    window.addEventListener('load', function() {
+        // Give main initialization a chance to complete
+        setTimeout(function() {
+            if (!window.supabase) {
+                console.log('Backup initialization: Supabase not initialized by primary script, attempting fallback');
+                try {
+                    window.SUPABASE_URL = 'https://isagurhfcktnnldvntse.supabase.co';
+                    window.SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlzYWd1cmhmY2t0bm5sZHZudHNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQzNTY4NTAsImV4cCI6MjA1OTkzMjg1MH0.WYOhUCj5wD7AUCuxpDerOkwV_XvBAGapTEztRoJC2Q0';
+                    if (typeof supabase !== 'undefined') {
+                        window.supabase = supabase.createClient(window.SUPABASE_URL, window.SUPABASE_KEY);
+                        console.log('Fallback initialization complete');
+                        
+                        // Update connection status indicator
+                        const statusElem = document.getElementById('connection-status');
+                        if (statusElem) {
+                            statusElem.className = 'status-warning';
+                            statusElem.innerHTML = `
+                                <div class="status-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                        <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM8 4a.905.905 0 0 0-.9.995l.35 3.507a.552.552 0 0 0 1.1 0l.35-3.507A.905.905 0 0 0 8 4zm.002 6a1 1 0 1 0 0 2 1 1 0 0 0 0-2z"/>
+                                    </svg>
+                                </div>
+                                <div class="status-tooltip">Using fallback database connection</div>
+                            `;
+                        }
+                    }
+                } catch (error) {
+                    console.error('Fallback initialization failed:', error);
                 }
-            }, 2000);
-        });
+            }
+        }, 2000);
+    });
     </script>
 </body>
 </html> 

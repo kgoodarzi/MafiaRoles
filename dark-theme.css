@@ -258,19 +258,55 @@ input:focus, select:focus, textarea:focus {
 
 /* For role selection page - larger role image containers with no borders */
 #current-roles-list .role-image-container {
-    width: 140px;
-    height: 140px;
-    margin: 0 auto 0.5rem;
+    width: 180px;
+    height: 180px;
     border-radius: 8px;
     overflow: hidden;
     background-color: transparent;
     border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute; /* Position absolutely */
+    top: 35%; /* Higher in the taller card */
+    left: 50%; /* Center horizontally */
+    transform: translate(-50%, -50%); /* Perfect centering */
+    padding: 0;
+    margin-top: 0;
+    z-index: 1; /* Ensure image is above other elements */
 }
 
+/* Center image within container - with thinner colored border and no padding */
 #current-roles-list .role-image-container img {
-    width: 100%;
-    height: 100%;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    max-width: 80%;
+    max-height: 80%;
+    width: auto;
+    height: auto;
     object-fit: contain;
+    border: 2px solid transparent; /* Thin border */
+    border-radius: 8px;
+    padding: 0; /* Removed padding between image and border */
+    background-clip: padding-box;
+}
+
+/* Team-specific image borders to match card borders */
+#current-roles-list .role-card[data-team="mafia"] .role-image-container img {
+    border-color: #ef4444 !important; /* Red - match mafia border */
+    box-shadow: 0 0 8px rgba(239, 68, 68, 0.6); /* Subtle glow */
+}
+
+#current-roles-list .role-card[data-team="citizen"] .role-image-container img {
+    border-color: #10b981 !important; /* Green - match citizen border */
+    box-shadow: 0 0 8px rgba(16, 185, 129, 0.6); /* Subtle glow */
+}
+
+#current-roles-list .role-card[data-team="independent"] .role-image-container img {
+    border-color: #8b5cf6 !important; /* Purple - match independent border */
+    box-shadow: 0 0 8px rgba(139, 92, 246, 0.6); /* Subtle glow */
 }
 
 /* For game view - larger role image containers with no borders */
@@ -288,6 +324,9 @@ input:focus, select:focus, textarea:focus {
     width: 100%;
     height: 100%;
     object-fit: contain;
+    border: 2px solid transparent; /* Base border that will be overridden */
+    border-radius: 8px;
+    padding: 0; /* No padding between image and border */
 }
 
 /* Player cards for player selection page */
@@ -494,6 +533,75 @@ input:focus, select:focus, textarea:focus {
     margin-bottom: 15px;
 }
 
+/* Connection status icon */
+#connection-status {
+    position: fixed;
+    top: 15px;
+    right: 15px;
+    margin: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background-color: var(--card-bg);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    cursor: pointer;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+#connection-status:hover {
+    transform: scale(1.1);
+}
+
+#connection-status .status-icon {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#connection-status .status-tooltip {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 10px;
+    padding: 8px 12px;
+    background-color: var(--card-bg);
+    border-radius: 6px;
+    white-space: nowrap;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    opacity: 0;
+    transform: translateY(-10px);
+    pointer-events: none;
+    transition: all 0.3s ease;
+}
+
+#connection-status:hover .status-tooltip {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.status-ok .status-icon {
+    background-color: rgba(16, 185, 129, 0.2);
+    color: var(--success-color);
+}
+
+.status-error .status-icon {
+    background-color: rgba(239, 68, 68, 0.2);
+    color: var(--danger-color);
+}
+
+.status-loading .status-icon {
+    background-color: rgba(79, 70, 229, 0.2);
+    color: var(--accent-primary);
+}
+
 /* Game completion */
 .game-complete {
     background-color: rgba(16, 185, 129, 0.1);
@@ -579,47 +687,130 @@ input:focus, select:focus, textarea:focus {
 /* Roles grid styling for role selection page */
 #current-roles-list.roles-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1.5rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr)); /* Use minmax to ensure proper sizing */
+    gap: 2rem; /* Increase gap between cards */
     padding: 1.5rem;
     max-height: none;
     overflow: visible;
+    width: 100%;
+    box-sizing: border-box;
+    margin-left: 0; /* Remove the negative margin */
 }
 
+/* Adjust cards for responsive fit with further reduced height */
 #current-roles-list .role-card {
-    height: 100%;
+    height: 230px; /* Reduced from 270px by approximately 15% */
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: space-between;
-    padding: 1.5rem 1rem;
+    align-items: center; /* Center horizontally */
+    justify-content: flex-start; /* Start from top */
+    padding: 1.5rem;
     background-color: var(--card-bg);
     border-radius: 12px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     transition: all 0.3s ease;
-    border: none;
+    box-sizing: border-box;
+    width: 100%; /* Full width */
+    text-align: center; /* Ensure all content is centered */
+    position: relative; /* Allow absolute positioning of children */
+    border-width: 4px !important; /* Increase border width */
 }
 
+/* Adjust h4 positioning to bottom of card and match border colors */
 #current-roles-list .role-card h4 {
     font-size: 1.2rem;
-    margin: 0.75rem 0 0;
+    position: absolute;
+    bottom: 1rem;
+    left: 0;
+    right: 0;
     text-align: center;
+    z-index: 2; /* Ensure text is above image */
+    margin: 0;
+    padding: 0; /* Removed horizontal padding to fix alignment */
+    width: 100%; /* Ensure it spans the full width */
 }
 
-/* Team Colors - maintain team indicators but without borders */
+/* Team-specific title colors to match borders */
+#current-roles-list .role-card[data-team="mafia"] h4 {
+    color: #ef4444 !important; /* Red - match mafia border */
+}
+
+#current-roles-list .role-card[data-team="citizen"] h4 {
+    color: #10b981 !important; /* Green - match citizen border */
+}
+
+#current-roles-list .role-card[data-team="independent"] h4 {
+    color: #8b5cf6 !important; /* Purple - match independent border */
+}
+
+/* Additional styling to ensure proper alignment */
+.current-roles-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Center the entire section */
+    width: 100%;
+    padding: 1rem;
+    box-sizing: border-box;
+    overflow: hidden; /* Prevent horizontal scrolling */
+}
+
+/* Team Colors - with neon glow effects */
 .role-card[data-team="citizen"] {
-    background-color: rgba(16, 185, 129, 0.1);
-    box-shadow: 0 0 15px rgba(16, 185, 129, 0.2);
+    background-color: var(--card-bg);
+    border: 4px solid #10b981 !important;
+    box-shadow: 0 0 15px rgba(16, 185, 129, 0.6), 0 0 25px rgba(16, 185, 129, 0.4), inset 0 0 10px rgba(16, 185, 129, 0.3) !important;
+    animation: citizenNeonPulse 2s infinite;
 }
 
 .role-card[data-team="mafia"] {
-    background-color: rgba(239, 68, 68, 0.1);
-    box-shadow: 0 0 15px rgba(239, 68, 68, 0.2);
+    background-color: var(--card-bg);
+    border: 4px solid #ef4444 !important;
+    box-shadow: 0 0 15px rgba(239, 68, 68, 0.6), 0 0 25px rgba(239, 68, 68, 0.4), inset 0 0 10px rgba(239, 68, 68, 0.3) !important;
+    animation: mafiaNeonPulse 2s infinite;
 }
 
 .role-card[data-team="independent"] {
-    background-color: rgba(139, 92, 246, 0.1);
-    box-shadow: 0 0 15px rgba(139, 92, 246, 0.2);
+    background-color: var(--card-bg);
+    border: 4px solid #8b5cf6 !important;
+    box-shadow: 0 0 15px rgba(139, 92, 246, 0.6), 0 0 25px rgba(139, 92, 246, 0.4), inset 0 0 10px rgba(139, 92, 246, 0.3) !important;
+    animation: independentNeonPulse 2s infinite;
+}
+
+/* Neon pulse animations for each team */
+@keyframes citizenNeonPulse {
+    0% {
+        box-shadow: 0 0 15px rgba(16, 185, 129, 0.6), 0 0 25px rgba(16, 185, 129, 0.4), inset 0 0 10px rgba(16, 185, 129, 0.3);
+    }
+    50% {
+        box-shadow: 0 0 20px rgba(16, 185, 129, 0.8), 0 0 35px rgba(16, 185, 129, 0.6), inset 0 0 15px rgba(16, 185, 129, 0.5);
+    }
+    100% {
+        box-shadow: 0 0 15px rgba(16, 185, 129, 0.6), 0 0 25px rgba(16, 185, 129, 0.4), inset 0 0 10px rgba(16, 185, 129, 0.3);
+    }
+}
+
+@keyframes mafiaNeonPulse {
+    0% {
+        box-shadow: 0 0 15px rgba(239, 68, 68, 0.6), 0 0 25px rgba(239, 68, 68, 0.4), inset 0 0 10px rgba(239, 68, 68, 0.3);
+    }
+    50% {
+        box-shadow: 0 0 20px rgba(239, 68, 68, 0.8), 0 0 35px rgba(239, 68, 68, 0.6), inset 0 0 15px rgba(239, 68, 68, 0.5);
+    }
+    100% {
+        box-shadow: 0 0 15px rgba(239, 68, 68, 0.6), 0 0 25px rgba(239, 68, 68, 0.4), inset 0 0 10px rgba(239, 68, 68, 0.3);
+    }
+}
+
+@keyframes independentNeonPulse {
+    0% {
+        box-shadow: 0 0 15px rgba(139, 92, 246, 0.6), 0 0 25px rgba(139, 92, 246, 0.4), inset 0 0 10px rgba(139, 92, 246, 0.3);
+    }
+    50% {
+        box-shadow: 0 0 20px rgba(139, 92, 246, 0.8), 0 0 35px rgba(139, 92, 246, 0.6), inset 0 0 15px rgba(139, 92, 246, 0.5);
+    }
+    100% {
+        box-shadow: 0 0 15px rgba(139, 92, 246, 0.6), 0 0 25px rgba(139, 92, 246, 0.4), inset 0 0 10px rgba(139, 92, 246, 0.3);
+    }
 }
 
 /* Remove this conflicting rule that's causing all player grids to be 2 columns */
@@ -793,28 +984,78 @@ body.player-selection-page section {
     color: var(--text-secondary);
 }
 
-/* Role card title in game page */
+/* Role card title in game page - with team colors */
 .role-card h3 {
-    font-size: 2rem; /* Two font sizes bigger */
+    font-size: 2rem;
     font-weight: 700;
     margin: 1rem 0 0.5rem;
     text-align: center;
-    color: var(--text-primary);
 }
 
+/* Hide role descriptions on game page */
 .role-description {
-    font-size: 1.1rem;
-    line-height: 1.5;
-    text-align: center;
-    margin: 0 auto;
-    max-width: 80%;
-    color: var(--text-secondary);
+    display: none !important; /* Hide role descriptions */
 }
 
-/* Role display container */
-.role-display {
+/* Team-specific title colors for game page */
+.role-card[data-team="mafia"] h3 {
+    color: #ef4444 !important; /* Red - match mafia */
+}
+
+.role-card[data-team="citizen"] h3 {
+    color: #10b981 !important; /* Green - match citizen */
+}
+
+.role-card[data-team="independent"] h3 {
+    color: #8b5cf6 !important; /* Purple - match independent */
+}
+
+/* Game page role image container - matching role selection page */
+.role-image-container {
+    width: 180px; /* Match the size from role selection page */
+    height: 180px; /* Match the size from role selection page */
+    margin: 0 auto 1rem;
+    border-radius: 8px;
+    overflow: hidden;
+    background-color: transparent;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     position: relative;
-    left: 0; /* Reset to center */
+}
+
+/* Game page role image with team-colored border - matching role selection page */
+.role-image-container img {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    max-width: 80%;
+    max-height: 80%;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    border: 2px solid transparent; /* Base border that will be overridden */
+    border-radius: 8px;
+    padding: 0; /* No padding between image and border */
+    background-clip: padding-box;
+}
+
+/* Team-specific image borders for game page - matching role selection page */
+.role-card[data-team="mafia"] .role-image-container img {
+    border-color: #ef4444 !important; /* Red - match mafia */
+    box-shadow: 0 0 8px rgba(239, 68, 68, 0.6); /* Subtle glow */
+}
+
+.role-card[data-team="citizen"] .role-image-container img {
+    border-color: #10b981 !important; /* Green - match citizen */
+    box-shadow: 0 0 8px rgba(16, 185, 129, 0.6); /* Subtle glow */
+}
+
+.role-card[data-team="independent"] .role-image-container img {
+    border-color: #8b5cf6 !important; /* Purple - match independent */
+    box-shadow: 0 0 8px rgba(139, 92, 246, 0.6); /* Subtle glow */
 }
 
 /* Action buttons in the role reveal section */
@@ -840,4 +1081,16 @@ body.player-selection-page section {
 #current-player {
     text-align: left; /* Ensure container aligns with player card */
     width: 100%;
+}
+
+#current-roles-list .role-card h4 {
+    font-size: 1.2rem;
+    margin: 0.75rem 0 0;
+    text-align: center;
+}
+
+/* Role display container */
+.role-display {
+    position: relative;
+    left: 0; /* Reset to center */
 } 

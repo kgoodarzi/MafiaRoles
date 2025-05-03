@@ -3,71 +3,66 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mafia Game - About</title>
+    <title>About Mafia Game</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="dark-theme.css">
     <!-- Supabase JS -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script>
-        // Create global variable for debugging
-        window.supabaseLoaded = true;
-    </script>
-    <!-- Database manager -->
-    <script src="database.js"></script>
+    <!-- Supabase initialization -->
+    <script src="supabase-init.js"></script>
+    <!-- Connection status -->
+    <script src="connection-status.js"></script>
+    
 </head>
 <body class="dark-theme">
+    <div id="connection-status"></div>
+    
     <div class="container">
         <header>
             <h1>About Mafia Game</h1>
-            <p>Learn the rules and how to play</p>
+            <p>Learn more about the rules and gameplay</p>
         </header>
 
         <main>
-            <div id="connection-status"></div>
-            
-            <div class="about-section">
+            <section class="about-section">
                 <h2>What is Mafia?</h2>
-                <img src="images/About-1.jpg" alt="Mafia Game" class="about-image">
-                <p>
-                    Mafia is a social deduction game that simulates a conflict between an informed minority (the mafia) 
-                    and an uninformed majority (the citizens). The game was created by Dimitry Davidoff in 1986 and has 
-                    become popular worldwide under various names like "Werewolf" and "Assassin."
-                </p>
-            </div>
+                <p>Mafia is a social deduction party game that tests your ability to lie, detect lies, and work as a team.</p>
+                <img src="images/mafia-game.jpg" alt="Mafia game in action" class="about-image">
+                <p>Created in the 1980s by Dimitry Davidoff, this psychological game has become a worldwide phenomenon and has inspired many variations and adaptations.</p>
+            </section>
 
-            <div class="about-section">
+            <section class="about-section">
                 <h2>Basic Rules</h2>
-                <ol class="rules-list">
-                    <li>Players are secretly assigned roles as either Mafia members or Citizens.</li>
-                    <li>The game alternates between "night" and "day" phases.</li>
-                    <li>During the night, the Mafia secretly choose a Citizen to eliminate.</li>
-                    <li>Special roles may perform their actions during the night.</li>
-                    <li>During the day, all players discuss and vote to eliminate one player they suspect is Mafia.</li>
-                    <li>Citizens win if they eliminate all Mafia members.</li>
-                    <li>Mafia wins if they equal or outnumber the Citizens.</li>
-                </ol>
-            </div>
+                <p>The game is played in alternating phases:</p>
+                <ul class="rules-list">
+                    <li><strong>Night Phase:</strong> The Mafia secretly 'eliminate' one citizen. Special roles also perform their actions.</li>
+                    <li><strong>Day Phase:</strong> All players debate and vote to eliminate one player they suspect is Mafia.</li>
+                    <li><strong>Game End:</strong> The game continues until either all Mafia are eliminated (Town wins) or the Mafia outnumbers the Town (Mafia wins).</li>
+                </ul>
+            </section>
 
-            <div class="about-section">
-                <h2>Tips for Players</h2>
+            <section class="about-section">
+                <h2>Tips for Playing</h2>
                 <ul class="tips-list">
-                    <li>Pay attention to everyone's behavior and statements.</li>
-                    <li>As a Citizen, share as much information as possible to help identify the Mafia.</li>
-                    <li>As Mafia, try to blend in and avoid drawing suspicion.</li>
-                    <li>Special roles should be careful about revealing their identity too early.</li>
-                    <li>Remember that lying is part of the game — don't take accusations personally!</li>
+                    <li>Pay attention to contradictions in other players' statements</li>
+                    <li>Observe body language and unusual behavior</li>
+                    <li>Trust your intuition, but gather evidence before making accusations</li>
+                    <li>Stay calm when defending yourself</li>
+                    <li>Remember that deception is part of the game - don't take it personally!</li>
                 </ul>
-            </div>
+            </section>
 
-            <div class="about-section">
+            <section class="about-section">
                 <h2>About This App</h2>
+                <p>This app was created to help organize and enhance your Mafia game experience. Features include:</p>
                 <ul class="app-features">
-                    <li>Manage your player roster</li>
-                    <li>Easily assign roles for each game</li>
-                    <li>Helps moderate the game by handling role reveals</li>
-                    <li>Keeps track of all game information</li>
+                    <li>Easy role assignment without needing printed cards</li>
+                    <li>Role information available for each player</li>
+                    <li>Game state tracking and management</li>
+                    <li>Customizable role setups</li>
+                    <li>Offline play capability</li>
                 </ul>
-            </div>
+            </section>
 
             <div class="actions">
                 <a href="index.html" class="btn">Back to Home</a>
@@ -78,26 +73,5 @@
             <p>&copy; 2025 KRS Consulting Inc.</p>
         </footer>
     </div>
-
-    <script>
-        // Simple connection status check
-        document.addEventListener('DOMContentLoaded', function() {
-            const statusElem = document.getElementById('connection-status');
-            if (!statusElem) return;
-            
-            statusElem.innerHTML = '<div class="status-loading">Checking database connection...</div>';
-            
-            // Check for Supabase client after a delay
-            setTimeout(function() {
-                if (window.supabase) {
-                    statusElem.innerHTML = '<div class="status-ok">Database connected</div>';
-                    console.log('Database connected successfully');
-                } else {
-                    statusElem.innerHTML = '<div class="status-error">Not connected to database</div>';
-                    console.error('Supabase client not initialized');
-                }
-            }, 2000);
-        });
-    </script>
 </body>
 </html> 
