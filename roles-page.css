@@ -1,5 +1,17 @@
 /* Roles Page Specific Styling */
 
+/* Explicitly disable inheritance from neon-effects.css for roles-item */
+.roles-item {
+    animation: none !important;
+    box-shadow: none !important;
+}
+
+.roles-item::before {
+    content: none !important;
+    animation: none !important;
+    display: none !important;
+}
+
 /* Reset default body centering */
 body, html {
     display: block !important; 
@@ -68,9 +80,9 @@ body[data-page="roles"] main {
 }
 
 /* Style role cards to match role-selection.html */
-body[data-page="roles"] .role-card,
-.roles-page .role-card,
-.team-section .roles-list .role-card {
+body[data-page="roles"] .roles-item,
+body.roles-page .roles-item,
+html body .team-section .roles-list .roles-item {
     height: 200px !important;
     width: 48% !important;
     max-width: 48% !important;
@@ -93,36 +105,77 @@ body[data-page="roles"] .role-card,
     float: none !important;
     flex-shrink: 0 !important;
     flex-grow: 0 !important;
+    animation: none !important;
 }
 
 /* Team-specific styling with neon glow */
-body[data-page="roles"] .role-card[data-team="citizen"],
-.roles-page .role-card[data-team="citizen"] {
+body[data-page="roles"] .roles-item[data-team="citizen"],
+body.roles-page .roles-item[data-team="citizen"],
+html body .team-section .roles-list .roles-item[data-team="citizen"] {
     background-color: var(--card-bg) !important;
     border: 4px solid #10b981 !important;
     box-shadow: 0 0 15px rgba(16, 185, 129, 0.6), 0 0 25px rgba(16, 185, 129, 0.4), inset 0 0 10px rgba(16, 185, 129, 0.3) !important;
     animation: citizenNeonPulse 2s infinite !important;
 }
 
-body[data-page="roles"] .role-card[data-team="mafia"],
-.roles-page .role-card[data-team="mafia"] {
+body[data-page="roles"] .roles-item[data-team="mafia"],
+body.roles-page .roles-item[data-team="mafia"],
+html body .team-section .roles-list .roles-item[data-team="mafia"] {
     background-color: var(--card-bg) !important;
     border: 4px solid #ef4444 !important;
     box-shadow: 0 0 15px rgba(239, 68, 68, 0.6), 0 0 25px rgba(239, 68, 68, 0.4), inset 0 0 10px rgba(239, 68, 68, 0.3) !important;
     animation: mafiaNeonPulse 2s infinite !important;
 }
 
-body[data-page="roles"] .role-card[data-team="independent"],
-.roles-page .role-card[data-team="independent"] {
+body[data-page="roles"] .roles-item[data-team="independent"],
+body.roles-page .roles-item[data-team="independent"],
+html body .team-section .roles-list .roles-item[data-team="independent"] {
     background-color: var(--card-bg) !important;
     border: 4px solid #8b5cf6 !important;
     box-shadow: 0 0 15px rgba(139, 92, 246, 0.6), 0 0 25px rgba(139, 92, 246, 0.4), inset 0 0 10px rgba(139, 92, 246, 0.3) !important;
     animation: independentNeonPulse 2s infinite !important;
 }
 
+/* Reset the ::before element and define it specifically for our animation */
+body[data-page="roles"] .roles-item::before,
+body.roles-page .roles-item::before,
+html body .team-section .roles-list .roles-item::before {
+    content: '' !important;
+    display: block !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    z-index: -1 !important;
+    opacity: 0.3 !important;
+    pointer-events: none !important;
+    border-radius: inherit !important;
+}
+
+/* Team-specific ::before elements for animations */
+body[data-page="roles"] .roles-item[data-team="citizen"]::before,
+body.roles-page .roles-item[data-team="citizen"]::before,
+html body .team-section .roles-list .roles-item[data-team="citizen"]::before {
+    box-shadow: 0 0 15px rgba(16, 185, 129, 0.6), 0 0 25px rgba(16, 185, 129, 0.4) !important;
+}
+
+body[data-page="roles"] .roles-item[data-team="mafia"]::before,
+body.roles-page .roles-item[data-team="mafia"]::before,
+html body .team-section .roles-list .roles-item[data-team="mafia"]::before {
+    box-shadow: 0 0 15px rgba(239, 68, 68, 0.6), 0 0 25px rgba(239, 68, 68, 0.4) !important;
+}
+
+body[data-page="roles"] .roles-item[data-team="independent"]::before,
+body.roles-page .roles-item[data-team="independent"]::before,
+html body .team-section .roles-list .roles-item[data-team="independent"]::before {
+    box-shadow: 0 0 15px rgba(139, 92, 246, 0.6), 0 0 25px rgba(139, 92, 246, 0.4) !important;
+}
+
 /* Create image container to match role-selection.html */
-body[data-page="roles"] .role-card .role-image-container,
-.roles-page .role-card .role-image-container {
+body[data-page="roles"] .roles-item .role-image-container,
+body.roles-page .roles-item .role-image-container,
+html body .team-section .roles-list .roles-item .role-image-container {
     width: 140px !important;
     height: 140px !important;
     margin: 0 auto 0.25rem !important;
@@ -134,9 +187,9 @@ body[data-page="roles"] .role-card .role-image-container,
 }
 
 /* Fix role images to match role-selection.html exactly */
-body[data-page="roles"] .role-card img,
-.roles-page .role-card img,
-.team-section .roles-list .role-card img {
+body[data-page="roles"] .roles-item img,
+body.roles-page .roles-item img,
+html body .team-section .roles-list .roles-item img {
     width: 120px !important;
     height: 120px !important;
     max-width: 120px !important;
@@ -147,29 +200,29 @@ body[data-page="roles"] .role-card img,
 }
 
 /* Team-specific image styling */
-body[data-page="roles"] .role-card[data-team="mafia"] img,
-.roles-page .role-card[data-team="mafia"] img {
+body[data-page="roles"] .roles-item[data-team="mafia"] img,
+body.roles-page .roles-item[data-team="mafia"] img {
     border: 2px solid #ef4444 !important;
     box-shadow: 0 0 8px rgba(239, 68, 68, 0.6) !important;
 }
 
-body[data-page="roles"] .role-card[data-team="citizen"] img,
-.roles-page .role-card[data-team="citizen"] img {
+body[data-page="roles"] .roles-item[data-team="citizen"] img,
+body.roles-page .roles-item[data-team="citizen"] img {
     border: 2px solid #10b981 !important;
     box-shadow: 0 0 8px rgba(16, 185, 129, 0.6) !important;
 }
 
-body[data-page="roles"] .role-card[data-team="independent"] img,
-.roles-page .role-card[data-team="independent"] img {
+body[data-page="roles"] .roles-item[data-team="independent"] img,
+body.roles-page .roles-item[data-team="independent"] img {
     border: 2px solid #8b5cf6 !important;
     box-shadow: 0 0 8px rgba(139, 92, 246, 0.6) !important;
 }
 
 /* Position title at bottom of card */
-body[data-page="roles"] .role-card h3,
-.roles-page .role-card h3,
-.team-section .roles-list .role-card h3,
-.role-card .role-title {
+body[data-page="roles"] .roles-item h3,
+body.roles-page .roles-item h3,
+html body .team-section .roles-list .roles-item h3,
+.roles-item .role-title {
     font-size: 1.1rem !important;
     position: absolute !important;
     bottom: 0.5rem !important;
@@ -183,28 +236,28 @@ body[data-page="roles"] .role-card h3,
 }
 
 /* Team-specific title colors */
-body[data-page="roles"] .role-card[data-team="mafia"] h3,
-.roles-page .role-card[data-team="mafia"] h3,
-.role-card[data-team="mafia"] .role-title {
+body[data-page="roles"] .roles-item[data-team="mafia"] h3,
+body.roles-page .roles-item[data-team="mafia"] h3,
+html body .team-section .roles-list .roles-item[data-team="mafia"] .role-title {
     color: #ef4444 !important;
 }
 
-body[data-page="roles"] .role-card[data-team="citizen"] h3,
-.roles-page .role-card[data-team="citizen"] h3,
-.role-card[data-team="citizen"] .role-title {
+body[data-page="roles"] .roles-item[data-team="citizen"] h3,
+body.roles-page .roles-item[data-team="citizen"] h3,
+html body .team-section .roles-list .roles-item[data-team="citizen"] .role-title {
     color: #10b981 !important;
 }
 
-body[data-page="roles"] .role-card[data-team="independent"] h3,
-.roles-page .role-card[data-team="independent"] h3,
-.role-card[data-team="independent"] .role-title {
+body[data-page="roles"] .roles-item[data-team="independent"] h3,
+body.roles-page .roles-item[data-team="independent"] h3,
+html body .team-section .roles-list .roles-item[data-team="independent"] .role-title {
     color: #8b5cf6 !important;
 }
 
 /* Make role description more compact */
-body[data-page="roles"] .role-card .role-description,
-.roles-page .role-card .role-description,
-.team-section .roles-list .role-card .role-description {
+body[data-page="roles"] .roles-item .role-description,
+body.roles-page .roles-item .role-description,
+html body .team-section .roles-list .roles-item .role-description {
     font-size: 0.8rem !important;
     line-height: 1.3 !important;
     margin-top: 0 !important;
@@ -275,27 +328,27 @@ body[data-page="roles"] .role-card .role-description,
         flex-wrap: wrap !important;
     }
     
-    body[data-page="roles"] .role-card,
-    .roles-page .role-card,
-    .team-section .roles-list .role-card {
+    body[data-page="roles"] .roles-item,
+    body.roles-page .roles-item,
+    html body .team-section .roles-list .roles-item {
         width: 48% !important;
         min-width: 48% !important;
         height: 180px !important;
         padding: 10px !important;
     }
     
-    body[data-page="roles"] .role-card img,
-    .roles-page .role-card img,
-    .team-section .roles-list .role-card img {
+    body[data-page="roles"] .roles-item img,
+    body.roles-page .roles-item img,
+    html body .team-section .roles-list .roles-item img {
         width: 100px !important;
         height: 100px !important;
         max-width: 100px !important;
         max-height: 100px !important;
     }
     
-    body[data-page="roles"] .role-card .role-description,
-    .roles-page .role-card .role-description,
-    .team-section .roles-list .role-card .role-description {
+    body[data-page="roles"] .roles-item .role-description,
+    body.roles-page .roles-item .role-description,
+    html body .team-section .roles-list .roles-item .role-description {
         bottom: 2rem !important;
         max-height: 40px !important;
         font-size: 0.75rem !important;
@@ -312,12 +365,11 @@ body[data-page="roles"] .role-card .role-description,
         flex-direction: column !important;
     }
     
-    body[data-page="roles"] .role-card,
-    .roles-page .role-card,
-    .team-section .roles-list .role-card {
-        width: 95% !important;
-        max-width: 95% !important;
-        min-width: 95% !important;
+    body[data-page="roles"] .roles-item,
+    body.roles-page .roles-item,
+    html body .team-section .roles-list .roles-item {
         margin: 10px auto !important;
+        width: 303px !important;
+        height: 220px !important;
     }
 } 

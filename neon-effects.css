@@ -1300,8 +1300,8 @@ html body .role-reveal .role-card[data-team="independent"] .role-image-container
 
 /* ADDITIONAL FULLSCREEN FIXES */
 
-/* Target any element with "role" in its class name */
-[class*="role"] {
+/* Target any element with "role" in its class name except roles-item */
+[class*="role"]:not(.roles-item) {
     box-sizing: border-box !important;
 }
 
@@ -1365,7 +1365,7 @@ html body .role-reveal .role-card[data-team="independent"] .role-image-container
 
 /* Make the role image very large */
 .role-card .role-image-container,
-[class*="role"] .role-image-container {
+[class*="role"]:not(.roles-item) .role-image-container {
     flex: 1 1 auto !important;
     width: 80% !important;
     height: 80% !important;
@@ -1378,7 +1378,7 @@ html body .role-reveal .role-card[data-team="independent"] .role-image-container
 
 /* Make role image fill container but maintain aspect ratio */
 .role-card .role-image-container img,
-[class*="role"] .role-image-container img {
+[class*="role"]:not(.roles-item) .role-image-container img {
     max-width: 90% !important;
     max-height: 90% !important;
     object-fit: contain !important;
@@ -1388,7 +1388,7 @@ html body .role-reveal .role-card[data-team="independent"] .role-image-container
 /* Push game actions to bottom of card */
 .role-reveal .actions,
 .role-display .actions,
-[class*="role"] .actions {
+[class*="role"]:not(.roles-item) .actions {
     margin-top: auto !important;
     padding-top: 20px !important;
     width: 100% !important;
@@ -1444,9 +1444,9 @@ div.role-card {
 }
 
 /* Target any specific role identifiers */
-[data-team="mafia"],
-[data-team="citizen"],
-[data-team="independent"] {
+.role-card[data-team="mafia"],
+.role-card[data-team="citizen"],
+.role-card[data-team="independent"] {
     min-height: 600px !important;
     height: 600px !important;
 }
@@ -1476,8 +1476,8 @@ body, html, main, .container, section {
     height: 100vh;
 }
 
-/* Set all role related elements to block with height */
-div[class*="role"],
+/* Set all role related elements to block with height except roles-item */
+div[class*="role"]:not(.roles-item),
 div[id*="role"],
 section[class*="role"],
 section[id*="role"] {
@@ -1511,4 +1511,58 @@ div[id*="role-card"] {
 /* Override any max-height constraints */
 .role-card {
     max-height: none !important;
+}
+
+/* Ensure role-card styles don't affect roles-item */
+.roles-item {
+    /* Cancel any role-card styles */
+    all: revert;
+    /* Reset any animations */
+    animation: none !important;
+}
+
+.roles-item::before,
+.roles-item::after {
+    /* Prevent pseudo-elements from being used */
+    content: none !important;
+    display: none !important;
+    animation: none !important;
+}
+
+/* Ensure that very specific neon-effects selectors don't target roles-item */
+body .roles-item,
+html body .roles-item,
+body[data-page="roles"] .roles-item,
+.roles-page .roles-item,
+.team-section .roles-list .roles-item {
+    /* These styles will be defined in roles-page.css, not here */
+    border: none;
+    box-shadow: none;
+    animation: none !important;
+    /* Override any height inheritance */
+    min-height: auto !important;
+    height: auto !important; 
+    max-height: none !important;
+}
+
+/* Extra specific selectors to override data-team attributes */
+body .roles-item[data-team="mafia"],
+body .roles-item[data-team="citizen"],
+body .roles-item[data-team="independent"],
+html body .roles-item[data-team],
+.team-section .roles-list .roles-item[data-team] {
+    /* Override any data-team height constraints */
+    min-height: auto !important;
+    height: auto !important;
+    max-height: none !important;
+}
+
+/* Ensure no pseudo-element animations are applied to roles-item */
+body .roles-item::before,
+html body .roles-item::before,
+.roles-item[data-team]::before,
+.roles-item[data-team]::after {
+    content: none !important;
+    display: none !important;
+    animation: none !important;
 } 

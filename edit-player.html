@@ -12,8 +12,8 @@
     <script src="supabase-init.js"></script>
     <!-- Connection status -->
     <script src="connection-status.js"></script>
-    <!-- Connection Status -->
-    
+    <!-- Database Manager -->
+    <script src="database.js"></script>
 </head>
 <body class="dark-theme">
     <div id="connection-status"></div>
@@ -21,45 +21,178 @@
     <div class="container">
         <header>
             <h1>Edit Player</h1>
-            <p>Edit the selected player's information</p>
+            <p>Update player information</p>
         </header>
+
         <main>
-            <form id="edit-player-form" class="add-player-form" onsubmit="handleEditPlayer(event)">
-                <div class="form-group avatar-upload">
-                    <div id="avatar-preview" class="avatar-preview">
-                        <img id="avatar-preview-img" src="images/default-avatar.svg" alt="Player Avatar">
-                        <div class="avatar-overlay">Click to change</div>
+            <div id="form-container">
+                <form id="edit-player-form" class="add-player-form">
+                    <div class="form-group avatar-upload">
+                        <div id="avatar-preview" class="avatar-preview">
+                            <img id="avatar-preview-img" src="images/default-avatar.svg" alt="Player Avatar">
+                            <div class="avatar-overlay">Click to update</div>
+                        </div>
+                        <input type="file" id="player-avatar" accept="image/*" style="display: none;">
                     </div>
-                    <input type="file" id="player-avatar" accept="image/*" style="display: none;" onchange="handleAvatarPreview(event)">
-                </div>
-                <div class="form-group">
-                    <label for="player-username">Username:</label>
-                    <input type="text" id="player-username" required>
-                </div>
-                <div class="form-group">
-                    <label for="player-fullname">Full Name:</label>
-                    <input type="text" id="player-fullname" required>
-                </div>
-                <div class="form-group">
-                    <label for="player-email">Email:</label>
-                    <input type="email" id="player-email">
-                </div>
-                <div class="actions">
-                    <a href="player-selection.html" class="btn">Cancel</a>
-                    <button type="submit" class="btn btn-primary">Save Changes</button>
-                </div>
-            </form>
+                    
+                    <div class="form-group">
+                        <label for="player-name">Player Name:</label>
+                        <input type="text" id="player-name" required placeholder="Full name">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="player-username">Username:</label>
+                        <input type="text" id="player-username" required placeholder="Username" readonly>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="player-email">Email (optional):</label>
+                        <input type="email" id="player-email" placeholder="Email">
+                    </div>
+                    
+                    <div class="actions">
+                        <a href="player-selection.html" class="btn">Cancel</a>
+                        <button type="submit" id="submit-btn" class="btn btn-primary">Update Player</button>
+                    </div>
+                </form>
+            </div>
         </main>
+
         <footer>
             <p>&copy; 2025 KRS Consulting Inc.</p>
         </footer>
     </div>
+
     <script>
-        // Avatar preview click handler
-        document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('avatar-preview').addEventListener('click', function() {
-                document.getElementById('player-avatar').click();
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Get player username from URL parameter
+            const urlParams = new URLSearchParams(window.location.search);
+            const username = urlParams.get('username');
+            
+            if (!username) {
+                alert('No player username provided');
+                window.location.href = 'player-selection.html';
+                return;
+            }
+            
+            console.log('Edit player page loaded for username:', username);
+            
+            // Set up avatar preview functionality
+            const avatarPreview = document.getElementById('avatar-preview');
+            const avatarPreviewImg = document.getElementById('avatar-preview-img');
+            const avatarInput = document.getElementById('player-avatar');
+            
+            avatarPreview.addEventListener('click', function() {
+                avatarInput.click();
             });
+            
+            avatarInput.addEventListener('change', function() {
+                if (this.files && this.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        avatarPreviewImg.src = e.target.result;
+                    };
+                    reader.readAsDataURL(this.files[0]);
+                }
+            });
+            
+            // Wait for database manager to be ready
+            const waitForDbManager = () => {
+                return new Promise((resolve) => {
+                    if (window.dbManager) {
+                        resolve(window.dbManager);
+                    } else {
+                        document.addEventListener('dbManagerReady', function(event) {
+                            resolve(window.dbManager);
+                        });
+                    }
+                });
+            };
+            
+            try {
+                const dbManager = await waitForDbManager();
+                console.log('Database manager loaded successfully');
+                
+                // Load player data by username
+                const player = await dbManager.getPlayerByUsername(username);
+                
+                if (!player) {
+                    alert('Player not found');
+                    window.location.href = 'player-selection.html';
+                    return;
+                }
+                
+                // Debug: log the player data received
+                console.log('Player data loaded:', player);
+                
+                // Determine the correct name field (handle various formats)
+                const playerName = player.name || player.full_name || player.player_name || '';
+                console.log('Using player name:', playerName);
+                
+                // Populate form fields
+                document.getElementById('player-name').value = playerName;
+                document.getElementById('player-username').value = player.username || username;
+                document.getElementById('player-email').value = player.email || '';
+                
+                // Set avatar if available (handle various formats)
+                const photoUrl = player.photo_url || player.photoUrl || player.avatar || player.photo;
+                console.log('Using photo URL:', photoUrl);
+                
+                if (photoUrl) {
+                    // Set the image source with error handling
+                    avatarPreviewImg.onerror = function() {
+                        console.error('Failed to load image:', photoUrl);
+                        this.src = 'images/default-avatar.svg';
+                    };
+                    avatarPreviewImg.src = photoUrl;
+                }
+                
+                // Set up form submission
+                const form = document.getElementById('edit-player-form');
+                form.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    
+                    const name = document.getElementById('player-name').value.trim();
+                    const email = document.getElementById('player-email').value.trim();
+                    const photoFile = avatarInput.files.length > 0 ? avatarInput.files[0] : null;
+                    
+                    if (!name) {
+                        alert('Please enter a player name');
+                        return;
+                    }
+                    
+                    // Store original button text outside try-catch-finally block
+                    const submitBtn = this.querySelector('button[type="submit"]');
+                    const originalText = submitBtn.textContent;
+                    
+                    try {
+                        // Show loading state
+                        submitBtn.textContent = 'Updating...';
+                        submitBtn.disabled = true;
+                        
+                        // Update player in database using username
+                        const updatedPlayer = await dbManager.updatePlayerByUsername(username, name, email, photoFile);
+                        
+                        if (updatedPlayer) {
+                            // Show success message
+                            alert(`Player ${name} updated successfully!`);
+                            window.location.href = 'player-selection.html';
+                        } else {
+                            throw new Error('Failed to update player');
+                        }
+                    } catch (error) {
+                        console.error('Error updating player:', error);
+                        alert(`Failed to update player: ${error.message || 'Unknown error'}`);
+                    } finally {
+                        // Reset button state - using the originalText from outside the try block
+                        submitBtn.textContent = originalText;
+                        submitBtn.disabled = false;
+                    }
+                });
+            } catch (error) {
+                console.error('Error loading player data:', error);
+                alert(`Error: ${error.message || 'Failed to load player data'}`);
+            }
         });
     </script>
 </body>

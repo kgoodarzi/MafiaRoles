@@ -1,0 +1,477 @@
+/* Completely isolated CSS for character cards */
+
+/* Fix overall body and container layout */
+body.roles-page, 
+html body.roles-page {
+    /* Override any fixed positioning */
+    position: static !important;
+    display: block !important;
+    height: auto !important;
+    min-height: 100vh !important;
+    overflow-y: auto !important;
+    padding-bottom: 50px !important;
+    /* Reset center alignment completely */
+    align-items: initial !important;
+    justify-content: initial !important;
+    vertical-align: initial !important;
+    text-align: left !important;
+}
+
+body[data-page="roles"],
+html body[data-page="roles"] {
+    /* Override any fixed positioning */
+    position: static !important;
+    display: block !important;
+    height: auto !important;
+    overflow-y: auto !important;
+    /* Reset center alignment completely */
+    align-items: initial !important;
+    justify-content: initial !important;
+    vertical-align: initial !important;
+    text-align: left !important;
+}
+
+/* Fix the container */
+.container,
+html body .container,
+body.roles-page .container,
+body[data-page="roles"] .container {
+    width: 95% !important;
+    max-width: 1200px !important;
+    margin: 0 auto !important;
+    padding: 20px !important;
+    display: block !important;
+    overflow: visible !important;
+    position: relative !important;
+    /* Center horizontally but not vertically */
+    align-items: initial !important;
+    justify-content: initial !important;
+}
+
+/* Page sections */
+main,
+html body main,
+body.roles-page main,
+body[data-page="roles"] main {
+    display: block !important;
+    width: 100% !important;
+    overflow: visible !important;
+    position: relative !important;
+    margin-top: 20px !important;
+    /* Reset any centering */
+    align-items: initial !important;
+    justify-content: initial !important;
+    text-align: left !important;
+}
+
+/* Team section containers - super specific selectors to override anything */
+.team-section,
+html body .team-section,
+body.roles-page .team-section,
+body[data-page="roles"] .team-section,
+#mafia-team,
+#town-team,
+#independent-team {
+    width: 100% !important;
+    display: block !important;
+    float: none !important;
+    clear: both !important;
+    margin-bottom: 40px !important;
+    padding: 15px !important;
+    overflow: visible !important;
+    position: relative !important;
+    /* Override any centering properties */
+    align-items: initial !important;
+    justify-content: initial !important;
+    text-align: left !important;
+    /* Dynamic height based on content */
+    height: auto !important;
+    min-height: unset !important;
+    max-height: unset !important;
+}
+
+/* Role grid containers - make these extremely specific */
+.roles-list, 
+.roles-grid,
+#mafia-roles,
+#town-roles,
+#independent-roles,
+html body .roles-list,
+html body .roles-grid,
+html body #mafia-roles,
+html body #town-roles,
+html body #independent-roles,
+body.roles-page .roles-list,
+body.roles-page .roles-grid,
+body.roles-page #mafia-roles,
+body.roles-page #town-roles,
+body.roles-page #independent-roles,
+body[data-page="roles"] .roles-list,
+body[data-page="roles"] .roles-grid,
+body[data-page="roles"] #mafia-roles,
+body[data-page="roles"] #town-roles,
+body[data-page="roles"] #independent-roles,
+.team-section .roles-list,
+.team-section .roles-grid {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    width: 100% !important;
+    justify-content: flex-start !important;
+    gap: 20px !important;
+    margin: 15px 0 !important;
+    float: none !important;
+    min-height: unset !important;
+    position: relative !important;
+    /* Override any vertical centering */
+    align-items: flex-start !important;
+    align-content: flex-start !important;
+    flex-direction: row !important;
+    text-align: left !important;
+    /* Dynamic height based on content */
+    height: auto !important;
+    max-height: unset !important;
+}
+
+/* Main character card container */
+.mafia-character-card,
+html body .mafia-character-card,
+body.roles-page .mafia-character-card,
+body[data-page="roles"] .mafia-character-card,
+.team-section .mafia-character-card,
+.roles-list .mafia-character-card,
+.roles-grid .mafia-character-card,
+#mafia-roles .mafia-character-card,
+#town-roles .mafia-character-card,
+#independent-roles .mafia-character-card {
+    /* Basic box model */
+    box-sizing: border-box !important;
+    display: flex !important;
+    position: relative !important;
+    overflow: hidden !important;
+    float: none !important;
+    
+    /* Fixed dimensions */
+    width: calc(50% - 10px) !important;
+    height: 280px !important;
+    min-height: 200px !important;
+    max-height: 300px !important;
+    margin: 0 !important;
+    
+    /* Appearance */
+    background-color: #1e1e1e !important;
+    border-radius: 12px !important;
+    border-width: 4px !important;
+    border-style: solid !important;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
+    text-align: center !important;
+    flex-basis: calc(50% - 20px) !important;
+    flex-grow: 0 !important;
+    flex-shrink: 0 !important;
+}
+
+/* Team-specific borders and effects */
+.mafia-character-card[data-team="mafia"] {
+    border-color: #ef4444 !important;
+    box-shadow: 0 0 15px rgba(239, 68, 68, 0.6), 0 0 25px rgba(239, 68, 68, 0.4), inset 0 0 10px rgba(239, 68, 68, 0.3) !important;
+}
+
+.mafia-character-card[data-team="citizen"] {
+    border-color: #10b981 !important;
+    box-shadow: 0 0 15px rgba(16, 185, 129, 0.6), 0 0 25px rgba(16, 185, 129, 0.4), inset 0 0 10px rgba(16, 185, 129, 0.3) !important;
+}
+
+.mafia-character-card[data-team="independent"] {
+    border-color: #8b5cf6 !important;
+    box-shadow: 0 0 15px rgba(139, 92, 246, 0.6), 0 0 25px rgba(139, 92, 246, 0.4), inset 0 0 10px rgba(139, 92, 246, 0.3) !important;
+}
+
+/* Image container */
+.mafia-character-card .character-image-container {
+    width: 140px !important;
+    height: 140px !important;
+    min-height: 140px !important;
+    max-height: 140px !important;
+    margin: 10px auto 0.25rem !important;
+    position: relative !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    background-color: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+/* Images */
+.mafia-character-card .character-image-container img {
+    width: 120px !important;
+    height: 120px !important;
+    max-width: 120px !important;
+    max-height: 120px !important;
+    object-fit: contain !important;
+    margin: 0 auto !important;
+    border-radius: 8px !important;
+    border-width: 2px !important;
+    border-style: solid !important;
+    display: block !important;
+}
+
+/* Team-specific image styling */
+.mafia-character-card[data-team="mafia"] .character-image-container img {
+    border-color: #ef4444 !important;
+    box-shadow: 0 0 8px rgba(239, 68, 68, 0.6) !important;
+}
+
+.mafia-character-card[data-team="citizen"] .character-image-container img {
+    border-color: #10b981 !important;
+    box-shadow: 0 0 8px rgba(16, 185, 129, 0.6) !important;
+}
+
+.mafia-character-card[data-team="independent"] .character-image-container img {
+    border-color: #8b5cf6 !important;
+    box-shadow: 0 0 8px rgba(139, 92, 246, 0.6) !important;
+}
+
+/* Title */
+.mafia-character-card .character-title {
+    font-size: 1.1rem !important;
+    position: absolute !important;
+    bottom: 50px !important;
+    left: 0 !important;
+    right: 0 !important;
+    text-align: center !important;
+    z-index: 2 !important;
+    margin: 0 !important;
+    padding: 0 5px !important;
+    width: 100% !important;
+    font-weight: bold !important;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+}
+
+/* Team-specific title colors */
+.mafia-character-card[data-team="mafia"] .character-title {
+    color: #ef4444 !important;
+}
+
+.mafia-character-card[data-team="citizen"] .character-title {
+    color: #10b981 !important;
+}
+
+.mafia-character-card[data-team="independent"] .character-title {
+    color: #8b5cf6 !important;
+}
+
+/* Description */
+.mafia-character-card .character-description {
+    font-size: 0.75rem !important;
+    line-height: 1.2 !important;
+    margin-top: 0 !important;
+    width: 100% !important;
+    position: absolute !important;
+    bottom: 10px !important;
+    left: 0 !important;
+    right: 0 !important;
+    padding: 0 5px !important;
+    max-height: 30px !important;
+    overflow-y: auto !important;
+    text-align: center !important;
+    color: rgba(255, 255, 255, 0.85) !important;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+    .mafia-character-card {
+        width: calc(50% - 10px) !important;
+        flex-basis: calc(50% - 10px) !important;
+        height: 180px !important;
+        padding: 10px !important;
+    }
+    
+    .roles-list, 
+    .roles-grid,
+    #mafia-roles,
+    #town-roles,
+    #independent-roles {
+        gap: 10px !important;
+    }
+}
+
+/* Very small screens */
+@media (max-width: 480px) {
+    .mafia-character-card {
+        width: 100% !important;
+        flex-basis: 100% !important;
+        height: 220px !important;
+        max-height: 220px !important;
+        margin: 0 0 10px 0 !important;
+    }
+    
+    .roles-list, 
+    .roles-grid,
+    #mafia-roles,
+    #town-roles,
+    #independent-roles {
+        flex-direction: column !important;
+    }
+}
+
+/* Add neon pulse animations for glow effects */
+@keyframes characterMafiaPulse {
+    0% {
+        box-shadow: 0 0 15px rgba(239, 68, 68, 0.6), 0 0 25px rgba(239, 68, 68, 0.4), inset 0 0 10px rgba(239, 68, 68, 0.3);
+    }
+    50% {
+        box-shadow: 0 0 20px rgba(239, 68, 68, 0.8), 0 0 35px rgba(239, 68, 68, 0.6), inset 0 0 15px rgba(239, 68, 68, 0.5);
+    }
+    100% {
+        box-shadow: 0 0 15px rgba(239, 68, 68, 0.6), 0 0 25px rgba(239, 68, 68, 0.4), inset 0 0 10px rgba(239, 68, 68, 0.3);
+    }
+}
+
+@keyframes characterCitizenPulse {
+    0% {
+        box-shadow: 0 0 15px rgba(16, 185, 129, 0.6), 0 0 25px rgba(16, 185, 129, 0.4), inset 0 0 10px rgba(16, 185, 129, 0.3);
+    }
+    50% {
+        box-shadow: 0 0 20px rgba(16, 185, 129, 0.8), 0 0 35px rgba(16, 185, 129, 0.6), inset 0 0 15px rgba(16, 185, 129, 0.5);
+    }
+    100% {
+        box-shadow: 0 0 15px rgba(16, 185, 129, 0.6), 0 0 25px rgba(16, 185, 129, 0.4), inset 0 0 10px rgba(16, 185, 129, 0.3);
+    }
+}
+
+@keyframes characterIndependentPulse {
+    0% {
+        box-shadow: 0 0 15px rgba(139, 92, 246, 0.6), 0 0 25px rgba(139, 92, 246, 0.4), inset 0 0 10px rgba(139, 92, 246, 0.3);
+    }
+    50% {
+        box-shadow: 0 0 20px rgba(139, 92, 246, 0.8), 0 0 35px rgba(139, 92, 246, 0.6), inset 0 0 15px rgba(139, 92, 246, 0.5);
+    }
+    100% {
+        box-shadow: 0 0 15px rgba(139, 92, 246, 0.6), 0 0 25px rgba(139, 92, 246, 0.4), inset 0 0 10px rgba(139, 92, 246, 0.3);
+    }
+}
+
+/* Apply animations */
+.mafia-character-card[data-team="mafia"] {
+    animation: characterMafiaPulse 2s infinite !important;
+}
+
+.mafia-character-card[data-team="citizen"] {
+    animation: characterCitizenPulse 2s infinite !important;
+}
+
+.mafia-character-card[data-team="independent"] {
+    animation: characterIndependentPulse 2s infinite !important;
+}
+
+/* Specific heights for team sections based on content */
+#mafia-team {
+    /* For 3 roles in 2 columns = 2 rows of cards + header text */
+    height: auto !important;
+    max-height: unset !important;
+}
+
+#mafia-roles {
+    /* For 3 roles in 2 columns = 2 rows of cards */
+    height: auto !important;
+    min-height: unset !important;
+    max-height: unset !important;
+}
+
+/* Additional adjustments for condensed team section heights */
+.team-section h2,
+html body .team-section h2 {
+    margin-top: 0 !important;
+    margin-bottom: 5px !important;
+    padding-bottom: 0 !important;
+}
+
+.team-section p,
+html body .team-section p {
+    margin-top: 5px !important;
+    margin-bottom: 10px !important;
+    padding-bottom: 0 !important;
+}
+
+/* Extra condensed section for Mafia which only has 3 roles in 2 columns */
+#mafia-team {
+    padding-top: 10px !important;
+    padding-bottom: 10px !important;
+}
+
+/* Remove any margins from role card containers */
+#mafia-roles .mafia-character-card:first-child,
+#mafia-roles .mafia-character-card:nth-child(2) {
+    margin-bottom: 15px !important;
+}
+
+/* Reduce spacing between sections */
+hr {
+    margin: 20px auto !important;
+}
+
+/* Specific layout adjustments for different team sizes */
+/* Mafia team - 3 roles (2x2 grid) */
+#mafia-team {
+    padding: 10px !important;
+    margin-bottom: 20px !important;
+}
+
+#mafia-roles {
+    min-height: unset !important;
+    gap: 15px !important;
+}
+
+/* Town team - 7 roles (2x4 grid) */
+#town-team {
+    padding: 10px !important;
+    margin-bottom: 20px !important;
+}
+
+#town-roles {
+    min-height: unset !important;
+    gap: 15px !important;
+}
+
+/* Independent team - 1 role (centered) */
+#independent-team {
+    padding: 10px !important;
+    margin-bottom: 20px !important;
+}
+
+#independent-roles {
+    min-height: unset !important;
+    gap: 15px !important;
+    justify-content: center !important; /* Center the single independent role */
+}
+
+#independent-roles .mafia-character-card {
+    margin: 0 auto !important;
+}
+
+/* Responsive layout for different team sizes */
+@media (max-width: 768px) {
+    /* Smaller gap for mobile */
+    #mafia-roles,
+    #town-roles,
+    #independent-roles {
+        gap: 10px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    /* Stack cards on small screens */
+    #mafia-roles,
+    #town-roles,
+    #independent-roles {
+        flex-direction: column !important;
+        align-items: center !important;
+    }
+    
+    .mafia-character-card {
+        width: 100% !important;
+        max-width: 300px !important;
+        margin: 0 auto 15px auto !important;
+    }
+} 

@@ -268,7 +268,7 @@ function createPlayerCard(player) {
     card.dataset.id = id;
     
     // Handle various possible property names and deal with SQL result format
-    let name, phone, photoUrl;
+    let name, phone, photoUrl, username;
     
     // If player is from SQL query, it might have a different structure
     if (player.row) {
@@ -276,17 +276,21 @@ function createPlayerCard(player) {
         name = row[1] || 'Unknown Player'; // Assuming name is 2nd column
         phone = row[2] || '';              // Assuming phone is 3rd column
         photoUrl = row[3] || 'images/default-avatar.svg'; // Assuming photo is 4th column
+        username = row[4] || id;           // Assuming username is 5th column, fall back to id
     } else {
         name = player.name || player.full_name || player.player_name || 'Unknown Player';
         phone = player.phone || player.phone_number || '';
         photoUrl = player.photo_url || player.photoUrl || player.avatar || player.photo || 'images/default-avatar.svg';
+        username = player.username || id;  // Fall back to id if username is not defined
     }
     
-    console.log('Player properties:', { id, name, phone, photoUrl });
+    console.log('Player properties:', { id, name, phone, photoUrl, username });
     
+    // Add edit button styles to card header
     card.innerHTML = `
-        <div class="player-photo">
+        <div class="player-photo" style="position: relative;">
             <img src="${photoUrl}" alt="${name}" onerror="this.src='images/default-avatar.svg'">
+            <a href="edit-player.html?username=${username}" class="edit-player-btn">✎</a>
         </div>
         <div class="player-info">
             <h3 class="player-name">${name}</h3>

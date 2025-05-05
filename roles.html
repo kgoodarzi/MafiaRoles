@@ -8,8 +8,8 @@
     <link rel="stylesheet" href="dark-theme.css">
     <!-- Neon effects -->
     <link rel="stylesheet" href="neon-effects.css">
-    <!-- Roles Page Specific CSS -->
-    <link rel="stylesheet" href="roles-page.css">
+    <!-- Completely new character card styling -->
+    <link rel="stylesheet" href="character-cards.css">
     <!-- Supabase JS -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Supabase initialization -->
@@ -20,13 +20,19 @@
     <script src="database.js"></script>
     <!-- Roles JS -->
     <script src="roles.js"></script>
-    <!-- Inline style to ensure proper positioning -->
+    <!-- Final override styles to completely separate roles-item from role-card -->
     <style>
         /* Override the vertical centering from styles.css */
         body {
             display: block !important;
             align-items: flex-start !important;
             justify-content: flex-start !important;
+            height: auto !important;
+            min-height: 100vh !important;
+            overflow-x: hidden !important;
+            overflow-y: auto !important;
+            margin: 0 !important;
+            padding: 0 !important;
         }
         
         body.roles-page {
@@ -36,6 +42,7 @@
             min-height: 100vh !important;
             align-items: flex-start !important;
             justify-content: flex-start !important;
+            position: relative !important;
         }
         
         .container {
@@ -44,83 +51,154 @@
             display: block !important;
             text-align: left !important;
             max-width: 1200px !important;
+            position: relative !important;
+            float: none !important;
+            clear: both !important;
+            overflow: visible !important;
         }
         
         main {
             display: block !important;
             width: 100% !important;
             margin-top: 20px !important;
+            position: relative !important;
+            float: left !important;
+            clear: both !important;
         }
         
         .team-section {
             display: block !important;
             margin-bottom: 30px !important;
             width: 100% !important;
+            float: left !important;
+            clear: both !important;
         }
         
         header {
             text-align: center !important;
             margin-bottom: 20px !important;
+            width: 100% !important;
+            float: left !important;
+            clear: both !important;
+        }
+        
+        footer {
+            text-align: center !important;
+            margin-top: 30px !important;
+            width: 100% !important;
+            float: left !important;
+            clear: both !important;
+        }
+        
+        /* Add clearfix to ensure floats are contained */
+        .clearfix::after {
+            content: "" !important;
+            display: table !important;
+            clear: both !important;
         }
         
         body.dark-theme {
             align-items: flex-start !important;
             justify-content: flex-start !important;
         }
+        
+        /* Complete disconnect between roles-item and role-card */
+        .roles-item {
+            /* Reset any role-card inheritance */
+            all: revert;
+            /* Apply only roles-page.css styles */
+            animation: none !important;
+            /* Force correct height */
+            height: 200px !important;
+            min-height: 200px !important;
+            max-height: 200px !important;
+        }
+        
+        /* Force role-image-container to correct size */
+        .roles-item .role-image-container {
+            height: 140px !important;
+            min-height: 140px !important;
+            max-height: 140px !important;
+            width: 140px !important;
+        }
+        
+        .roles-item::before,
+        .roles-item::after {
+            /* Disable any pseudo-elements */
+            content: none !important;
+            display: none !important;
+        }
+        
+        /* Re-enable only for team-specific animations */
+        body[data-page="roles"] .roles-item[data-team]::before {
+            content: '' !important;
+            display: block !important;
+            position: absolute !important;
+            top: 0 !important; 
+            left: 0 !important;
+            right: 0 !important;
+            bottom: 0 !important;
+            z-index: -1 !important;
+            border-radius: inherit !important;
+        }
     </style>
 </head>
 <body class="dark-theme roles-page" data-page="roles">
     <div id="connection-status"></div>
     
-    <div class="container">
-        <header>
+    <div class="container clearfix" style="margin: 10px auto !important; padding: 10px !important;">
+        <header class="clearfix" style="margin-bottom: 10px !important;">
             <h1>Mafia Game Roles</h1>
             <p>Information about all possible roles in the game</p>
         </header>
 
-        <main>
+        <main class="clearfix" style="margin-top: 10px !important;">
             <!-- Mafia Team -->
-            <section class="team-section">
+            <section class="team-section clearfix" id="mafia-team" style="display: block !important; position: relative !important; width: 100% !important; margin-bottom: 20px !important; padding: 10px !important; float: none !important; clear: both !important; text-align: left !important; height: auto !important;">
                 <h2>Mafia Team</h2>
                 <p>
                     The Mafia team knows each other and works together to eliminate town members
                     without getting caught.
                 </p>
-                <div class="roles-list roles-grid" id="mafia-roles">
+                <div class="roles-list roles-grid clearfix" id="mafia-roles" style="display: flex !important; flex-wrap: wrap !important; justify-content: flex-start !important; align-items: flex-start !important; width: 100% !important; gap: 15px !important; float: none !important; position: relative !important; margin: 10px 0 !important; height: auto !important;">
                     <!-- Mafia roles will be populated here dynamically -->
                 </div>
             </section>
+            
+            <hr style="width: 90%; margin: 20px auto; border-top: 1px dashed #444;">
 
             <!-- Town Team -->
-            <section class="team-section">
+            <section class="team-section clearfix" id="town-team" style="height: auto !important; margin-bottom: 20px !important; padding: 10px !important;">
                 <h2>Town Team</h2>
                 <p>
                     The Town team's objective is to identify and eliminate all Mafia members
                     through logical deduction and careful observation.
                 </p>
-                <div class="roles-list roles-grid" id="town-roles">
+                <div class="roles-list roles-grid clearfix" id="town-roles" style="height: auto !important; gap: 15px !important; margin: 10px 0 !important;">
                     <!-- Town roles will be populated here dynamically -->
                 </div>
             </section>
+            
+            <hr style="width: 90%; margin: 20px auto; border-top: 1px dashed #444;">
 
             <!-- Independent Roles -->
-            <section class="team-section">
+            <section class="team-section clearfix" id="independent-team" style="height: auto !important; margin-bottom: 20px !important; padding: 10px !important;">
                 <h2>Independent Roles</h2>
                 <p>
                     Independent roles have their own unique victory conditions and generally
                     operate outside the framework of the two main teams.
                 </p>
-                <div class="roles-list roles-grid" id="independent-roles">
+                <div class="roles-list roles-grid clearfix" id="independent-roles" style="height: auto !important; gap: 15px !important; margin: 10px 0 !important; justify-content: center !important;">
                     <!-- Independent roles will be populated here dynamically -->
                 </div>
             </section>
 
-            <div class="actions">
+            <div class="actions clearfix">
                 <a href="index.html" class="btn">Back to Home</a>
             </div>
         </main>
 
-        <footer>
+        <footer class="clearfix">
             <p>&copy; 2025 KRS Consulting Inc.</p>
         </footer>
     </div>
@@ -133,23 +211,27 @@
             const townContainer = document.getElementById('town-roles');
             const independentContainer = document.getElementById('independent-roles');
             
-            ROLES.forEach(role => {
+            // Add debug counters
+            let mafiaCount = 0;
+            let townCount = 0;
+            let independentCount = 0;
+            
+            // Get only enabled roles
+            const enabledRoles = ROLES.filter(role => role.isEnabled !== false);
+            
+            enabledRoles.forEach(role => {
                 const roleCard = document.createElement('div');
-                roleCard.className = 'role-card';
+                roleCard.className = 'mafia-character-card';
                 
                 // Set team data attribute for neon effect
                 roleCard.setAttribute('data-team', role.team);
                 
-                const roleImageName = role.name;
-                const roleImageSrc = role.image || `images/Role - ${roleImageName}.jpg`;
+                // Use the correct image from the role definition
+                const roleImageSrc = role.image || `images/Role - ${role.name}.jpg`;
                 
-                // Add team-specific class name
-                const teamClass = role.team === 'mafia' ? 'team-mafia' : 
-                                 (role.team === 'citizen' ? 'team-citizen' : 'team-independent');
-                                 
                 // Create elements with appropriate structure matching role-selection.html
                 const imageContainer = document.createElement('div');
-                imageContainer.className = 'role-image-container';
+                imageContainer.className = 'character-image-container';
                 
                 const img = document.createElement('img');
                 img.src = roleImageSrc;
@@ -157,26 +239,29 @@
                 img.onerror = function() { this.src = 'images/default-avatar.svg'; };
                 
                 const title = document.createElement('h3');
-                title.className = 'role-title';
+                title.className = 'character-title';
                 title.textContent = role.name;
                 
                 const description = document.createElement('p');
-                description.className = 'role-description';
+                description.className = 'character-description';
                 description.textContent = role.description;
                 
                 // Assemble the card
                 imageContainer.appendChild(img);
                 roleCard.appendChild(imageContainer);
-                roleCard.appendChild(description);
                 roleCard.appendChild(title);
+                roleCard.appendChild(description);
                 
                 // Custom team mapping
                 if (role.team === 'mafia') {
                     mafiaContainer.appendChild(roleCard);
+                    mafiaCount++;
                 } else if (role.team === 'citizen') {
                     townContainer.appendChild(roleCard);
+                    townCount++;
                 } else if (role.team === 'independent') {
                     independentContainer.appendChild(roleCard);
+                    independentCount++;
                 }
             });
             
@@ -191,6 +276,32 @@
                     header.className = 'neon-text-purple';
                 }
             });
+            
+            // Output debug information
+            console.log(`Mafia roles: ${mafiaCount}`);
+            console.log(`Town roles: ${townCount}`);
+            console.log(`Independent roles: ${independentCount}`);
+            console.log(`Total enabled roles: ${enabledRoles.length}`);
+            
+            // Debug height issue
+            setTimeout(() => {
+                // Check dimensions of team sections
+                console.log("Mafia section height:", getComputedStyle(document.querySelector('#mafia-team')).height);
+                console.log("Town section height:", getComputedStyle(document.querySelector('#town-team')).height);
+                console.log("Independent section height:", getComputedStyle(document.querySelector('#independent-team')).height);
+                
+                // Check if ROLES data exists
+                console.log(`ROLES enabled count: ${enabledRoles.length}`);
+                if (enabledRoles.length > 0) {
+                    const teams = {};
+                    enabledRoles.forEach(role => {
+                        teams[role.team] = (teams[role.team] || 0) + 1;
+                    });
+                    console.log('Role distribution by team:', teams);
+                }
+            }, 1000);
+        } else {
+            console.error("ROLES variable is undefined or not an array!");
         }
     });
     </script>
