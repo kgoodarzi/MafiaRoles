@@ -75,12 +75,12 @@ document.addEventListener('DOMContentLoaded', function() {
 function createFallbackDbManager() {
     console.log('Creating fallback database manager with default players');
     const defaultPlayers = [
-        { id: '1', name: 'Alice', photo_url: 'images/default-avatar.svg' },
-        { id: '2', name: 'Bob', photo_url: 'images/default-avatar.svg' },
-        { id: '3', name: 'Charlie', photo_url: 'images/default-avatar.svg' },
-        { id: '4', name: 'David', photo_url: 'images/default-avatar.svg' },
-        { id: '5', name: 'Emily', photo_url: 'images/default-avatar.svg' },
-        { id: '6', name: 'Frank', photo_url: 'images/default-avatar.svg' }
+        { username: 'alice123', full_name: 'Alice', photo: 'images/default-avatar.svg', email: '', previously_selected: false },
+        { username: 'bob456', full_name: 'Bob', photo: 'images/default-avatar.svg', email: '', previously_selected: false },
+        { username: 'charlie789', full_name: 'Charlie', photo: 'images/default-avatar.svg', email: '', previously_selected: false },
+        { username: 'david101', full_name: 'David', photo: 'images/default-avatar.svg', email: '', previously_selected: false },
+        { username: 'emily202', full_name: 'Emily', photo: 'images/default-avatar.svg', email: '', previously_selected: false },
+        { username: 'frank303', full_name: 'Frank', photo: 'images/default-avatar.svg', email: '', previously_selected: false }
     ];
     
     window.dbManager = {
@@ -91,8 +91,8 @@ function createFallbackDbManager() {
             return this.selectedPlayers;
         },
         togglePlayerSelection: function(playerId) {
-            const playerIndex = this.selectedPlayers.findIndex(p => p.id === playerId);
-            const player = this.players.find(p => p.id === playerId);
+            const playerIndex = this.selectedPlayers.findIndex(p => p.username === playerId);
+            const player = this.players.find(p => p.username === playerId);
             
             if (playerIndex === -1 && player) {
                 this.selectedPlayers.push(player);
@@ -113,6 +113,97 @@ function createFallbackDbManager() {
         },
         verifyPreviouslySelectedStatus: function() {
             return Promise.resolve();
+        },
+        getPlayerById: function(playerId) {
+            console.log('Fallback getPlayerById:', playerId);
+            const player = this.players.find(p => p.username === playerId);
+            if (player) {
+                return Promise.resolve(player);
+            } else {
+                return Promise.reject(new Error('Player not found in fallback manager'));
+            }
+        },
+        getPlayerByUsername: function(username) {
+            console.log('Fallback getPlayerByUsername:', username);
+            const player = this.players.find(p => p.username === username);
+            if (player) {
+                return Promise.resolve(player);
+            } else {
+                return Promise.reject(new Error('Player not found in fallback manager'));
+            }
+        },
+        updatePlayer: function(playerId, name, email, photoFile) {
+            console.log('Fallback updatePlayer:', playerId);
+            const playerIndex = this.players.findIndex(p => p.username === playerId);
+            if (playerIndex === -1) {
+                return Promise.reject(new Error('Player not found in fallback manager'));
+            }
+            
+            // Update player in the array
+            const updatedPlayer = {
+                ...this.players[playerIndex],
+                full_name: name,
+                email: email || this.players[playerIndex].email,
+                updated_at: new Date().toISOString()
+            };
+            
+            // If there's a new photo, create a fake URL
+            if (photoFile) {
+                // In a real environment, we'd upload and get a URL, but here just make a note
+                updatedPlayer.photo = `images/default-avatar.svg#updated=${Date.now()}`; 
+            }
+            
+            this.players[playerIndex] = updatedPlayer;
+            
+            // Also update in selected players if present
+            const selectedIndex = this.selectedPlayers.findIndex(p => p.username === playerId);
+            if (selectedIndex !== -1) {
+                this.selectedPlayers[selectedIndex] = updatedPlayer;
+            }
+            
+            return Promise.resolve(updatedPlayer);
+        },
+        updatePlayerByUsername: function(username, name, email, photoFile) {
+            console.log(`Updating player with username: ${username}`);
+            return this.updatePlayer(username, name, email, photoFile);
+        },
+        updatePlayerInCache: function(playerId, updatedPlayer) {
+            // Update the player in the local cache
+            if (this.players && this.players.length > 0) {
+                const index = this.players.findIndex(p => p.username === playerId);
+                
+                if (index !== -1) {
+                    this.players[index] = updatedPlayer;
+                }
+            }
+            
+            // Also update in selected players if present
+            if (this.selectedPlayers && this.selectedPlayers.length > 0) {
+                const selectedIndex = this.selectedPlayers.findIndex(p => p.username === playerId);
+                
+                if (selectedIndex !== -1) {
+                    this.selectedPlayers[selectedIndex] = updatedPlayer;
+                }
+            }
+        },
+        updatePlayerInCacheByUsername: function(username, updatedPlayer) {
+            // Update the player in the local cache
+            if (this.players && this.players.length > 0) {
+                const index = this.players.findIndex(p => p.username === username);
+                
+                if (index !== -1) {
+                    this.players[index] = updatedPlayer;
+                }
+            }
+            
+            // Also update in selected players if present
+            if (this.selectedPlayers && this.selectedPlayers.length > 0) {
+                const selectedIndex = this.selectedPlayers.findIndex(p => p.username === username);
+                
+                if (selectedIndex !== -1) {
+                    this.selectedPlayers[selectedIndex] = updatedPlayer;
+                }
+            }
         }
     };
     
@@ -170,6 +261,14 @@ class DatabaseManager {
                 }
             }
             
+            // Check storage bucket availability
+            try {
+                await this.checkStorageAvailability();
+            } catch (storageError) {
+                console.error('Error checking storage availability:', storageError);
+                // Continue anyway
+            }
+            
             // Try to ensure previously_selected column exists in profiles table
             try {
                 await this.ensurePreviouslySelectedColumn();
@@ -186,12 +285,12 @@ class DatabaseManager {
                 console.error('Error loading players:', loadError);
                 // Create fallback players if loading failed
                 this.players = [
-                    { id: '1', name: 'Alice (Fallback)', photo_url: 'images/default-avatar.svg' },
-                    { id: '2', name: 'Bob (Fallback)', photo_url: 'images/default-avatar.svg' },
-                    { id: '3', name: 'Charlie (Fallback)', photo_url: 'images/default-avatar.svg' },
-                    { id: '4', name: 'David (Fallback)', photo_url: 'images/default-avatar.svg' },
-                    { id: '5', name: 'Emily (Fallback)', photo_url: 'images/default-avatar.svg' },
-                    { id: '6', name: 'Frank (Fallback)', photo_url: 'images/default-avatar.svg' }
+                    { username: 'alice123', full_name: 'Alice (Fallback)', photo: 'images/default-avatar.svg', email: '', previously_selected: false },
+                    { username: 'bob456', full_name: 'Bob (Fallback)', photo: 'images/default-avatar.svg', email: '', previously_selected: false },
+                    { username: 'charlie789', full_name: 'Charlie (Fallback)', photo: 'images/default-avatar.svg', email: '', previously_selected: false },
+                    { username: 'david101', full_name: 'David (Fallback)', photo: 'images/default-avatar.svg', email: '', previously_selected: false },
+                    { username: 'emily202', full_name: 'Emily (Fallback)', photo: 'images/default-avatar.svg', email: '', previously_selected: false },
+                    { username: 'frank303', full_name: 'Frank (Fallback)', photo: 'images/default-avatar.svg', email: '', previously_selected: false }
                 ];
             }
             
@@ -216,12 +315,12 @@ class DatabaseManager {
             
             // Create emergency fallback players
             this.players = [
-                { id: '1', name: 'Alice (Emergency)', photo_url: 'images/default-avatar.svg' },
-                { id: '2', name: 'Bob (Emergency)', photo_url: 'images/default-avatar.svg' },
-                { id: '3', name: 'Charlie (Emergency)', photo_url: 'images/default-avatar.svg' },
-                { id: '4', name: 'David (Emergency)', photo_url: 'images/default-avatar.svg' },
-                { id: '5', name: 'Emily (Emergency)', photo_url: 'images/default-avatar.svg' },
-                { id: '6', name: 'Frank (Emergency)', photo_url: 'images/default-avatar.svg' }
+                { username: 'alice123', full_name: 'Alice (Emergency)', photo: 'images/default-avatar.svg', email: '', previously_selected: false },
+                { username: 'bob456', full_name: 'Bob (Emergency)', photo: 'images/default-avatar.svg', email: '', previously_selected: false },
+                { username: 'charlie789', full_name: 'Charlie (Emergency)', photo: 'images/default-avatar.svg', email: '', previously_selected: false },
+                { username: 'david101', full_name: 'David (Emergency)', photo: 'images/default-avatar.svg', email: '', previously_selected: false },
+                { username: 'emily202', full_name: 'Emily (Emergency)', photo: 'images/default-avatar.svg', email: '', previously_selected: false },
+                { username: 'frank303', full_name: 'Frank (Emergency)', photo: 'images/default-avatar.svg', email: '', previously_selected: false }
             ];
             
             // Still dispatch the event with error information
@@ -244,52 +343,477 @@ class DatabaseManager {
             console.log('- Supabase initialized:', !!window.supabase);
             console.log('- Has .from() method:', typeof window.supabase?.from === 'function');
             
-            // Try to load from profiles table first
-            console.log('Querying "profiles" table');
-            const { data, error } = await window.supabase
-                .from('profiles')
-                .select('username, full_name, photo, previously_selected');
-            
-            if (error) {
-                console.error('Error querying profiles:', error);
-                // More detailed logging
-                console.log('Profiles table error details:', {
-                    code: error.code,
-                    message: error.message,
-                    details: error.details
-                });
-                // Fall back to legacy table
-                return this.loadLegacyPlayers();
-            }
-            
-            if (data && data.length > 0) {
-                console.log(`Found ${data.length} players in profiles table:`, data.map(p => p.full_name));
+            // Try to load from profiles table
+            try {
+                console.log('Querying "profiles" table');
+                const { data, error } = await window.supabase
+                    .from('profiles')
+                    .select('*');
                 
-                // Map to our player structure
-                this.players = data.map(profile => ({
-                    id: profile.username || profile.id,
-                    name: profile.full_name,
-                    photo_url: profile.photo || 'images/default-avatar.svg',
-                    previously_selected: profile.previously_selected
-                }));
+                if (error) {
+                    console.error('Error loading profiles:', error);
+                    throw error;
+                } 
                 
-                // Pre-select players that were previously selected
-                this.selectedPlayers = [];
-                for (const player of this.players) {
-                    if (player.previously_selected) {
-                        this.selectPlayer(player);
+                if (data && data.length > 0) {
+                    console.log(`Loaded ${data.length} players from profiles table`);
+                    this.players = data;
+                    
+                    // Save to localStorage for future offline use
+                    try {
+                        if (typeof localStorage !== 'undefined') {
+                            localStorage.setItem('players', JSON.stringify(this.players));
+                            console.log('Saved players to localStorage');
+                        }
+                    } catch (saveError) {
+                        console.error('Error saving players to localStorage:', saveError);
                     }
+                    
+                    return this.players;
+                } else {
+                    // No players found, create default players
+                    console.log('No players found in profiles table');
+                    throw new Error('No players found');
                 }
-                
-                return this.players;
-            } else {
-                console.log('No players found in profiles table, checking legacy table');
-                return this.loadLegacyPlayers();
+            } catch (profilesError) {
+                console.error('Error loading from profiles table:', profilesError);
+                throw profilesError;
             }
         } catch (error) {
             console.error('Error in loadPlayers:', error);
-            console.log('Stack trace:', error.stack);
-            return this.loadLegacyPlayers();
+            
+            // Try to load from localStorage as fallback
+            try {
+                if (typeof localStorage !== 'undefined') {
+                    const localPlayersJson = localStorage.getItem('players');
+                    if (localPlayersJson) {
+                        this.players = JSON.parse(localPlayersJson);
+                        console.log(`Loaded ${this.players.length} players from localStorage after error`);
+                        return this.players;
+                    }
+                }
+            } catch (e) {
+                console.error('Error accessing localStorage after main error:', e);
+            }
+            
+            // If everything else failed, use fallback players
+            console.log('All loading attempts failed, using fallback players');
+            this.players = [
+                { username: 'alice123', full_name: 'Alice (Fallback)', photo: 'images/default-avatar.svg', email: '', previously_selected: false },
+                { username: 'bob456', full_name: 'Bob (Fallback)', photo: 'images/default-avatar.svg', email: '', previously_selected: false },
+                { username: 'charlie789', full_name: 'Charlie (Fallback)', photo: 'images/default-avatar.svg', email: '', previously_selected: false },
+                { username: 'david101', full_name: 'David (Fallback)', photo: 'images/default-avatar.svg', email: '', previously_selected: false },
+                { username: 'emily202', full_name: 'Emily (Fallback)', photo: 'images/default-avatar.svg', email: '', previously_selected: false },
+                { username: 'frank303', full_name: 'Frank (Fallback)', photo: 'images/default-avatar.svg', email: '', previously_selected: false }
+            ];
+            
+            return this.players;
+        }
+    }
+    
+    async getPlayerById(playerId) {
+        console.log(`Getting player with ID: ${playerId}`);
+        
+        // This method needs to be rewritten to use username as the primary key
+        // In this context, we'll treat the passed "playerId" as if it were a username
+        return this.getPlayerByUsername(playerId);
+    }
+    
+    async getPlayerByUsername(username) {
+        console.log(`Getting player with username: ${username}`);
+        
+        // First check the already loaded players
+        if (this.players && this.players.length > 0) {
+            const player = this.players.find(p => 
+                p.username === username
+            );
+            
+            if (player) {
+                console.log('Player found in local cache:', player);
+                return this.normalizePlayerData(player);
+            }
+        }
+        
+        try {
+            // Check if we should even attempt database operations
+            const skipDbOps = typeof localStorage !== 'undefined' && 
+                              localStorage.getItem('skip_db_updates') === 'true';
+            
+            if (skipDbOps) {
+                console.log('Skipping database lookup due to previous failures');
+                // Skip to localStorage check
+                throw new Error('Skipping database operations');
+            }
+            
+            // Ensure Supabase is ready
+            await waitForSupabase();
+            
+            // Query the profiles table using username as primary key
+            const { data, error } = await window.supabase
+                .from('profiles')
+                .select('*')
+                .eq('username', username)
+                .single();
+            
+            if (error) {
+                console.error('Error getting player from profiles table:', error);
+                throw new Error('Player not found in profiles table');
+            }
+            
+            if (data) {
+                console.log('Player found in profiles table:', data);
+                return this.normalizePlayerData(data);
+            } else {
+                throw new Error('Player not found');
+            }
+        } catch (error) {
+            console.error('Error in getPlayerByUsername:', error);
+            
+            // Try localStorage as a fallback
+            if (typeof localStorage !== 'undefined') {
+                try {
+                    console.log('Trying to find player in localStorage');
+                    const storedPlayersJSON = localStorage.getItem('players');
+                    if (storedPlayersJSON) {
+                        const storedPlayers = JSON.parse(storedPlayersJSON);
+                        const player = storedPlayers.find(p => p.username === username);
+                        if (player) {
+                            console.log('Player found in localStorage:', player);
+                            return this.normalizePlayerData(player);
+                        }
+                    }
+                } catch (localStorageError) {
+                    console.error('Error checking localStorage:', localStorageError);
+                }
+            }
+            
+            // If we reach here, create a minimal player object so the UI can proceed
+            console.log('Creating minimal player object for', username);
+            const minimalPlayer = {
+                username: username,
+                full_name: username, // Use username as name
+                photo: 'images/default-avatar.svg',
+                email: '',
+                previously_selected: false,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+            };
+            
+            // Add to players cache for future lookups
+            if (!this.players.some(p => p.username === username)) {
+                this.players.push(minimalPlayer);
+            }
+            
+            return minimalPlayer;
+        }
+    }
+    
+    // Helper method to normalize player data from different sources
+    normalizePlayerData(player) {
+        if (!player) return null;
+        
+        const normalizedPlayer = { ...player };
+        
+        // Ensure name is set correctly using full_name
+        normalizedPlayer.full_name = player.full_name || player.name || player.player_name || 'Unknown Player';
+        
+        // Ensure username is set correctly
+        normalizedPlayer.username = player.username || player.user_name || player.id || 'unknown';
+        
+        // Ensure photo is set correctly
+        normalizedPlayer.photo = player.photo || player.photoUrl || player.avatar || player.photo_url || 'images/default-avatar.svg';
+        
+        // Ensure these fields exist
+        if (!normalizedPlayer.email) normalizedPlayer.email = '';
+        if (!normalizedPlayer.previously_selected) normalizedPlayer.previously_selected = false;
+        
+        console.log('Normalized player data:', normalizedPlayer);
+        return normalizedPlayer;
+    }
+    
+    async updatePlayer(playerId, name, email, photoFile) {
+        console.log(`Updating player with ID: ${playerId}`);
+        try {
+            // Ensure Supabase is ready
+            await waitForSupabase();
+            
+            // First get the player by ID to get their username
+            const player = await this.getPlayerById(playerId).catch(e => null);
+            
+            if (!player || !player.username) {
+                throw new Error('Could not find player username for ID: ' + playerId);
+            }
+            
+            // Now use updatePlayerByUsername since we need to use username as the primary key
+            return this.updatePlayerByUsername(player.username, name, email, photoFile);
+        } catch (error) {
+            console.error('Error in updatePlayer:', error);
+            
+            // For photo upload errors, we can proceed with updating other fields
+            if (error.message && error.message.includes('Photo upload failed')) {
+                console.log('Proceeding with player update without photo changes');
+                // Try again without the photo file
+                return this.updatePlayerByUsername(player.username, name, email, null);
+            }
+            
+            throw error;
+        }
+    }
+    
+    async updatePlayerByUsername(username, name, email, photoFile) {
+        console.log(`Updating player with username: ${username}`);
+        try {
+            // Ensure Supabase is ready
+            await waitForSupabase();
+            
+            // Try to get the player first to understand current data
+            const player = await this.getPlayerByUsername(username).catch(e => null);
+            
+            // Check if we have localStorage available
+            const hasLocalStorage = typeof localStorage !== 'undefined';
+            
+            // Add diagnostics about the player data structure
+            if (player) {
+                console.log('Current player data:', player);
+            } else {
+                console.log('Unable to get current player data');
+            }
+            
+            // Prepare update data with correct fields only
+            const updateData = {
+                full_name: name,
+                updated_at: new Date().toISOString()
+            };
+            
+            // Add email if provided
+            if (email) updateData.email = email;
+            
+            // Base64 photo data for fallback
+            let base64PhotoData = null;
+            
+            // If there's a new photo, try to upload it to Supabase images bucket
+            if (photoFile) {
+                let photoUploadAttempted = false;
+                try {
+                    photoUploadAttempted = true;
+                    console.log('Processing photo file...');
+                    
+                    // Use the images bucket directly since we know it exists and works
+                    const targetBucket = 'images';
+                    
+                    try {
+                        // Generate a unique file name
+                        const fileExt = photoFile.name.split('.').pop();
+                        const fileName = `${username}_${Date.now()}.${fileExt}`;
+                        
+                        console.log(`Attempting to upload to ${targetBucket} bucket...`);
+                        
+                        // Upload the file to the bucket
+                        const { data: uploadData, error: uploadError } = await window.supabase.storage
+                            .from(targetBucket)
+                            .upload(fileName, photoFile, {
+                                cacheControl: '3600',
+                                upsert: true
+                            });
+                        
+                        if (uploadError) {
+                            console.error(`Error uploading to ${targetBucket}:`, uploadError);
+                            throw new Error(`Failed to upload to ${targetBucket}: ${uploadError.message}`);
+                        }
+                        
+                        // Get the public URL
+                        const { data: urlData } = await window.supabase.storage
+                            .from(targetBucket)
+                            .getPublicUrl(fileName);
+                        
+                        if (!urlData || !urlData.publicUrl) {
+                            console.error(`Failed to get public URL from ${targetBucket}`);
+                            throw new Error(`Failed to get public URL for uploaded file`);
+                        }
+                        
+                        const publicUrl = urlData.publicUrl;
+                        console.log(`Successfully uploaded image: ${publicUrl}`);
+                        
+                        // Update the photo field with the URL
+                        updateData.photo = publicUrl;
+                    } catch (uploadError) {
+                        console.error(`Error uploading image:`, uploadError);
+                        throw uploadError; // Re-throw to be caught by outer try/catch
+                    }
+                } catch (photoError) {
+                    console.error('Error processing photo:', photoError);
+                    
+                    // If photo upload was attempted but failed, continue without photo update
+                    if (photoUploadAttempted) {
+                        console.log('Continuing with player update but without photo changes');
+                        // Don't update the photo field, keeping the existing one
+                        if (player && player.photo) {
+                            console.log('Keeping existing photo URL:', player.photo);
+                        }
+                    } else {
+                        // This is a more serious error, might be best to propagate
+                        throw new Error(`Photo upload failed: ${photoError.message}`);
+                    }
+                }
+            }
+            
+            // Create the updated player object for cache and local storage
+            const updatedPlayerData = player ? { ...player, ...updateData } : { 
+                username: username, 
+                ...updateData
+            };
+            
+            // Save to localStorage as a backup
+            if (hasLocalStorage) {
+                try {
+                    // Get existing stored players
+                    const storedPlayersJSON = localStorage.getItem('players') || '[]';
+                    let storedPlayers = [];
+                    try {
+                        storedPlayers = JSON.parse(storedPlayersJSON);
+                    } catch (e) {
+                        console.error('Error parsing stored players:', e);
+                        storedPlayers = [];
+                    }
+                    
+                    // Update or add the player
+                    const existingIndex = storedPlayers.findIndex(p => p.username === username);
+                    if (existingIndex >= 0) {
+                        storedPlayers[existingIndex] = updatedPlayerData;
+                    } else {
+                        storedPlayers.push(updatedPlayerData);
+                    }
+                    
+                    // Save back to localStorage
+                    localStorage.setItem('players', JSON.stringify(storedPlayers));
+                    console.log('Player data saved to localStorage');
+                    
+                    // Also update the selected players if this player is in that list
+                    try {
+                        const storedSelectedJSON = localStorage.getItem('selectedPlayers') || '[]';
+                        let storedSelected = [];
+                        try {
+                            storedSelected = JSON.parse(storedSelectedJSON);
+                        } catch (e) {
+                            console.log('No valid selected players in storage');
+                            storedSelected = [];
+                        }
+                        
+                        // Update the player if in selected list
+                        const selectedIndex = storedSelected.findIndex(p => p.username === username);
+                        if (selectedIndex >= 0) {
+                            storedSelected[selectedIndex] = updatedPlayerData;
+                            localStorage.setItem('selectedPlayers', JSON.stringify(storedSelected));
+                            console.log('Updated player in selected players list');
+                        }
+                    } catch (e) {
+                        console.error('Error updating selected players:', e);
+                    }
+                } catch (storageError) {
+                    console.error('Error saving to localStorage:', storageError);
+                }
+            }
+            
+            // Try to update in profiles table
+            let updateSuccessful = false;
+            let updatedPlayer = null;
+            
+            console.log('Attempting to update player in profiles table:', updateData);
+            
+            const { data, error } = await window.supabase
+                .from('profiles')
+                .update(updateData)
+                .eq('username', username)
+                .select()
+                .single();
+            
+            if (error) {
+                console.error('Error updating player in profiles table:', error);
+                
+                // Database update failed, use local cache and storage
+                console.log('Database update failed, updating cache and localStorage only');
+                // Update local cache
+                this.updatePlayerInCacheByUsername(username, updatedPlayerData);
+                return updatedPlayerData;
+            } else {
+                console.log('Player updated in profiles table:', data);
+                updatedPlayer = data;
+                updateSuccessful = true;
+            }
+            
+            // Update local cache with database result or our constructed object
+            const finalResult = updatedPlayer || updatedPlayerData;
+            this.updatePlayerInCacheByUsername(username, finalResult);
+            
+            return finalResult;
+        } catch (error) {
+            console.error('Error in updatePlayerByUsername:', error);
+            
+            // Attempt to use localStorage as a fallback if an error occurs
+            if (typeof localStorage !== 'undefined') {
+                try {
+                    const storedPlayersJSON = localStorage.getItem('players') || '[]';
+                    const storedPlayers = JSON.parse(storedPlayersJSON);
+                    const existingPlayer = storedPlayers.find(p => p.username === username);
+                    
+                    if (existingPlayer) {
+                        console.log('Returning player from localStorage after error');
+                        return existingPlayer;
+                    }
+                } catch (e) {
+                    console.error('Error accessing localStorage after main error:', e);
+                }
+            }
+            
+            throw error;
+        }
+    }
+    
+    updatePlayerInCache(playerId, updatedPlayer) {
+        // Update the player in the local cache
+        if (this.players && this.players.length > 0) {
+            const index = this.players.findIndex(p => 
+                p.username === playerId
+            );
+            
+            if (index !== -1) {
+                this.players[index] = updatedPlayer;
+            }
+        }
+        
+        // Also update in selected players if present
+        if (this.selectedPlayers && this.selectedPlayers.length > 0) {
+            const selectedIndex = this.selectedPlayers.findIndex(p => 
+                p.username === playerId
+            );
+            
+            if (selectedIndex !== -1) {
+                this.selectedPlayers[selectedIndex] = updatedPlayer;
+            }
+        }
+    }
+    
+    updatePlayerInCacheByUsername(username, updatedPlayer) {
+        // Update the player in the local cache
+        if (this.players && this.players.length > 0) {
+            const index = this.players.findIndex(p => 
+                p.username === username
+            );
+            
+            if (index !== -1) {
+                this.players[index] = updatedPlayer;
+            }
+        }
+        
+        // Also update in selected players if present
+        if (this.selectedPlayers && this.selectedPlayers.length > 0) {
+            const selectedIndex = this.selectedPlayers.findIndex(p => 
+                p.username === username
+            );
+            
+            if (selectedIndex !== -1) {
+                this.selectedPlayers[selectedIndex] = updatedPlayer;
+            }
         }
     }
     
@@ -342,12 +866,12 @@ class DatabaseManager {
             // Create fallback players if all database methods fail
             console.log('Creating fallback players after all database methods failed');
             this.players = [
-                { id: '1', name: 'Alice (Offline)', photo_url: 'images/default-avatar.svg' },
-                { id: '2', name: 'Bob (Offline)', photo_url: 'images/default-avatar.svg' },
-                { id: '3', name: 'Charlie (Offline)', photo_url: 'images/default-avatar.svg' },
-                { id: '4', name: 'David (Offline)', photo_url: 'images/default-avatar.svg' },
-                { id: '5', name: 'Emily (Offline)', photo_url: 'images/default-avatar.svg' },
-                { id: '6', name: 'Frank (Offline)', photo_url: 'images/default-avatar.svg' }
+                { username: 'alice123', full_name: 'Alice (Offline)', photo: 'images/default-avatar.svg', email: '', previously_selected: false },
+                { username: 'bob456', full_name: 'Bob (Offline)', photo: 'images/default-avatar.svg', email: '', previously_selected: false },
+                { username: 'charlie789', full_name: 'Charlie (Offline)', photo: 'images/default-avatar.svg', email: '', previously_selected: false },
+                { username: 'david101', full_name: 'David (Offline)', photo: 'images/default-avatar.svg', email: '', previously_selected: false },
+                { username: 'emily202', full_name: 'Emily (Offline)', photo: 'images/default-avatar.svg', email: '', previously_selected: false },
+                { username: 'frank303', full_name: 'Frank (Offline)', photo: 'images/default-avatar.svg', email: '', previously_selected: false }
             ];
             return this.players;
         }
@@ -356,9 +880,9 @@ class DatabaseManager {
     async saveSamplePlayers() {
         console.log('Saving sample players...');
         const samplePlayers = [
-            { name: 'Alice', photo_url: 'images/default-avatar.svg' },
-            { name: 'Bob', photo_url: 'images/default-avatar.svg' },
-            { name: 'Charlie', photo_url: 'images/default-avatar.svg' }
+            { username: 'alice123', full_name: 'Alice', photo: 'images/default-avatar.svg', email: '', previously_selected: false },
+            { username: 'bob456', full_name: 'Bob', photo: 'images/default-avatar.svg', email: '', previously_selected: false },
+            { username: 'charlie789', full_name: 'Charlie', photo: 'images/default-avatar.svg', email: '', previously_selected: false }
         ];
 
         try {
@@ -408,38 +932,6 @@ class DatabaseManager {
         }
     }
 
-    async ensureStorageBucket() {
-        try {
-            console.log('Checking player-photos storage bucket...');
-            const { data, error } = await window.supabase
-                .storage
-                .getBucket('player-photos');
-                
-            if (error) {
-                console.log('Storage bucket does not exist, creating...');
-                const { error: createError } = await window.supabase
-                    .storage
-                    .createBucket('player-photos', {
-                        public: true
-                    });
-                    
-                if (createError) {
-                    console.error('Error creating storage bucket:', createError);
-                    return false;
-                }
-                
-                console.log('Storage bucket created successfully');
-            } else {
-                console.log('Storage bucket exists');
-            }
-            
-            return true;
-        } catch (error) {
-            console.error('Failed to check/create storage bucket:', error);
-            return false;
-        }
-    }
-
     async ensurePlayersTableExists() {
         console.log('Checking if mafia.players exists');
         try {
@@ -465,10 +957,9 @@ class DatabaseManager {
                     const { error: tableError } = await window.supabase
                         .sql`
                         CREATE TABLE IF NOT EXISTS mafia.players (
-                            id SERIAL PRIMARY KEY,
-                            name TEXT NOT NULL,
+                            username TEXT PRIMARY KEY,
+                            full_name TEXT NOT NULL,
                             phone TEXT,
-                            photo_url TEXT,
                             previously_selected BOOLEAN DEFAULT FALSE
                         )`;
                     
@@ -517,19 +1008,19 @@ class DatabaseManager {
 
     // Player selection methods
     selectPlayer(player) {
-        const existingIndex = this.selectedPlayers.findIndex(p => p.id === player.id);
+        const existingIndex = this.selectedPlayers.findIndex(p => p.username === player.username);
         if (existingIndex === -1) {
             this.selectedPlayers.push(player);
-            console.log(`Player ${player.name} (ID: ${player.id}) selected`);
+            console.log(`Player ${player.full_name} (username: ${player.username}) selected`);
         }
         return this.selectedPlayers.length;
     }
 
     deselectPlayer(player) {
-        const index = this.selectedPlayers.findIndex(p => p.id === player.id);
+        const index = this.selectedPlayers.findIndex(p => p.username === player.username);
         if (index !== -1) {
             this.selectedPlayers.splice(index, 1);
-            console.log(`Player ${player.name} (ID: ${player.id}) deselected`);
+            console.log(`Player ${player.full_name} (username: ${player.username}) deselected`);
         }
         return this.selectedPlayers.length;
     }
@@ -539,28 +1030,28 @@ class DatabaseManager {
         console.log(`DEBUG: Toggling selection for player ID: ${playerId}`);
         
         // Find the player in our players array
-        const player = this.players.find(p => p.id == playerId);
+        const player = this.players.find(p => p.username === playerId);
         if (!player) {
-            console.error(`DEBUG: Player with ID ${playerId} not found in players list`);
+            console.error(`DEBUG: Player with username ${playerId} not found in players list`);
             // Dump player list for debugging
-            console.log('DEBUG: Available players:', this.players.map(p => ({ id: p.id, name: p.name })));
+            console.log('DEBUG: Available players:', this.players.map(p => ({ username: p.username, full_name: p.full_name })));
             return this.selectedPlayers.length;
         }
         
         // Check if player is already selected
-        const existingIndex = this.selectedPlayers.findIndex(p => p.id == playerId);
+        const existingIndex = this.selectedPlayers.findIndex(p => p.username === playerId);
         
         if (existingIndex === -1) {
             // Player not selected, add to selection
             this.selectedPlayers.push(player);
-            console.log(`DEBUG: Player ${player.name} (ID: ${playerId}) selected`);
+            console.log(`DEBUG: Player ${player.full_name} (username: ${playerId}) selected`);
         } else {
             // Player already selected, remove from selection
             this.selectedPlayers.splice(existingIndex, 1);
-            console.log(`DEBUG: Player ${player.name} (ID: ${playerId}) deselected`);
+            console.log(`DEBUG: Player ${player.full_name} (username: ${playerId}) deselected`);
         }
         
-        console.log('DEBUG: Current selected players:', this.selectedPlayers.map(p => ({ id: p.id, name: p.name })));
+        console.log('DEBUG: Current selected players:', this.selectedPlayers.map(p => ({ username: p.username, full_name: p.full_name })));
         
         // Update the selection status in the database immediately
         this.updatePreviouslySelectedFlag()
@@ -599,7 +1090,7 @@ class DatabaseManager {
         }
         
         console.log('DEBUG: Updating previously_selected flag for players in database');
-        console.log('DEBUG: Current selected players:', this.selectedPlayers.map(p => ({ id: p.id, name: p.name })));
+        console.log('DEBUG: Current selected players:', this.selectedPlayers.map(p => ({ username: p.username, full_name: p.full_name || p.name })));
         
         try {
             // First, set all player flags to false
@@ -608,7 +1099,7 @@ class DatabaseManager {
                 .from('profiles')
                 .update({ previously_selected: false })
                 .neq('username', 'dummy_value')  // Update all rows
-                .select('username, previously_selected');
+                .select('username, full_name, previously_selected');
                 
             if (resetError) {
                 console.error('DEBUG: Error resetting previously_selected flags:', resetError);
@@ -616,53 +1107,27 @@ class DatabaseManager {
                 console.log('DEBUG: Successfully reset all previously_selected flags to false', resetData);
             }
             
-            // Get IDs from selected players
-            // We need to handle multiple ID formats to match with usernames in profiles
-            const selectedPlayerIds = this.selectedPlayers.map(player => player.id);
-            console.log('DEBUG: Selected player IDs:', selectedPlayerIds);
+            // Get usernames from selected players
+            const selectedPlayerUsernames = this.selectedPlayers.map(player => player.username);
+            console.log('DEBUG: Selected player usernames:', selectedPlayerUsernames);
             
-            // Directly try to insert the list of IDs for debugging
-            console.log('DEBUG: About to update the following usernames to true:', selectedPlayerIds);
-            
-            // Set selected players' flags to true directly using the IDs we have
-            if (selectedPlayerIds.length > 0) {
-                console.log('DEBUG: Setting previously_selected=true for usernames:', selectedPlayerIds);
+            // Set selected players' flags to true
+            if (selectedPlayerUsernames.length > 0) {
+                console.log('DEBUG: Setting previously_selected=true for usernames:', selectedPlayerUsernames);
                 
                 const { data: updateData, error: updateError } = await window.supabase
                     .from('profiles')
                     .update({ previously_selected: true })
-                    .in('username', selectedPlayerIds)
+                    .in('username', selectedPlayerUsernames)
                     .select('username, full_name, previously_selected');
                     
                 if (updateError) {
                     console.error('DEBUG: Error updating previously_selected flags:', updateError);
-                    
-                    // If direct update failed, try a broader approach using like queries
-                    console.log('DEBUG: Trying broader matching approach');
-                    
-                    // Try to match by name
-                    for (const player of this.selectedPlayers) {
-                        try {
-                            const { data: matchData, error: matchError } = await window.supabase
-                                .from('profiles')
-                                .update({ previously_selected: true })
-                                .eq('full_name', player.name)
-                                .select('username, full_name, previously_selected');
-                                
-                            if (matchError) {
-                                console.error(`DEBUG: Error updating for player ${player.name}:`, matchError);
-                            } else {
-                                console.log(`DEBUG: Updated by name for ${player.name}:`, matchData);
-                            }
-                        } catch (err) {
-                            console.error(`DEBUG: Exception updating for player ${player.name}:`, err);
-                        }
-                    }
                 } else {
                     console.log('DEBUG: Successfully updated previously_selected flags in database:', updateData);
                 }
             } else {
-                console.error('DEBUG: Could not find any matching usernames in profiles table for selected players');
+                console.error('DEBUG: Could not find any usernames in selected players');
             }
             
             // Verify the update worked
@@ -700,7 +1165,7 @@ class DatabaseManager {
                 );
                 
                 // Compare with our selected players
-                const ourSelectedIds = this.selectedPlayers.map(p => p.id);
+                const ourSelectedIds = this.selectedPlayers.map(p => p.username);
                 console.log('DEBUG: Our selected player IDs:', ourSelectedIds);
             }
         } catch (error) {
@@ -796,6 +1261,47 @@ class DatabaseManager {
             }
         } catch (error) {
             console.error('Error in ensurePreviouslySelectedColumn:', error);
+            return false;
+        }
+    }
+
+    async checkStorageAvailability() {
+        console.log('Checking storage availability...');
+        try {
+            // Ensure Supabase is ready
+            await waitForSupabase();
+            
+            // Check available buckets
+            const { data: buckets, error: bucketError } = await window.supabase
+                .storage
+                .listBuckets();
+            
+            if (bucketError) {
+                console.error('Error listing buckets:', bucketError);
+                if (bucketError.message.includes('permission denied')) {
+                    console.log('Storage permission denied. Photo uploads will likely fail.');
+                }
+                return false;
+            }
+            
+            if (!buckets || buckets.length === 0) {
+                console.log('No storage buckets found. Photo uploads will likely fail.');
+                return false;
+            }
+            
+            console.log('Available storage buckets:', buckets.map(b => b.name).join(', '));
+            
+            // Check for preferred bucket
+            const preferredBucket = 'player-photos';
+            const hasPreferredBucket = buckets.some(b => b.name === preferredBucket);
+            
+            if (!hasPreferredBucket) {
+                console.log(`Preferred bucket "${preferredBucket}" not found. Will use available buckets instead.`);
+            }
+            
+            return true;
+        } catch (error) {
+            console.error('Error checking storage availability:', error);
             return false;
         }
     }
