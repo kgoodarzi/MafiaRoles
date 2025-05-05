@@ -52,7 +52,9 @@ function loadSelectedPlayers() {
     try {
         const storedPlayers = localStorage.getItem('selectedPlayers');
         if (storedPlayers) {
-            selectedPlayers = JSON.parse(storedPlayers);
+            // Parse and normalize player data to ensure consistent field names
+            const parsedPlayers = JSON.parse(storedPlayers);
+            selectedPlayers = parsedPlayers.map(normalizePlayerData);
             totalPlayers = selectedPlayers.length;
             document.getElementById('total-players').textContent = totalPlayers;
             displaySelectedPlayers();
@@ -69,25 +71,49 @@ function loadSelectedPlayers() {
     }
 }
 
+// Normalize player data to ensure consistent field names
+function normalizePlayerData(player) {
+    if (!player) return null;
+    
+    const normalizedPlayer = { ...player };
+    
+    // Ensure name fields are set correctly
+    normalizedPlayer.full_name = player.full_name || player.name || player.player_name || 'Unknown Player';
+    normalizedPlayer.name = normalizedPlayer.full_name; // For backward compatibility
+    
+    // Ensure username/id is set correctly
+    normalizedPlayer.username = player.username || player.user_name || player.id || 'unknown';
+    normalizedPlayer.id = normalizedPlayer.username; // For backward compatibility
+    
+    // Ensure photo fields are set correctly
+    normalizedPlayer.photo = player.photo || player.photoUrl || player.avatar || player.photo_url || 'images/default-avatar.svg';
+    normalizedPlayer.photo_url = normalizedPlayer.photo; // For backward compatibility
+    
+    return normalizedPlayer;
+}
+
 // Display selected players in the UI
 function displaySelectedPlayers() {
     const playersList = document.getElementById('selected-players-list');
     playersList.innerHTML = '';
+    
+    // Make sure all players are normalized
+    selectedPlayers = selectedPlayers.map(normalizePlayerData).filter(p => p !== null);
     
     selectedPlayers.forEach(player => {
         const playerCard = document.createElement('div');
         playerCard.className = 'player-card';
         playerCard.dataset.id = player.id;
         
-        const imgSrc = player.photo_url || 'images/default-avatar.svg';
+        const imgSrc = player.photo || 'images/default-avatar.svg';
         
         playerCard.innerHTML = `
             <div class="player-container">
                 <div class="player-image">
-                    <img src="${imgSrc}" alt="${player.name}" onerror="this.src='images/default-avatar.svg'">
+                    <img src="${imgSrc}" alt="${player.full_name}" onerror="this.src='images/default-avatar.svg'">
                 </div>
                 <div class="player-info">
-                    <h3 class="player-name">${player.name}</h3>
+                    <h3 class="player-name">${player.full_name}</h3>
                 </div>
             </div>
         `;
@@ -103,7 +129,8 @@ function displaySelectedPlayers() {
 
     // On page load, if previousSelectedPlayers exists and selectedPlayers is empty, use it
     if ((!selectedPlayers || selectedPlayers.length === 0) && localStorage.getItem('previousSelectedPlayers')) {
-        selectedPlayers = JSON.parse(localStorage.getItem('previousSelectedPlayers'));
+        const previousPlayers = JSON.parse(localStorage.getItem('previousSelectedPlayers'));
+        selectedPlayers = previousPlayers.map(normalizePlayerData).filter(p => p !== null);
         totalPlayers = selectedPlayers.length;
         document.getElementById('total-players').textContent = totalPlayers;
         displaySelectedPlayers();
@@ -149,6 +176,9 @@ function assignRoles() {
     }
 
     try {
+        // Make sure all players are normalized
+        selectedPlayers = selectedPlayers.map(normalizePlayerData).filter(p => p !== null);
+        
         // Always use getEnabledRoles() from roles.js
         let rolesList = (typeof getEnabledRoles === 'function' ? getEnabledRoles() : []);
         // Defensive: fallback to empty array if not found
@@ -269,5 +299,7 @@ function displayCurrentRoles() {
 
 // Save selected players to localStorage whenever they are changed
 function saveSelectedPlayers() {
-    localStorage.setItem('selectedPlayers', JSON.stringify(selectedPlayers));
+    // Make sure all players are normalized before saving
+    const normalizedPlayers = selectedPlayers.map(normalizePlayerData).filter(p => p !== null);
+    localStorage.setItem('selectedPlayers', JSON.stringify(normalizedPlayers));
 } 
