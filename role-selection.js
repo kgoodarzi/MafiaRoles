@@ -162,8 +162,8 @@ function assignRoles() {
         // Remove roles in the specified order if fewer than 12 players
         const removalOrder = [
             'zodiac',
-            'citizen', // remove one of the two
             'ocean',
+            'citizen', // remove one of the two
             'gunman',
             'bomber',
             'bodyguard',
