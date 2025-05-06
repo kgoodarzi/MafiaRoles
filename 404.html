@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Redirecting...</title>
+    <script>
+        // Preserve the URL path by redirecting to the root with a hash fragment
+        // This allows your SPA router to handle the path correctly
+        const path = window.location.pathname;
+        window.location.href = '/' + (path.length > 1 ? '#' + path.substring(1) : '');
+    </script>
+</head>
+<body>
+    <p>Redirecting to homepage...</p>
+</body>
+</html> 
