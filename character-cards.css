@@ -484,7 +484,7 @@ hr {
     transition: all 0.3s ease;
     padding: 1rem;
     border-radius: 8px;
-    background-color: var(--card-bg, #2a2a2a);
+    background-color: #1e1e1e !important;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     margin-bottom: 1rem;
     cursor: pointer;
@@ -543,11 +543,12 @@ hr {
     margin: 8px 0;
     font-size: 1.2rem;
     text-align: center;
+    color: white !important;
 }
 
 .role-description {
     font-size: 0.85rem;
-    color: rgba(255, 255, 255, 0.7);
+    color: rgba(255, 255, 255, 0.85) !important;
     text-align: center;
     margin: 0.5rem 0;
     height: 3.5em;
@@ -555,6 +556,19 @@ hr {
     display: -webkit-box;
     -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
+}
+
+/* Team specific title colors to make them more vibrant */
+.role-card[data-team="mafia"] h4 {
+    color: #ff6b6b !important;
+}
+
+.role-card[data-team="citizen"] h4 {
+    color: #69db7c !important;
+}
+
+.role-card[data-team="independent"] h4 {
+    color: #da77f2 !important;
 }
 
 /* Responsive adjustments */

@@ -97,7 +97,7 @@ function displayTeamRoles(containerId, roles) {
             <p class="role-description">${role.description}</p>
             <div class="role-select">
                 <input type="checkbox" id="select-${role.id}" class="role-checkbox" ${isSelected ? 'checked' : ''}>
-                <label for="select-${role.id}">Select role</label>
+                <label for="select-${role.id}">Include in game</label>
             </div>
         `;
         
@@ -176,8 +176,17 @@ function validateRoleSelection() {
     const validationMsg = document.getElementById('validation-message');
     const saveButton = document.getElementById('save-roles-btn');
     
-    if (selectedRoles.length !== totalPlayers) {
-        validationMsg.textContent = `You must select exactly ${totalPlayers} roles for your ${totalPlayers} players.`;
+    // Check if at least one role is selected
+    if (selectedRoles.length === 0) {
+        validationMsg.textContent = "You must select at least one role.";
+        validationMsg.className = "error";
+        saveButton.disabled = true;
+        return false;
+    }
+    
+    // It's okay to have fewer roles than players (citizens will be added automatically)
+    if (selectedRoles.length > totalPlayers) {
+        validationMsg.textContent = `You cannot select more than ${totalPlayers} roles. Please deselect some roles.`;
         validationMsg.className = "error";
         saveButton.disabled = true;
         return false;
@@ -194,12 +203,12 @@ function validateRoleSelection() {
     
     // Ensure mafia isn't too large (typically less than half)
     if (mafiaCount > Math.floor(totalPlayers / 2)) {
-        validationMsg.textContent = "Too many Mafia roles. Mafia should be less than half of total players.";
+        validationMsg.textContent = `Selected ${selectedRoles.length} roles (${mafiaCount} Mafia). Remaining roles will be Citizens.`;
         validationMsg.className = "warning";
         // Allow save despite warning
         saveButton.disabled = false;
     } else {
-        validationMsg.textContent = "Role selection is valid.";
+        validationMsg.textContent = `Selected ${selectedRoles.length} roles. Remaining ${totalPlayers - selectedRoles.length} roles will be Citizens.`;
         validationMsg.className = "success";
         saveButton.disabled = false;
     }
@@ -209,6 +218,23 @@ function validateRoleSelection() {
 
 // Save selected roles and return to role selection page
 function saveRolesAndReturn() {
+    // If fewer roles than players, add citizen roles to fill the gap
+    const remainingSlots = totalPlayers - selectedRoles.length;
+    if (remainingSlots > 0) {
+        // Find the citizen role
+        const citizenRole = allRoles.find(role => role.id === 'citizen');
+        
+        if (citizenRole) {
+            // Add citizen roles to fill the remaining slots
+            for (let i = 0; i < remainingSlots; i++) {
+                selectedRoles.push(citizenRole);
+            }
+            console.log(`Added ${remainingSlots} citizen roles to complete the selection.`);
+        } else {
+            console.error("Could not find citizen role to fill remaining slots");
+        }
+    }
+    
     // Save selected roles to localStorage
     localStorage.setItem('customizedRoles', JSON.stringify(selectedRoles));
     
