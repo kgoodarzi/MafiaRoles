@@ -94,17 +94,19 @@ function showCurrentPlayer() {
     const player = gameState.players[currentPlayerIndex];
     const playerElement = document.getElementById('current-player');
     
-    // Display player info
+    // Display player info with the name to the right of the photo
     playerElement.innerHTML = `
         <div class="player-card">
-            <div class="player-image">
-                <img src="${player.photo_url || 'images/default-avatar.svg'}" 
-                     alt="${player.name}" 
-                     onerror="this.src='images/default-avatar.svg'">
-            </div>
-            <div class="player-info">
-                <h3>${player.name}</h3>
-                <p>Player ${currentPlayerIndex + 1} of ${gameState.players.length}</p>
+            <div class="player-container" style="display: flex; align-items: center;">
+                <div class="player-image" style="margin-right: 1rem;">
+                    <img src="${player.photo_url || 'images/default-avatar.svg'}" 
+                         alt="${player.name}" 
+                         onerror="this.src='images/default-avatar.svg'">
+                </div>
+                <div class="player-info" style="text-align: left;">
+                    <h3>${player.name}</h3>
+                    <p>Player ${currentPlayerIndex + 1} of ${gameState.players.length}</p>
+                </div>
             </div>
         </div>
     `;
@@ -167,15 +169,22 @@ function viewRole() {
         teamClass = 'independent';
     }
     
-    // Display role with enhanced styling
+    // Display role with the name to the right of the image
     roleDisplay.innerHTML = `
         <div class="role-card ${player.role}" data-team="${teamClass}">
-            <div class="role-image-container">
-                <img src="${roleImageSrc}" 
-                     alt="${roleInfo.name}" 
-                     onerror="this.src='images/default-avatar.svg'">
+            <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 1rem;">
+                <div class="role-image-container" style="margin-right: 1rem;">
+                    <img src="${roleImageSrc}" 
+                         alt="${roleInfo.name}" 
+                         onerror="this.src='images/default-avatar.svg'">
+                </div>
+                <div class="role-info" style="text-align: left;">
+                    <h3>${roleInfo.name}</h3>
+                    <div class="team-indicator" style="color: ${getTeamColor(teamClass)}; font-weight: bold; margin-top: 0.5rem;">
+                        ${teamClass.charAt(0).toUpperCase() + teamClass.slice(1)} Team
+                    </div>
+                </div>
             </div>
-            <h3>${roleInfo.name}</h3>
             <p class="role-description">${roleInfo.description}</p>
         </div>
     `;
@@ -444,4 +453,18 @@ function getRoleInfo(roleId) {
         description: 'This role is not defined in detail.',
         image: 'images/default-avatar.svg'
     };
+}
+
+// Helper function to get team color
+function getTeamColor(team) {
+    switch(team) {
+        case 'mafia':
+            return '#ff4d4d';
+        case 'citizen':
+            return '#4caf50';
+        case 'independent':
+            return '#9c27b0';
+        default:
+            return '#ffffff';
+    }
 } 

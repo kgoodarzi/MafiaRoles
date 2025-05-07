@@ -616,7 +616,114 @@ section.selected-players .players-grid {
 
 /* Game page styles */
 .role-reveal {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    margin: 2rem 0;
+}
+
+.role-reveal .player-card {
+    width: 90%;
+    max-width: 600px;
+    margin-bottom: 2rem;
+    border-radius: 10px;
+    background-color: var(--card-bg, #2a2a2a);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    padding: 1.5rem;
+}
+
+.role-reveal .player-container {
+    display: flex;
+    align-items: center;
+}
+
+.role-reveal .player-image {
+    width: 100px;
+    height: 100px;
+    flex-shrink: 0;
+    margin-right: 1.5rem;
+}
+
+.role-reveal .player-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 3px solid var(--primary-color, #4caf50);
+}
+
+.role-reveal .player-info {
+    text-align: left;
+}
+
+.role-reveal .player-info h3 {
+    margin: 0 0 0.5rem;
+    font-size: 1.5rem;
+}
+
+.role-reveal .role-card {
+    width: 90%;
+    max-width: 600px;
+    border-radius: 10px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.role-reveal .role-image-container {
+    width: 140px;
+    height: 140px;
+    flex-shrink: 0;
+    margin-right: 1.5rem;
+}
+
+.role-reveal .role-image-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+.role-reveal .role-info {
+    text-align: left;
+}
+
+.role-reveal .role-info h3 {
+    margin: 0 0 0.5rem;
+    font-size: 1.8rem;
+}
+
+.role-reveal .team-indicator {
+    font-weight: bold;
+    margin-top: 0.5rem;
+    font-size: 1.1rem;
+}
+
+.role-reveal .role-description {
+    font-size: 1.1rem;
+    line-height: 1.5;
+    margin-top: 1rem;
     text-align: center;
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+    .role-reveal .player-container,
+    .role-reveal .role-card > div:first-child {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .role-reveal .player-image,
+    .role-reveal .role-image-container {
+        margin-right: 0;
+        margin-bottom: 1rem;
+    }
+    
+    .role-reveal .player-info,
+    .role-reveal .role-info {
+        text-align: center;
+    }
 }
 
 .current-state {
