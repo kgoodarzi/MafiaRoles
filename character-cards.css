@@ -13,7 +13,7 @@ html body.roles-page {
     /* Reset center alignment completely */
     align-items: initial !important;
     justify-content: initial !important;
-    vertical-align: initial !important;
+    /*vertical-align: initial !important;*/
     text-align: left !important;
 }
 
@@ -27,7 +27,7 @@ html body[data-page="roles"] {
     /* Reset center alignment completely */
     align-items: initial !important;
     justify-content: initial !important;
-    vertical-align: initial !important;
+    /*vertical-align: initial !important;*/
     text-align: left !important;
 }
 
@@ -474,4 +474,119 @@ hr {
         max-width: 300px !important;
         margin: 0 auto 15px auto !important;
     }
+}
+
+/* Character Cards CSS */
+
+/* Role card styles */
+.role-card {
+    position: relative;
+    transition: all 0.3s ease;
+    padding: 1rem;
+    border-radius: 8px;
+    background-color: var(--card-bg, #2a2a2a);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    margin-bottom: 1rem;
+    cursor: pointer;
+    border: 2px solid transparent;
+    max-width: 280px;
+    margin: 0 auto 1rem;
+}
+
+/* Role image container */
+.role-image-container {
+    width: 140px;
+    height: 140px;
+    margin: 0 auto 0.5rem;
+    border-radius: 8px;
+    overflow: hidden;
+    background-color: rgba(0, 0, 0, 0.2);
+}
+
+.role-image-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Team specific styling */
+.role-card[data-team="mafia"] {
+    border-color: #ff4d4d;
+}
+
+.role-card[data-team="citizen"] {
+    border-color: #4caf50;
+}
+
+.role-card[data-team="independent"] {
+    border-color: #9c27b0;
+}
+
+/* Selected role styling */
+.role-card.selected {
+    border-color: #03a9f4;
+    background-color: rgba(3, 169, 244, 0.1);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Role grid layout */
+.roles-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 1rem;
+    margin: 1rem 0;
+}
+
+/* Role info styles */
+.role-card h4 {
+    margin: 8px 0;
+    font-size: 1.2rem;
+    text-align: center;
+}
+
+.role-description {
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.7);
+    text-align: center;
+    margin: 0.5rem 0;
+    height: 3.5em;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .roles-grid {
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    }
+    
+    .role-image-container {
+        width: 100px;
+        height: 100px;
+    }
+}
+
+/* Role selection UI */
+.role-select {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 8px;
+}
+
+.role-checkbox {
+    margin-right: 5px;
+}
+
+/* Provide some visual feedback on hover */
+.role-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.role-card.selected:hover {
+    transform: translateY(-4px);
 } 

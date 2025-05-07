@@ -1,6 +1,7 @@
 // Global variables
 let selectedPlayers = [];
 let totalPlayers = 0;
+let customRoles = []; // Store custom role selection
 
 // Initialize page when DOM is loaded
 document.addEventListener('DOMContentLoaded', async function() {
@@ -21,8 +22,12 @@ document.addEventListener('DOMContentLoaded', async function() {
     // Load selected players from localStorage
     loadSelectedPlayers();
     
+    // Check for customized roles
+    loadCustomRoles();
+    
     // Set up event listeners (only for assign roles button)
     document.getElementById('assign-roles-btn').addEventListener('click', assignRoles);
+    document.getElementById('edit-roles-btn').addEventListener('click', navigateToRoleCustomize);
     
     // Initial calculation of role distribution
     updateRoleDistribution();
@@ -71,6 +76,26 @@ function loadSelectedPlayers() {
     }
 }
 
+// Load custom roles if available
+function loadCustomRoles() {
+    try {
+        const storedRoles = localStorage.getItem('customizedRoles');
+        if (storedRoles) {
+            customRoles = JSON.parse(storedRoles);
+            console.log("Loaded custom roles:", customRoles);
+            
+            // Validate the number of custom roles matches the player count
+            if (customRoles.length !== totalPlayers) {
+                console.warn("Custom roles count doesn't match player count. Reverting to default roles.");
+                customRoles = [];
+            }
+        }
+    } catch (error) {
+        console.error("Error loading custom roles:", error);
+        customRoles = [];
+    }
+}
+
 // Normalize player data to ensure consistent field names
 function normalizePlayerData(player) {
     if (!player) return null;
@@ -90,6 +115,11 @@ function normalizePlayerData(player) {
     normalizedPlayer.photo_url = normalizedPlayer.photo; // For backward compatibility
     
     return normalizedPlayer;
+}
+
+// Navigate to role customization page
+function navigateToRoleCustomize() {
+    window.location.href = 'role-customize.html';
 }
 
 // Display selected players in the UI
@@ -163,6 +193,73 @@ function validateRoles() {
     return true;
 }
 
+// Show current roles that will be assigned
+function displayCurrentRoles() {
+    let rolesList;
+    
+    // Use custom roles if available, otherwise use enabled roles
+    if (customRoles && customRoles.length === totalPlayers) {
+        rolesList = customRoles;
+    } else {
+        rolesList = (typeof getEnabledRoles === 'function' ? getEnabledRoles() : []);
+        
+        // Apply default role selection logic if no custom roles
+        // Remove roles in the specified order if fewer than 12 players
+        const removalOrder = [
+            'zodiac',
+            'citizen',
+            'ocean',
+            'gunman',
+            'bomber',
+            'bodyguard',
+            'magician'
+        ];
+        let tempRoles = [...rolesList];
+        if (totalPlayers < 12) {
+            for (let i = 0; tempRoles.length > totalPlayers && i < removalOrder.length; i++) {
+                const roleToRemove = tempRoles.findIndex(r => r.id === removalOrder[i]);
+                if (roleToRemove !== -1) {
+                    tempRoles.splice(roleToRemove, 1);
+                }
+            }
+            while (tempRoles.length > totalPlayers) {
+                tempRoles.pop();
+            }
+        } else {
+            tempRoles = tempRoles.slice(0, totalPlayers);
+        }
+        rolesList = tempRoles;
+    }
+    
+    const rolesContainer = document.getElementById('current-roles-list');
+    if (!rolesList || !Array.isArray(rolesList) || rolesList.length === 0) {
+        if (rolesContainer) {
+            rolesContainer.innerHTML = "<div style='color:#888;padding:1rem;'>No roles available. Please check your roles configuration.</div>";
+        }
+        console.warn("No roles available for assignment. Check if roles.js is loaded and getEnabledRoles is defined.");
+        return;
+    }
+    
+    // Render roles
+    if (rolesContainer) {
+        rolesContainer.innerHTML = rolesList.map(role => 
+            `<div class='role-card' data-team='${role.team}'>
+                <div class="role-image-container">
+                    <img src='${role.image}' alt='${role.name}'>
+                </div>
+                <h4>${role.name}</h4>
+            </div>`
+        ).join('');
+    }
+}
+
+// Save selected players to localStorage whenever they are changed
+function saveSelectedPlayers() {
+    // Make sure all players are normalized before saving
+    const normalizedPlayers = selectedPlayers.map(normalizePlayerData).filter(p => p !== null);
+    localStorage.setItem('selectedPlayers', JSON.stringify(normalizedPlayers));
+}
+
 // Assign roles to players and advance to game page
 function assignRoles() {
     if (!validateRoles()) {
@@ -179,43 +276,52 @@ function assignRoles() {
         // Make sure all players are normalized
         selectedPlayers = selectedPlayers.map(normalizePlayerData).filter(p => p !== null);
         
-        // Always use getEnabledRoles() from roles.js
-        let rolesList = (typeof getEnabledRoles === 'function' ? getEnabledRoles() : []);
-        // Defensive: fallback to empty array if not found
-        if (!rolesList || !Array.isArray(rolesList)) rolesList = [];
-        // Ensure there are enough roles (add extra citizens if needed)
-        while (rolesList.length < 12) {
-            const citizenRole = rolesList.find(r => r.id === 'citizen');
-            if (citizenRole) rolesList.push(citizenRole);
-            else break;
-        }
-        // Remove roles in the specified order if fewer than 12 players
-        const removalOrder = [
-            'zodiac',
-            'ocean',
-            'citizen', // remove one of the two
-            'gunman',
-            'bomber',
-            'bodyguard',
-            'magician'
-        ];
-        let rolesToAssign = rolesList.slice(0, totalPlayers);
-        if (totalPlayers < 12) {
-            let tempRoles = [...rolesList];
-            for (let i = 0; tempRoles.length > totalPlayers && i < removalOrder.length; i++) {
-                const roleToRemove = tempRoles.findIndex(r => r.id === removalOrder[i]);
-                if (roleToRemove !== -1) {
-                    tempRoles.splice(roleToRemove, 1);
+        let rolesToAssign;
+        
+        // Use custom roles if available, otherwise use enabled roles
+        if (customRoles && customRoles.length === totalPlayers) {
+            rolesToAssign = [...customRoles];
+        } else {
+            // Always use getEnabledRoles() from roles.js
+            let rolesList = (typeof getEnabledRoles === 'function' ? getEnabledRoles() : []);
+            // Defensive: fallback to empty array if not found
+            if (!rolesList || !Array.isArray(rolesList)) rolesList = [];
+            // Ensure there are enough roles (add extra citizens if needed)
+            while (rolesList.length < totalPlayers) {
+                const citizenRole = rolesList.find(r => r.id === 'citizen');
+                if (citizenRole) rolesList.push(citizenRole);
+                else break;
+            }
+            // Remove roles in the specified order if fewer than 12 players
+            const removalOrder = [
+                'zodiac',
+                'ocean',
+                'citizen', // remove one of the two
+                'gunman',
+                'bomber',
+                'bodyguard',
+                'magician'
+            ];
+            rolesToAssign = rolesList.slice(0, totalPlayers);
+            if (totalPlayers < 12) {
+                let tempRoles = [...rolesList];
+                for (let i = 0; tempRoles.length > totalPlayers && i < removalOrder.length; i++) {
+                    const roleToRemove = tempRoles.findIndex(r => r.id === removalOrder[i]);
+                    if (roleToRemove !== -1) {
+                        tempRoles.splice(roleToRemove, 1);
+                    }
                 }
+                // If still more roles than players, remove from end
+                while (tempRoles.length > totalPlayers) {
+                    tempRoles.pop();
+                }
+                rolesToAssign = tempRoles;
             }
-            // If still more roles than players, remove from end
-            while (tempRoles.length > totalPlayers) {
-                tempRoles.pop();
-            }
-            rolesToAssign = tempRoles;
         }
+        
         // Shuffle roles
         rolesToAssign = shuffleArray(rolesToAssign);
+        
         // Assign roles to players (store role id)
         const playersWithRoles = selectedPlayers.map((player, index) => {
             return {
@@ -223,6 +329,7 @@ function assignRoles() {
                 role: rolesToAssign[index] ? rolesToAssign[index].id : 'citizen'
             };
         });
+        
         // Save to localStorage for the game page
         localStorage.setItem('gameState', JSON.stringify({
             players: playersWithRoles,
@@ -230,6 +337,7 @@ function assignRoles() {
             gamePhase: 'setup',
             eliminatedPlayers: []
         }));
+        
         // Redirect to game page
         window.location.href = 'game.html';
     } catch (error) {
@@ -247,59 +355,4 @@ function shuffleArray(array) {
         [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
     }
     return shuffled;
-}
-
-// Show current roles that will be assigned
-function displayCurrentRoles() {
-    let rolesList = (typeof getEnabledRoles === 'function' ? getEnabledRoles() : []);
-    const rolesContainer = document.getElementById('current-roles-list');
-    if (!rolesList || !Array.isArray(rolesList) || rolesList.length === 0) {
-        if (rolesContainer) {
-            rolesContainer.innerHTML = "<div style='color:#888;padding:1rem;'>No roles available. Please check your roles configuration.</div>";
-        }
-        console.warn("No roles available for assignment. Check if roles.js is loaded and getEnabledRoles is defined.");
-        return;
-    }
-    // Remove roles in the specified order if fewer than 12 players
-    const removalOrder = [
-        'zodiac',
-        'citizen',
-        'ocean',
-        'gunman',
-        'bomber',
-        'bodyguard',
-        'magician'
-    ];
-    let tempRoles = [...rolesList];
-    if (totalPlayers < 12) {
-        for (let i = 0; tempRoles.length > totalPlayers && i < removalOrder.length; i++) {
-            const roleToRemove = tempRoles.findIndex(r => r.id === removalOrder[i]);
-            if (roleToRemove !== -1) {
-                tempRoles.splice(roleToRemove, 1);
-            }
-        }
-        while (tempRoles.length > totalPlayers) {
-            tempRoles.pop();
-        }
-    } else {
-        tempRoles = tempRoles.slice(0, totalPlayers);
-    }
-    // Render roles
-    if (rolesContainer) {
-        rolesContainer.innerHTML = tempRoles.map(role => 
-            `<div class='role-card' data-team='${role.team}'>
-                <div class="role-image-container">
-                    <img src='${role.image}' alt='${role.name}'>
-                </div>
-                <h4>${role.name}</h4>
-            </div>`
-        ).join('');
-    }
-}
-
-// Save selected players to localStorage whenever they are changed
-function saveSelectedPlayers() {
-    // Make sure all players are normalized before saving
-    const normalizedPlayers = selectedPlayers.map(normalizePlayerData).filter(p => p !== null);
-    localStorage.setItem('selectedPlayers', JSON.stringify(normalizedPlayers));
 } 

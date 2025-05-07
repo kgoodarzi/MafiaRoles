@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mafia Game - Customize Roles</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="dark-theme.css">
+    <link rel="stylesheet" href="character-cards.css">
+    <!-- Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Supabase initialization -->
+    <script src="supabase-init.js"></script>
+    <!-- Connection status -->
+    <script src="connection-status.js"></script>
+    <!-- Include roles.js first so role data is available -->
+    <script src="roles.js"></script>
+    <!-- External database manager -->
+    <script src="database.js"></script>
+    <!-- Role customization JS -->
+    <script src="role-customize.js"></script>
+</head>
+<body class="dark-theme">
+    <div id="connection-status"></div>
+    
+    <div class="container">
+        <header>
+            <h1>Customize Roles</h1>
+            <p>Select the roles you want to include in your game</p>
+        </header>
+
+        <main>
+            <section class="role-config">
+                <div class="players-summary">
+                    <p>Total Players: <span id="total-players">0</span></p>
+                    <p>Selected Roles: <span id="selected-roles-count">0</span> of <span id="required-roles">0</span></p>
+                </div>
+                
+                <div class="validation-message" id="validation-message"></div>
+                
+                <div class="role-selection-container">
+                    <!-- Mafia Team Roles -->
+                    <div class="role-team-section">
+                        <h3>Mafia Team</h3>
+                        <div id="mafia-roles" class="roles-list roles-grid"></div>
+                    </div>
+                    
+                    <!-- Town Team Roles -->
+                    <div class="role-team-section">
+                        <h3>Town Team</h3>
+                        <div id="town-roles" class="roles-list roles-grid"></div>
+                    </div>
+                    
+                    <!-- Independent Roles -->
+                    <div class="role-team-section">
+                        <h3>Independent Roles</h3>
+                        <div id="independent-roles" class="roles-list roles-grid"></div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="game-actions">
+                <div id="role-controls">
+                    <button id="cancel-btn" class="btn">Cancel</button>
+                    <button id="save-roles-btn" class="btn btn-primary">Save Selected Roles</button>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>&copy; 2025 KRS Consulting Inc.</p>
+        </footer>
+    </div>
+</body>
+</html> 
