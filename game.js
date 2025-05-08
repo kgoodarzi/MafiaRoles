@@ -94,19 +94,17 @@ function showCurrentPlayer() {
     const player = gameState.players[currentPlayerIndex];
     const playerElement = document.getElementById('current-player');
     
-    // Display player info with the name to the right of the photo
+    // Display player info
     playerElement.innerHTML = `
         <div class="player-card">
-            <div class="player-container" style="display: flex; align-items: center;">
-                <div class="player-image" style="margin-right: 1rem;">
-                    <img src="${player.photo_url || 'images/default-avatar.svg'}" 
-                         alt="${player.name}" 
-                         onerror="this.src='images/default-avatar.svg'">
-                </div>
-                <div class="player-info" style="text-align: left;">
-                    <h3>${player.name}</h3>
-                    <p>Player ${currentPlayerIndex + 1} of ${gameState.players.length}</p>
-                </div>
+            <div class="player-image">
+                <img src="${player.photo_url || 'images/default-avatar.svg'}" 
+                     alt="${player.name}" 
+                     onerror="this.src='images/default-avatar.svg'">
+            </div>
+            <div class="player-info">
+                <h3>${player.name}</h3>
+                <p>Player ${currentPlayerIndex + 1} of ${gameState.players.length}</p>
             </div>
         </div>
     `;
@@ -169,22 +167,15 @@ function viewRole() {
         teamClass = 'independent';
     }
     
-    // Display role with the name to the right of the image
+    // Display role with enhanced styling
     roleDisplay.innerHTML = `
         <div class="role-card ${player.role}" data-team="${teamClass}">
-            <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 1rem;">
-                <div class="role-image-container" style="margin-right: 1rem;">
-                    <img src="${roleImageSrc}" 
-                         alt="${roleInfo.name}" 
-                         onerror="this.src='images/default-avatar.svg'">
-                </div>
-                <div class="role-info" style="text-align: left;">
-                    <h3>${roleInfo.name}</h3>
-                    <div class="team-indicator" style="color: ${getTeamColor(teamClass)}; font-weight: bold; margin-top: 0.5rem;">
-                        ${teamClass.charAt(0).toUpperCase() + teamClass.slice(1)} Team
-                    </div>
-                </div>
+            <div class="role-image-container">
+                <img src="${roleImageSrc}" 
+                     alt="${roleInfo.name}" 
+                     onerror="this.src='images/default-avatar.svg'">
             </div>
+            <h3>${roleInfo.name}</h3>
             <p class="role-description">${roleInfo.description}</p>
         </div>
     `;
@@ -353,8 +344,8 @@ function startGame() {
         console.error("Not all roles have been assigned yet");
         return;
     }
-    // Update game phase
-    gameState.gamePhase = 'night';
+    // Update game phase to start with introduction day
+    gameState.gamePhase = 'intro-day';
     gameState.currentRound = 1;
     // Save updated game state
     localStorage.setItem('gameState', JSON.stringify(gameState));
@@ -370,25 +361,67 @@ function renderGamePhase() {
     const round = gameState.currentRound;
     let phaseTitle = '';
     let phaseDesc = '';
-    if (phase === 'night') {
-        phaseTitle = `Night Phase - Round ${round}`;
-        phaseDesc = 'The Mafia and special roles can now perform their actions.';
-    } else if (phase === 'day') {
-        phaseTitle = `Day Phase - Round ${round}`;
-        phaseDesc = 'Players discuss and vote to eliminate a suspect.';
-    } else {
-        phaseTitle = `Game Phase`;
-        phaseDesc = '';
+    
+    switch(phase) {
+        case 'intro-day':
+            phaseTitle = `Introduction Day Phase`;
+            phaseDesc = 'Players introduce themselves and get to know each other. No actions are taken during this phase.';
+            break;
+        case 'role-identification':
+            phaseTitle = `Night Phase - Role Identification`;
+            phaseDesc = 'The Moderator asks each role to identify themselves with a like. Mafia members learn who their teammates are.';
+            break;
+        case 'day':
+            phaseTitle = `Day Phase - Round ${round}`;
+            phaseDesc = 'Players discuss to identify and eliminate Mafia members.';
+            break;
+        case 'voting':
+            phaseTitle = `Voting Phase - Round ${round}`;
+            phaseDesc = 'Players vote to eliminate a suspect.';
+            break;
+        case 'night':
+            phaseTitle = `Night Phase - Round ${round}`;
+            phaseDesc = 'The Mafia and special roles perform their actions.';
+            break;
+        default:
+            phaseTitle = `Game Phase`;
+            phaseDesc = 'Current game phase';
     }
+    
     document.getElementById('game-phase').innerHTML = `
         <h2>${phaseTitle}</h2>
         <p>${phaseDesc}</p>
     `;
-    document.getElementById('game-actions').innerHTML = `
-        <button id="next-phase-btn" class="btn btn-primary">Next Phase</button>
-        <button id="reset-btn" class="btn" style="margin-left:1rem;">Back to Home (reset)</button>
-    `;
+    
+    // Different actions based on game phase
+    if (phase === 'intro-day') {
+        document.getElementById('game-actions').innerHTML = `
+            <button id="next-phase-btn" class="btn btn-primary">Next Phase</button>
+            <div style="margin-top: 15px;">
+                <button id="intro-timer-btn" class="btn btn-success" style="width: 100%;">Start Introduction Timers</button>
+            </div>
+            <div style="margin-top: 15px;">
+                <button id="show-roles-btn" class="btn" style="width: 100%;">Show Role Assignments</button>
+            </div>
+            <div style="margin-top: 15px;">
+                <button id="reset-btn" class="btn" style="width: 100%;">Back to Home (reset)</button>
+            </div>
+        `;
+        document.getElementById('intro-timer-btn').onclick = startIntroductionTimers;
+    } else {
+        document.getElementById('game-actions').innerHTML = `
+            <button id="next-phase-btn" class="btn btn-primary">Next Phase</button>
+            <div style="margin-top: 15px;">
+                <button id="show-roles-btn" class="btn" style="width: 100%;">Show Role Assignments</button>
+            </div>
+            <div style="margin-top: 15px;">
+                <button id="reset-btn" class="btn" style="width: 100%;">Back to Home (reset)</button>
+            </div>
+        `;
+    }
+    
     document.getElementById('next-phase-btn').onclick = nextPhase;
+    document.getElementById('show-roles-btn').onclick = toggleRoleAssignmentsView;
     document.getElementById('reset-btn').onclick = function() {
         // Clear game state and go back to home
         // (No need to save players, DatabaseManager handles that)
@@ -396,16 +429,170 @@ function renderGamePhase() {
         localStorage.removeItem('selectedPlayers');
         window.location.href = 'index.html';
     };
+    
+    // Add a div for role assignments table (initially hidden)
+    if (!document.getElementById('role-assignments-container')) {
+        const gameInfoDiv = document.getElementById('game-info');
+        const roleAssignmentsDiv = document.createElement('div');
+        roleAssignmentsDiv.id = 'role-assignments-container';
+        roleAssignmentsDiv.style.display = 'none';
+        roleAssignmentsDiv.className = 'role-assignments';
+        roleAssignmentsDiv.innerHTML = `
+            <div class="role-assignments-header">
+                <h3>Role Assignments</h3>
+            </div>
+            <div id="role-assignments-content"></div>
+            <div style="text-align: center; margin-top: 25px;">
+                <button id="hide-roles-btn" class="btn" style="width: 100%; max-width: 300px;">Return to Game</button>
+            </div>
+        `;
+        gameInfoDiv.appendChild(roleAssignmentsDiv);
+        document.getElementById('hide-roles-btn').onclick = toggleRoleAssignmentsView;
+    }
 }
 
-// Advance to the next phase (cycle night/day, increment round)
-function nextPhase() {
-    if (gameState.gamePhase === 'night') {
-        gameState.gamePhase = 'day';
+// Toggle between game phase view and role assignments view
+function toggleRoleAssignmentsView() {
+    const gamePhaseElement = document.getElementById('game-phase');
+    const actionsElement = document.getElementById('game-actions');
+    const roleAssignmentsElement = document.getElementById('role-assignments-container');
+    
+    if (roleAssignmentsElement.style.display === 'none') {
+        // Show role assignments
+        gamePhaseElement.style.display = 'none';
+        actionsElement.style.display = 'none';
+        roleAssignmentsElement.style.display = 'block';
+        
+        // Generate and display role assignments table
+        displayRoleAssignmentsTable();
     } else {
-        gameState.gamePhase = 'night';
-        gameState.currentRound++;
+        // Hide role assignments and return to game
+        gamePhaseElement.style.display = 'block';
+        actionsElement.style.display = 'block';
+        roleAssignmentsElement.style.display = 'none';
     }
+}
+
+// Display the role assignments table
+function displayRoleAssignmentsTable() {
+    if (!gameState || !gameState.players) return;
+    
+    const roleAssignmentsContent = document.getElementById('role-assignments-content');
+    
+    // Sort players by sequence if available
+    const sortedPlayers = [...gameState.players].sort((a, b) => {
+        const seqA = a.sequence !== undefined ? a.sequence : 9999;
+        const seqB = b.sequence !== undefined ? b.sequence : 9999;
+        return seqA - seqB;
+    });
+    
+    // Create a visually appealing roles table
+    let tableHtml = `
+        <div class="roles-table" style="border:1px solid var(--border-color);border-radius:8px;overflow:hidden;">
+    `;
+    
+    sortedPlayers.forEach(player => {
+        let roleId = player.role;
+        let teamClass = 'citizen';  // Default team class
+        
+        // Try to get team from ROLES array
+        if (typeof getRoleById === 'function') {
+            const role = getRoleById(roleId);
+            if (role) {
+                teamClass = role.team;
+            }
+        }
+        
+        // Fallback for known roles if getRoleById is not available or fails
+        if (roleId === 'mafia' || roleId === 'godfather' || roleId === 'bomber' || 
+            roleId === 'al-capon' || roleId === 'magician' || roleId === 'regular_mafia') {
+            if (teamClass !== 'mafia') {
+                teamClass = 'mafia';
+            }
+        } else if (roleId === 'zodiac') {
+            teamClass = 'independent';
+        }
+        
+        // For image path and proper role name
+        let roleImageName = roleId;
+        let roleName = "";
+        
+        // Get role info to get proper name
+        const roleInfo = getRoleInfo(roleId);
+        roleName = roleInfo.name;
+        
+        // Special case for 'mafia' and 'regular_mafia'
+        if (roleId === 'mafia' || roleId === 'regular_mafia') {
+            roleImageName = 'Mafia';
+        } else {
+            roleImageName = roleId.charAt(0).toUpperCase() + roleId.slice(1);
+        }
+        
+        const roleImageSrc = `images/Role - ${roleImageName}.jpg`;
+        
+        // Get sequence display (add sequence number if available)
+        const sequenceDisplay = player.sequence !== undefined ? ` (Seq #${player.sequence})` : '';
+        
+        // Add table row
+        tableHtml += `
+            <div class="roles-table-row" data-team="${teamClass}" style="padding:12px;border-bottom:1px solid var(--border-color);display:flex;align-items:center;background-color:var(--card-bg);border-left:4px solid ${getTeamBorderColor(teamClass)};">
+                <div class="roles-table-avatar" style="margin-right:12px;width:40px;height:40px;border-radius:50%;overflow:hidden;">
+                    <img src="${player.photo_url || 'images/default-avatar.svg'}" 
+                         alt="${player.name}" 
+                         style="width:100%;height:100%;object-fit:cover;"
+                         onerror="this.src='images/default-avatar.svg'">
+                </div>
+                <div class="roles-table-info" style="flex-grow:1;">
+                    <div style="font-weight:bold;">${player.name}${sequenceDisplay}</div>
+                    <div style="color:var(--text-secondary);font-size:0.9rem;">${roleName}</div>
+                </div>
+                <div class="roles-table-role-icon" style="width:35px;height:35px;border-radius:4px;overflow:hidden;">
+                    <img src="${roleImageSrc}" 
+                         alt="${roleName}" 
+                         style="width:100%;height:100%;object-fit:cover;"
+                         onerror="this.src='images/default-avatar.svg'">
+                </div>
+            </div>
+        `;
+    });
+    
+    tableHtml += `</div>`;
+    
+    // Add game status information
+    tableHtml += `
+        <div class="game-status-info" style="margin-top:20px;padding:15px;border-radius:8px;background-color:var(--card-bg);border:1px solid var(--border-color);">
+            <div><strong>Current Phase:</strong> ${gameState.gamePhase.charAt(0).toUpperCase() + gameState.gamePhase.slice(1)}</div>
+            <div><strong>Round:</strong> ${gameState.currentRound}</div>
+        </div>
+    `;
+    
+    roleAssignmentsContent.innerHTML = tableHtml;
+}
+
+// Advance to the next phase following the new game flow
+function nextPhase() {
+    switch(gameState.gamePhase) {
+        case 'intro-day':
+            gameState.gamePhase = 'role-identification';
+            break;
+        case 'role-identification':
+            gameState.gamePhase = 'day';
+            break;
+        case 'day':
+            gameState.gamePhase = 'voting';
+            break;
+        case 'voting':
+            gameState.gamePhase = 'night';
+            break;
+        case 'night':
+            gameState.gamePhase = 'day';
+            gameState.currentRound++;
+            break;
+        default:
+            gameState.gamePhase = 'intro-day';
+            break;
+    }
+    
     localStorage.setItem('gameState', JSON.stringify(gameState));
     renderGamePhase();
 }
@@ -455,16 +642,11 @@ function getRoleInfo(roleId) {
     };
 }
 
-// Helper function to get team color
-function getTeamColor(team) {
-    switch(team) {
-        case 'mafia':
-            return '#ff4d4d';
-        case 'citizen':
-            return '#4caf50';
-        case 'independent':
-            return '#9c27b0';
-        default:
-            return '#ffffff';
-    }
+// Navigate to introduction timers page
+function startIntroductionTimers() {
+    // Save any current game state
+    localStorage.setItem('gameState', JSON.stringify(gameState));
+    
+    // Navigate to timer page
+    window.location.href = 'timer.html';
 } 

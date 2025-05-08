@@ -135,8 +135,8 @@ body[data-page="game"] .role-reveal .actions {
     .role-reveal .role-image-container,
     .role-display .role-image-container,
     body[data-page="game"] .role-display .role-image-container {
-        width: 180px !important;
-        height: 270px !important;
+        width: 200px !important;
+        height: 300px !important;
         min-height: 270px !important;
     }
 } 

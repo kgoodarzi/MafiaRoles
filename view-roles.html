@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mafia Game - View Roles</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="dark-theme.css">
+    <link rel="stylesheet" href="game-role-display.css">
+    <!-- Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Supabase initialization -->
+    <script src="supabase-init.js"></script>
+    <!-- Database Manager -->
+    <script src="database.js"></script>
+    <!-- Roles JS -->
+    <script src="roles.js"></script>
+    <!-- Connection Status -->
+    <script src="connection-status.js"></script>
+    <!-- View Roles JS -->
+    <script src="view-roles.js"></script>
+</head>
+<body class="dark-theme">
+    <div id="connection-status"></div>
+    
+    <div class="container">
+        <header>
+            <h1>View Roles</h1>
+            <p id="game-status">Each player can now view their assigned role</p>
+        </header>
+
+        <main>
+            <section class="role-reveal">
+                <div id="current-player"></div>
+                <div id="role-display" class="role-display">
+                    <!-- Role information will be shown here -->
+                </div>
+                <div class="actions">
+                    <button id="view-role-btn" class="btn">View Your Role</button>
+                    <button id="hide-role-btn" class="btn" style="display: none;">Hide Role</button>
+                    <button id="next-player-btn" class="btn" style="display: none;">Next Player</button>
+                    <button id="proceed-btn" class="btn btn-primary" style="display: none;">Continue to Game</button>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>&copy; 2025 KRS Consulting Inc.</p>
+        </footer>
+    </div>
+</body>
+</html> 

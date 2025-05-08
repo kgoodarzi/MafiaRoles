@@ -1012,8 +1012,8 @@ body.player-selection-page section {
 
 /* Game page role image container - matching role selection page */
 .role-image-container {
-    width: 180px; /* Match the size from role selection page */
-    height: 180px; /* Match the size from role selection page */
+    width: 220px; /* Match the size from role selection page */
+    height: 220px; /* Match the size from role selection page */
     margin: 0 auto 1rem;
     border-radius: 8px;
     overflow: hidden;

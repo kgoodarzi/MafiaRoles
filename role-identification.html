@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mafia Game - Role Identification</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="dark-theme.css">
+    <!-- Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Supabase initialization -->
+    <script src="supabase-init.js"></script>
+    <!-- Database Manager -->
+    <script src="database.js"></script>
+    <!-- Roles JS -->
+    <script src="roles.js"></script>
+    <!-- Connection Status -->
+    <script src="connection-status.js"></script>
+    <!-- Role Identification JS -->
+    <script src="role-identification.js"></script>
+</head>
+<body class="dark-theme">
+    <div id="connection-status"></div>
+    
+    <div class="container">
+        <header>
+            <h1>Role Identification Night</h1>
+            <p>Roles identify themselves to the moderator</p>
+        </header>
+
+        <main>
+            <section id="role-identification-section">
+                <div id="phase-info" class="phase-info">
+                    <h2>Night Phase - Role Identification</h2>
+                    <p>The Moderator asks each role to identify themselves with a like. Mafia members learn who their teammates are.</p>
+                </div>
+
+                <div id="role-group-actions" class="role-group-actions" style="margin-top:20px;">
+                    <h3>Call each role group</h3>
+                    <button id="call-mafia-btn" class="btn" style="width: 100%; margin-bottom: 10px; background-color: var(--mafia-color);">Call Mafia Team</button>
+                    <button id="call-independent-btn" class="btn" style="width: 100%; margin-bottom: 10px; background-color: var(--independent-color);">Call Independent Roles</button>
+                    <button id="call-citizens-btn" class="btn" style="width: 100%; margin-bottom: 10px; background-color: var(--citizen-color);">Call Citizen Special Roles</button>
+                </div>
+
+                <div id="game-status-info" class="game-status-info" style="margin-top:20px;padding:15px;border-radius:8px;background-color:var(--card-bg);border:1px solid var(--border-color);">
+                    <!-- Game status will be inserted here -->
+                </div>
+                
+                <div id="game-actions" class="game-actions" style="margin-top:20px;">
+                    <button id="next-phase-btn" class="btn btn-primary" style="width: 100%; margin-bottom: 15px;">Next Phase</button>
+                    <button id="show-roles-btn" class="btn" style="width: 100%; margin-bottom: 15px;">Show Role Assignments</button>
+                    <button id="reset-btn" class="btn" style="width: 100%;">Back to Home</button>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>&copy; 2025 KRS Consulting Inc.</p>
+        </footer>
+    </div>
+</body>
+</html> 

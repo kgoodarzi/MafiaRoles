@@ -60,6 +60,14 @@ function loadSelectedPlayers() {
             // Parse and normalize player data to ensure consistent field names
             const parsedPlayers = JSON.parse(storedPlayers);
             selectedPlayers = parsedPlayers.map(normalizePlayerData);
+            
+            // Sort players by sequence if available
+            selectedPlayers.sort((a, b) => {
+                const seqA = a.sequence !== undefined ? a.sequence : 9999;
+                const seqB = b.sequence !== undefined ? b.sequence : 9999;
+                return seqA - seqB;
+            });
+            
             totalPlayers = selectedPlayers.length;
             document.getElementById('total-players').textContent = totalPlayers;
             displaySelectedPlayers();
@@ -130,10 +138,18 @@ function displaySelectedPlayers() {
     // Make sure all players are normalized
     selectedPlayers = selectedPlayers.map(normalizePlayerData).filter(p => p !== null);
     
-    selectedPlayers.forEach(player => {
+    // Sort players by sequence before displaying
+    selectedPlayers.sort((a, b) => {
+        const seqA = a.sequence !== undefined ? a.sequence : 9999;
+        const seqB = b.sequence !== undefined ? b.sequence : 9999;
+        return seqA - seqB;
+    });
+    
+    selectedPlayers.forEach((player, index) => {
         const playerCard = document.createElement('div');
         playerCard.className = 'player-card';
         playerCard.dataset.id = player.id;
+        playerCard.dataset.sequence = player.sequence !== undefined ? player.sequence : index + 1;
         
         const imgSrc = player.photo || 'images/default-avatar.svg';
         
@@ -144,6 +160,7 @@ function displaySelectedPlayers() {
                 </div>
                 <div class="player-info">
                     <h3 class="player-name">${player.full_name}</h3>
+                    <p class="player-sequence">Sequence: ${playerCard.dataset.sequence}</p>
                 </div>
             </div>
         `;
@@ -161,6 +178,14 @@ function displaySelectedPlayers() {
     if ((!selectedPlayers || selectedPlayers.length === 0) && localStorage.getItem('previousSelectedPlayers')) {
         const previousPlayers = JSON.parse(localStorage.getItem('previousSelectedPlayers'));
         selectedPlayers = previousPlayers.map(normalizePlayerData).filter(p => p !== null);
+        
+        // Sort by sequence
+        selectedPlayers.sort((a, b) => {
+            const seqA = a.sequence !== undefined ? a.sequence : 9999;
+            const seqB = b.sequence !== undefined ? b.sequence : 9999;
+            return seqA - seqB;
+        });
+        
         totalPlayers = selectedPlayers.length;
         document.getElementById('total-players').textContent = totalPlayers;
         displaySelectedPlayers();
@@ -276,6 +301,13 @@ function assignRoles() {
         // Make sure all players are normalized
         selectedPlayers = selectedPlayers.map(normalizePlayerData).filter(p => p !== null);
         
+        // Ensure players are sorted by sequence
+        selectedPlayers.sort((a, b) => {
+            const seqA = a.sequence !== undefined ? a.sequence : 9999;
+            const seqB = b.sequence !== undefined ? b.sequence : 9999;
+            return seqA - seqB;
+        });
+        
         let rolesToAssign;
         
         // Use custom roles if available, otherwise use enabled roles
@@ -326,7 +358,9 @@ function assignRoles() {
         const playersWithRoles = selectedPlayers.map((player, index) => {
             return {
                 ...player,
-                role: rolesToAssign[index] ? rolesToAssign[index].id : 'citizen'
+                role: rolesToAssign[index] ? rolesToAssign[index].id : 'citizen',
+                // Ensure sequence is preserved
+                sequence: player.sequence !== undefined ? player.sequence : index + 1
             };
         });
         
@@ -338,8 +372,8 @@ function assignRoles() {
             eliminatedPlayers: []
         }));
         
-        // Redirect to game page
-        window.location.href = 'game.html';
+        // Redirect to view-roles page instead of role-assignments page
+        window.location.href = 'view-roles.html';
     } catch (error) {
         console.error("Error assigning roles:", error);
         document.getElementById('role-validation-message').textContent =

@@ -24,8 +24,8 @@ const ROLES = [
         nameRtl: 'مافیا',
         team: 'mafia',
         description: 'Standard Mafia member with no special abilities.',
-        image: 'images/Mafia.jpg',
-        isEnabled: false
+        image: 'images/Role - Mafia.jpg',
+        isEnabled: true
     },
     {
         id: 'doctor',

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mafia Game - Role Assignments</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="dark-theme.css">
+    <!-- Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Supabase initialization -->
+    <script src="supabase-init.js"></script>
+    <!-- Database Manager -->
+    <script src="database.js"></script>
+    <!-- Roles JS -->
+    <script src="roles.js"></script>
+    <!-- Role Assignments JS -->
+    <script src="role-assignments.js"></script>
+</head>
+<body class="dark-theme role-assignments-page">
+    <div id="connection-status"></div>
+    
+    <div class="container">
+        <header>
+            <h1>Role Assignments</h1>
+            <p>View the current role assignments for all players</p>
+        </header>
+
+        <main>
+            <section id="role-assignments-section">
+                <!-- Role assignments table will be inserted here -->
+                <div id="role-assignments-content"></div>
+                
+                <!-- Game status information -->
+                <div id="game-status-info" class="game-status-info" style="margin-top:20px;padding:15px;border-radius:8px;background-color:var(--card-bg);border:1px solid var(--border-color);">
+                    <!-- Game status will be inserted here -->
+                </div>
+            </section>
+            
+            <div class="navigation-buttons" style="margin-top: 30px; display: flex; flex-direction: column; gap: 15px;">
+                <button id="start-resume-btn" class="btn btn-primary">Start/Resume Game</button>
+                
+                <div style="display: flex; justify-content: space-between; gap: 10px;">
+                    <a href="index.html" class="btn" style="flex: 1;">Back to Home</a>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <p>&copy; 2025 KRS Consulting Inc.</p>
+        </footer>
+    </div>
+</body>
+</html> 

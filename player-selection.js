@@ -214,6 +214,7 @@ function displayPlayers() {
     
     // Log raw players data to help debug
     console.log('DEBUG: Raw players data:', window.dbManager.players);
+    console.log('DEBUG: Selected players:', window.dbManager.selectedPlayers);
     
     if (!window.dbManager.players || !window.dbManager.players.length) {
         showError('No players found');
@@ -222,13 +223,20 @@ function displayPlayers() {
     
     console.log(`DEBUG: Displaying ${window.dbManager.players.length} players`);
     
+    // First sort players by sequence before creating cards
+    const sortedPlayers = [...window.dbManager.players].sort((a, b) => {
+        const seqA = a.sequence !== undefined ? a.sequence : 9999;
+        const seqB = b.sequence !== undefined ? b.sequence : 9999;
+        return seqA - seqB;
+    });
+    
     // Create player cards
-    window.dbManager.players.forEach(player => {
+    sortedPlayers.forEach(player => {
         const playerCard = createPlayerCard(player);
         
         // Check if this player is already selected in the dbManager
         const isPlayerSelected = window.dbManager.selectedPlayers.some(
-            selected => selected.id === player.id
+            selected => selected.username === player.username
         );
         
         // Pre-select the player if they're in the selected players list
@@ -242,6 +250,9 @@ function displayPlayers() {
         
         playersContainer.appendChild(playerCard);
     });
+    
+    // Initial sort by sequence
+    sortPlayerCardsBySequence();
     
     // Update selected count
     const selectedPlayers = window.dbManager.getSelectedPlayers();
@@ -267,6 +278,9 @@ function createPlayerCard(player) {
               (typeof player === 'object' ? Object.values(player)[0] : 'unknown');
     card.dataset.id = id;
     
+    // Set sequence attribute if it exists, default to 9999 if not set
+    card.dataset.sequence = player.sequence !== undefined ? player.sequence : 9999;
+    
     // Handle various possible property names and deal with SQL result format
     let name, phone, photoUrl, username;
     
@@ -291,6 +305,10 @@ function createPlayerCard(player) {
         <div class="player-photo" style="position: relative;">
             <img src="${photoUrl}" alt="${name}" onerror="this.src='images/default-avatar.svg'">
             <a href="edit-player.html?username=${username}" class="edit-player-btn">✎</a>
+            <div class="reorder-controls">
+                <button class="reorder-btn move-up" title="Move Up">▲</button>
+                <button class="reorder-btn move-down" title="Move Down">▼</button>
+            </div>
         </div>
         <div class="player-info">
             <h3 class="player-name">${name}</h3>
@@ -312,6 +330,8 @@ function setupEventListeners() {
         card.addEventListener('click', function(e) {
             // Ignore clicks on the checkbox itself (it will handle its own changes)
             if (e.target.type === 'checkbox') return;
+            // Ignore clicks on reorder buttons
+            if (e.target.classList.contains('reorder-btn')) return;
             
             const checkbox = this.querySelector('input[type="checkbox"]');
             checkbox.checked = !checkbox.checked;
@@ -321,6 +341,9 @@ function setupEventListeners() {
             checkbox.dispatchEvent(event);
         });
     });
+    
+    // Reorder buttons
+    setupReorderButtons();
     
     // Checkbox change event
     document.querySelectorAll('.player-checkbox').forEach(checkbox => {
@@ -444,12 +467,84 @@ function setupEventListeners() {
                 return;
             }
             
-            // Save selected players and redirect
-            console.log('DEBUG: Saving selected players before navigating to role-selection.html');
+            // Get the current order of player cards in the UI
+            const playersContainer = document.getElementById('players-container');
+            const orderedCards = Array.from(playersContainer.querySelectorAll('.player-card.selected'));
+            
+            // Update sequence numbers based on UI order
+            orderedCards.forEach((card, index) => {
+                const playerId = card.dataset.id;
+                const newSequence = index + 1; // Start from 1
+                
+                console.log(`Setting sequence ${newSequence} for player ${playerId}`);
+                
+                // Update sequence in the database
+                updatePlayerSequence(playerId, newSequence);
+                
+                // Also update the sequence in selected players
+                const playerIndex = selectedPlayers.findIndex(p => 
+                    p.id === playerId || p.username === playerId
+                );
+                
+                if (playerIndex !== -1) {
+                    selectedPlayers[playerIndex].sequence = newSequence;
+                    console.log(`Updated sequence for selected player at index ${playerIndex} to ${newSequence}`);
+                } else {
+                    console.warn(`Player ${playerId} not found in selected players array`);
+                }
+            });
+            
+            // Ensure all selected players have a sequence value
+            selectedPlayers.forEach((player, idx) => {
+                if (player.sequence === undefined) {
+                    player.sequence = idx + 1;
+                    console.log(`Assigned default sequence ${player.sequence} to player ${player.username || player.id}`);
+                }
+            });
+            
+            // Sort selected players by sequence
+            selectedPlayers.sort((a, b) => {
+                const seqA = a.sequence !== undefined ? a.sequence : 9999;
+                const seqB = b.sequence !== undefined ? b.sequence : 9999;
+                return seqA - seqB;
+            });
+            
+            // Save selected players with updated sequence and redirect
+            console.log('DEBUG: Saving selected players with sequence before navigating to role-selection.html');
             
             try {
-                window.dbManager.saveSelectedPlayers();
-                window.location.href = 'role-selection.html';
+                // Force an update to the database for the selected players
+                if (window.supabase) {
+                    // Update each player's previously_selected flag
+                    const updatePromises = selectedPlayers.map(player => {
+                        return window.supabase
+                            .from('profiles')
+                            .update({ 
+                                previously_selected: true,
+                                sequence: player.sequence || 9999
+                            })
+                            .eq('username', player.username);
+                    });
+                    
+                    // Wait for all updates to complete
+                    Promise.all(updatePromises)
+                        .then(() => {
+                            console.log('All player updates complete, continuing to role selection');
+                            // Save to localStorage and redirect
+                            window.dbManager.saveSelectedPlayers();
+                            window.location.href = 'role-selection.html';
+                        })
+                        .catch(error => {
+                            console.error('Error updating players:', error);
+                            // Try direct localStorage save and redirect anyway
+                            localStorage.setItem('selectedPlayers', JSON.stringify(selectedPlayers));
+                            window.location.href = 'role-selection.html';
+                        });
+                } else {
+                    // No Supabase, just save to localStorage and redirect
+                    window.dbManager.saveSelectedPlayers();
+                    window.location.href = 'role-selection.html';
+                }
             } catch (error) {
                 console.error('Error saving selected players:', error);
                 
@@ -458,5 +553,172 @@ function setupEventListeners() {
                 window.location.href = 'role-selection.html';
             }
         });
+    }
+}
+
+// Setup reorder buttons
+function setupReorderButtons() {
+    // Handle player reordering with up/down buttons
+    document.querySelectorAll('.move-up').forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const card = this.closest('.player-card');
+            movePlayerUp(card);
+        });
+    });
+
+    document.querySelectorAll('.move-down').forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const card = this.closest('.player-card');
+            movePlayerDown(card);
+        });
+    });
+    
+    // Initially sort cards by sequence
+    sortPlayerCardsBySequence();
+    
+    // Update button states
+    updateReorderButtonStates();
+}
+
+// Sort player cards by sequence
+function sortPlayerCardsBySequence() {
+    const playersContainer = document.getElementById('players-container');
+    const cards = Array.from(playersContainer.querySelectorAll('.player-card'));
+    
+    // Sort the cards by sequence
+    cards.sort((a, b) => {
+        const seqA = parseInt(a.dataset.sequence) || 9999;
+        const seqB = parseInt(b.dataset.sequence) || 9999;
+        return seqA - seqB;
+    });
+    
+    // Remove all cards
+    cards.forEach(card => card.remove());
+    
+    // Add them back in the sorted order
+    cards.forEach(card => playersContainer.appendChild(card));
+    
+    // Update button states
+    updateReorderButtonStates();
+}
+
+// Move a player card up in the order
+function movePlayerUp(card) {
+    const playersContainer = document.getElementById('players-container');
+    const cards = Array.from(playersContainer.querySelectorAll('.player-card'));
+    const index = cards.indexOf(card);
+    
+    if (index <= 0) return; // Already at the top
+    
+    // Swap sequence values with the card above
+    const prevCard = cards[index - 1];
+    const currentSeq = parseInt(card.dataset.sequence) || 9999;
+    const prevSeq = parseInt(prevCard.dataset.sequence) || 9999;
+    
+    card.dataset.sequence = prevSeq;
+    prevCard.dataset.sequence = currentSeq;
+    
+    // Update the database with new sequence values
+    updatePlayerSequence(card.dataset.id, prevSeq);
+    updatePlayerSequence(prevCard.dataset.id, currentSeq);
+    
+    // Move the card in the DOM
+    playersContainer.insertBefore(card, prevCard);
+    
+    // Update button states
+    updateReorderButtonStates();
+}
+
+// Move a player card down in the order
+function movePlayerDown(card) {
+    const playersContainer = document.getElementById('players-container');
+    const cards = Array.from(playersContainer.querySelectorAll('.player-card'));
+    const index = cards.indexOf(card);
+    
+    if (index === -1 || index >= cards.length - 1) return; // Already at the bottom
+    
+    // Swap sequence values with the card below
+    const nextCard = cards[index + 1];
+    const currentSeq = parseInt(card.dataset.sequence) || 9999;
+    const nextSeq = parseInt(nextCard.dataset.sequence) || 9999;
+    
+    card.dataset.sequence = nextSeq;
+    nextCard.dataset.sequence = currentSeq;
+    
+    // Update the database with new sequence values
+    updatePlayerSequence(card.dataset.id, nextSeq);
+    updatePlayerSequence(nextCard.dataset.id, currentSeq);
+    
+    // Move the card in the DOM
+    playersContainer.insertBefore(nextCard, card);
+    
+    // Update button states
+    updateReorderButtonStates();
+}
+
+// Update button enabled states based on position
+function updateReorderButtonStates() {
+    const playersContainer = document.getElementById('players-container');
+    const cards = Array.from(playersContainer.querySelectorAll('.player-card'));
+    
+    cards.forEach((card, index) => {
+        const upButton = card.querySelector('.move-up');
+        const downButton = card.querySelector('.move-down');
+        
+        if (upButton) upButton.disabled = index === 0;
+        if (downButton) downButton.disabled = index === cards.length - 1;
+    });
+}
+
+// Update player sequence in the database
+function updatePlayerSequence(playerId, sequence) {
+    if (!window.dbManager) return;
+    
+    // Find the player in the players array
+    const player = window.dbManager.players.find(p => p.username === playerId || p.id === playerId);
+    if (!player) {
+        console.error(`Player with ID ${playerId} not found`);
+        return;
+    }
+    
+    console.log(`Updating sequence for player ${playerId} from ${player.sequence} to ${sequence}`);
+    
+    // Update sequence in the local player object
+    player.sequence = sequence;
+    
+    // Also update in selected players if present
+    const selectedPlayer = window.dbManager.selectedPlayers.find(p => p.username === playerId || p.id === playerId);
+    if (selectedPlayer) {
+        selectedPlayer.sequence = sequence;
+    }
+    
+    // If supabase is available, update the database
+    if (window.supabase) {
+        console.log(`Updating sequence for player ${playerId} to ${sequence} in database`);
+        let username = player.username; // Use username as the primary key
+        
+        window.supabase
+            .from('profiles')
+            .update({ sequence: sequence })
+            .eq('username', username)
+            .then(({ data, error }) => {
+                if (error) {
+                    console.error('Error updating player sequence:', error);
+                } else {
+                    console.log(`Player ${playerId} sequence updated to ${sequence} in database`);
+                }
+            });
+    } else {
+        console.log('Supabase not available, sequence will only be saved locally');
+    }
+    
+    // Also save to localStorage so we don't lose the change
+    try {
+        localStorage.setItem('players', JSON.stringify(window.dbManager.players));
+        localStorage.setItem('selectedPlayers', JSON.stringify(window.dbManager.selectedPlayers));
+    } catch (e) {
+        console.error('Error saving to localStorage:', e);
     }
 } 

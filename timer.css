@@ -1,0 +1,107 @@
+/* Timer page specific styles */
+.timer-page .container {
+    max-width: 700px;
+    text-align: center;
+    padding-bottom: 40px;
+}
+
+.player-display {
+    margin: 30px auto;
+    max-width: 500px;
+}
+
+.timer-display {
+    margin: 30px auto;
+    padding: 30px;
+    background-color: var(--card-bg);
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+    max-width: 300px;
+}
+
+.timer-display h2 {
+    font-size: 4rem;
+    margin: 0;
+    font-weight: 700;
+    font-family: monospace;
+}
+
+.timer-display p {
+    font-size: 1.2rem;
+    margin-top: 10px;
+    color: var(--text-secondary);
+}
+
+.timer-display.warning {
+    background-color: #ffe5a0;
+    color: #7e5600;
+}
+
+.timer-display.warning h2 {
+    color: #ce8500;
+}
+
+.timer-display.overtime {
+    background-color: #ffd7d7;
+    color: #5c0000;
+}
+
+.timer-display.overtime h2 {
+    color: #cc0000;
+}
+
+.timer-controls {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin: 25px auto;
+    max-width: 400px;
+}
+
+.timer-controls button {
+    flex: 1;
+    min-width: 100px;
+}
+
+.btn-success {
+    background-color: #28a745;
+}
+
+.btn-success:hover {
+    background-color: #218838;
+}
+
+.btn-warning {
+    background-color: #ffc107;
+    color: #212529;
+}
+
+.btn-warning:hover {
+    background-color: #e0a800;
+}
+
+.timer-info {
+    margin: 20px auto;
+    max-width: 500px;
+    padding: 15px;
+    background-color: rgba(0, 0, 0, 0.05);
+    border-radius: 5px;
+    font-style: italic;
+    color: var(--text-secondary);
+}
+
+.back-button {
+    margin-top: 30px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 500px) {
+    .timer-display h2 {
+        font-size: 3rem;
+    }
+    
+    .timer-controls {
+        flex-direction: column;
+    }
+} 

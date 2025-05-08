@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mafia Game - Introduction Day</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="dark-theme.css">
+    <!-- Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Supabase initialization -->
+    <script src="supabase-init.js"></script>
+    <!-- Database Manager -->
+    <script src="database.js"></script>
+    <!-- Roles JS -->
+    <script src="roles.js"></script>
+    <!-- Connection Status -->
+    <script src="connection-status.js"></script>
+    <!-- Intro Day JS -->
+    <script src="intro-day.js"></script>
+</head>
+<body class="dark-theme">
+    <div id="connection-status"></div>
+    
+    <div class="container">
+        <header>
+            <h1>Introduction Day</h1>
+            <p>Players introduce themselves and get to know each other</p>
+        </header>
+
+        <main>
+            <section id="intro-day-section">
+                <div id="phase-info" class="phase-info">
+                    <h2>Introduction Day Phase</h2>
+                    <p>Players introduce themselves and get to know each other. No actions are taken during this phase.</p>
+                </div>
+
+                <div id="game-status-info" class="game-status-info" style="margin-top:20px;padding:15px;border-radius:8px;background-color:var(--card-bg);border:1px solid var(--border-color);">
+                    <!-- Game status will be inserted here -->
+                </div>
+                
+                <div id="game-actions" class="game-actions" style="margin-top:20px;">
+                    <button id="intro-timer-btn" class="btn btn-success" style="width: 100%; margin-bottom: 15px;">Start Introduction Timers</button>
+                    <button id="next-phase-btn" class="btn btn-primary" style="width: 100%; margin-bottom: 15px;">Next Phase</button>
+                    <button id="show-roles-btn" class="btn" style="width: 100%; margin-bottom: 15px;">Show Role Assignments</button>
+                    <button id="reset-btn" class="btn" style="width: 100%;">Back to Home</button>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>&copy; 2025 KRS Consulting Inc.</p>
+        </footer>
+    </div>
+</body>
+</html> 

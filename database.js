@@ -348,21 +348,35 @@ class DatabaseManager {
                 console.log('Querying "profiles" table');
                 const { data, error } = await window.supabase
                     .from('profiles')
-                    .select('*');
+                    .select('*')
+                    .order('sequence', { ascending: true });
                 
                 if (error) {
                     console.error('Error loading profiles:', error);
                     throw error;
-                } 
+                }
                 
                 if (data && data.length > 0) {
                     console.log(`Loaded ${data.length} players from profiles table`);
                     this.players = data;
                     
+                    // Also load previously selected players into selectedPlayers array
+                    this.selectedPlayers = data.filter(player => player.previously_selected === true);
+                    
+                    // Sort selected players by sequence
+                    this.selectedPlayers.sort((a, b) => {
+                        const seqA = a.sequence !== undefined ? a.sequence : 9999;
+                        const seqB = b.sequence !== undefined ? b.sequence : 9999;
+                        return seqA - seqB;
+                    });
+                    
+                    console.log(`Loaded ${this.selectedPlayers.length} previously selected players`);
+                    
                     // Save to localStorage for future offline use
                     try {
                         if (typeof localStorage !== 'undefined') {
                             localStorage.setItem('players', JSON.stringify(this.players));
+                            localStorage.setItem('selectedPlayers', JSON.stringify(this.selectedPlayers));
                             console.log('Saved players to localStorage');
                         }
                     } catch (saveError) {
@@ -388,7 +402,25 @@ class DatabaseManager {
                     const localPlayersJson = localStorage.getItem('players');
                     if (localPlayersJson) {
                         this.players = JSON.parse(localPlayersJson);
+                        
+                        // Sort players by sequence if available
+                        this.players.sort((a, b) => {
+                            const seqA = a.sequence !== undefined ? a.sequence : 9999;
+                            const seqB = b.sequence !== undefined ? b.sequence : 9999;
+                            return seqA - seqB;
+                        });
+                        
+                        // Also try to load previously selected players
+                        const selectedPlayersJson = localStorage.getItem('selectedPlayers');
+                        if (selectedPlayersJson) {
+                            this.selectedPlayers = JSON.parse(selectedPlayersJson);
+                        } else {
+                            // If no selected players in localStorage, use previously_selected flag
+                            this.selectedPlayers = this.players.filter(player => player.previously_selected === true);
+                        }
+                        
                         console.log(`Loaded ${this.players.length} players from localStorage after error`);
+                        console.log(`Loaded ${this.selectedPlayers.length} previously selected players`);
                         return this.players;
                     }
                 }
@@ -399,12 +431,12 @@ class DatabaseManager {
             // If everything else failed, use fallback players
             console.log('All loading attempts failed, using fallback players');
             this.players = [
-                { username: 'alice123', full_name: 'Alice (Fallback)', photo: 'images/default-avatar.svg', email: '', previously_selected: false },
-                { username: 'bob456', full_name: 'Bob (Fallback)', photo: 'images/default-avatar.svg', email: '', previously_selected: false },
-                { username: 'charlie789', full_name: 'Charlie (Fallback)', photo: 'images/default-avatar.svg', email: '', previously_selected: false },
-                { username: 'david101', full_name: 'David (Fallback)', photo: 'images/default-avatar.svg', email: '', previously_selected: false },
-                { username: 'emily202', full_name: 'Emily (Fallback)', photo: 'images/default-avatar.svg', email: '', previously_selected: false },
-                { username: 'frank303', full_name: 'Frank (Fallback)', photo: 'images/default-avatar.svg', email: '', previously_selected: false }
+                { username: 'alice123', full_name: 'Alice (Fallback)', photo: 'images/default-avatar.svg', email: '', previously_selected: false, sequence: 1 },
+                { username: 'bob456', full_name: 'Bob (Fallback)', photo: 'images/default-avatar.svg', email: '', previously_selected: false, sequence: 2 },
+                { username: 'charlie789', full_name: 'Charlie (Fallback)', photo: 'images/default-avatar.svg', email: '', previously_selected: false, sequence: 3 },
+                { username: 'david101', full_name: 'David (Fallback)', photo: 'images/default-avatar.svg', email: '', previously_selected: false, sequence: 4 },
+                { username: 'emily202', full_name: 'Emily (Fallback)', photo: 'images/default-avatar.svg', email: '', previously_selected: false, sequence: 5 },
+                { username: 'frank303', full_name: 'Frank (Fallback)', photo: 'images/default-avatar.svg', email: '', previously_selected: false, sequence: 6 }
             ];
             
             return this.players;
@@ -1043,15 +1075,46 @@ class DatabaseManager {
         
         if (existingIndex === -1) {
             // Player not selected, add to selection
+            
+            // Assign next sequence number if not already set
+            if (player.sequence === undefined) {
+                // Find the highest sequence number currently in use
+                const maxSequence = this.selectedPlayers.reduce((max, p) => {
+                    return Math.max(max, p.sequence !== undefined ? p.sequence : 0);
+                }, 0);
+                
+                // Set next sequence number
+                player.sequence = maxSequence + 1;
+                
+                // Update the sequence in the database
+                if (window.supabase) {
+                    window.supabase
+                        .from('profiles')
+                        .update({ sequence: player.sequence })
+                        .eq('username', playerId)
+                        .then(({ error }) => {
+                            if (error) {
+                                console.error('Error updating player sequence:', error);
+                            } else {
+                                console.log(`Player ${playerId} sequence updated to ${player.sequence}`);
+                            }
+                        });
+                }
+            }
+            
             this.selectedPlayers.push(player);
-            console.log(`DEBUG: Player ${player.full_name} (username: ${playerId}) selected`);
+            console.log(`DEBUG: Player ${player.full_name} (username: ${playerId}) selected with sequence ${player.sequence}`);
         } else {
             // Player already selected, remove from selection
             this.selectedPlayers.splice(existingIndex, 1);
             console.log(`DEBUG: Player ${player.full_name} (username: ${playerId}) deselected`);
         }
         
-        console.log('DEBUG: Current selected players:', this.selectedPlayers.map(p => ({ username: p.username, full_name: p.full_name })));
+        console.log('DEBUG: Current selected players:', this.selectedPlayers.map(p => ({ 
+            username: p.username, 
+            full_name: p.full_name,
+            sequence: p.sequence
+        })));
         
         // Update the selection status in the database immediately
         this.updatePreviouslySelectedFlag()
@@ -1072,15 +1135,43 @@ class DatabaseManager {
     }
 
     saveSelectedPlayers() {
-        console.log('Saving selected players to local storage');
-        localStorage.setItem('selectedPlayers', JSON.stringify(this.selectedPlayers));
-        
-        // Also update the previously_selected flag in the database
-        this.updatePreviouslySelectedFlag().catch(error => {
-            console.error('Error updating previously_selected flags:', error);
-        });
-        
-        return this.selectedPlayers;
+        console.log('Saving selected players');
+        try {
+            // Sort selected players by sequence
+            this.selectedPlayers.sort((a, b) => {
+                const seqA = a.sequence !== undefined ? a.sequence : 9999;
+                const seqB = b.sequence !== undefined ? b.sequence : 9999;
+                return seqA - seqB;
+            });
+            
+            // Save to localStorage
+            if (typeof localStorage !== 'undefined') {
+                localStorage.setItem('selectedPlayers', JSON.stringify(this.selectedPlayers));
+                console.log(`Saved ${this.selectedPlayers.length} players to localStorage`);
+            } else {
+                console.warn('localStorage not available, cannot save selected players');
+            }
+            
+            // Try to update selected status in database
+            this.updatePreviouslySelectedFlag()
+                .then(() => console.log('Updated previously_selected flags in database'))
+                .catch(error => console.error('Error updating previously_selected flags:', error));
+            
+            return this.selectedPlayers;
+        } catch (error) {
+            console.error('Error in saveSelectedPlayers:', error);
+            
+            // Attempt direct localStorage save as fallback
+            try {
+                if (typeof localStorage !== 'undefined') {
+                    localStorage.setItem('selectedPlayers', JSON.stringify(this.selectedPlayers));
+                }
+            } catch (e) {
+                console.error('Fatal error saving selected players:', e);
+            }
+            
+            return this.selectedPlayers;
+        }
     }
     
     async updatePreviouslySelectedFlag() {
@@ -1090,7 +1181,11 @@ class DatabaseManager {
         }
         
         console.log('DEBUG: Updating previously_selected flag for players in database');
-        console.log('DEBUG: Current selected players:', this.selectedPlayers.map(p => ({ username: p.username, full_name: p.full_name || p.name })));
+        console.log('DEBUG: Current selected players:', this.selectedPlayers.map(p => ({ 
+            username: p.username, 
+            full_name: p.full_name || p.name,
+            sequence: p.sequence
+        })));
         
         try {
             // First, set all player flags to false
@@ -1130,6 +1225,25 @@ class DatabaseManager {
                 console.error('DEBUG: Could not find any usernames in selected players');
             }
             
+            // Update sequence values for each selected player
+            for (const player of this.selectedPlayers) {
+                if (player.username && player.sequence !== undefined) {
+                    console.log(`DEBUG: Updating sequence for ${player.username} to ${player.sequence}`);
+                    
+                    const { data: seqData, error: seqError } = await window.supabase
+                        .from('profiles')
+                        .update({ sequence: player.sequence })
+                        .eq('username', player.username)
+                        .select('username, full_name, sequence');
+                        
+                    if (seqError) {
+                        console.error(`DEBUG: Error updating sequence for ${player.username}:`, seqError);
+                    } else {
+                        console.log(`DEBUG: Successfully updated sequence for ${player.username} to ${player.sequence}`);
+                    }
+                }
+            }
+            
             // Verify the update worked
             await this.verifyPreviouslySelectedStatus();
         } catch (error) {
@@ -1144,29 +1258,42 @@ class DatabaseManager {
         try {
             const { data, error } = await window.supabase
                 .from('profiles')
-                .select('username, full_name, previously_selected')
-                .order('previously_selected', { ascending: false });
+                .select('username, full_name, previously_selected, sequence')
+                .order('sequence', { ascending: true });
                 
             if (error) {
                 console.error('DEBUG: Error verifying previously_selected:', error);
             } else {
-                console.log('DEBUG: Current database values for previously_selected:', 
+                console.log('DEBUG: Current database values for previously_selected and sequence:', 
                     data.map(p => ({ 
                         username: p.username, 
                         name: p.full_name, 
-                        selected: p.previously_selected 
+                        selected: p.previously_selected,
+                        sequence: p.sequence
                     }))
                 );
                 
                 // For true values only
                 const selectedInDb = data.filter(p => p.previously_selected === true);
                 console.log('DEBUG: Players with previously_selected=true in database:', 
-                    selectedInDb.map(p => ({ username: p.username, name: p.full_name }))
+                    selectedInDb.map(p => ({ 
+                        username: p.username, 
+                        name: p.full_name,
+                        sequence: p.sequence 
+                    }))
                 );
                 
                 // Compare with our selected players
                 const ourSelectedIds = this.selectedPlayers.map(p => p.username);
                 console.log('DEBUG: Our selected player IDs:', ourSelectedIds);
+                
+                // Log sequence values from selected players
+                console.log('DEBUG: Our selected player sequences:', 
+                    this.selectedPlayers.map(p => ({ 
+                        username: p.username, 
+                        sequence: p.sequence 
+                    }))
+                );
             }
         } catch (error) {
             console.error('DEBUG: Error in verifyPreviouslySelectedStatus:', error);
