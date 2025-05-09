@@ -3,6 +3,7 @@ let gameState = null;
 let timerInterval = null;
 let secondsRemaining = 30; // Default timer value
 let isTimerRunning = false;
+let initialTimerValue = 30; // Store initial value for progress bar calculation
 
 // Initialize page when DOM is loaded
 document.addEventListener('DOMContentLoaded', async function() {
@@ -18,6 +19,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     // Set timer value from config if available
     if (typeof TIMER_CONFIG !== 'undefined' && TIMER_CONFIG.roleIdentification) {
         secondsRemaining = TIMER_CONFIG.roleIdentification;
+        initialTimerValue = secondsRemaining;
         updateTimerDisplay();
         console.log(`Timer set to ${secondsRemaining} seconds from config`);
     }
@@ -222,13 +224,31 @@ function highlightRoleGroup(teamType) {
 // Timer functions
 function updateTimerDisplay() {
     const timerDisplay = document.getElementById('timer-display');
+    const timerSection = document.getElementById('timer-section');
+    const timerBar = document.getElementById('timer-bar');
+    
+    // Update timer text
     timerDisplay.textContent = secondsRemaining;
     
-    // Change color based on time remaining
-    if (secondsRemaining <= 10) {
+    // Calculate progress percentage
+    const progressPercentage = (secondsRemaining / initialTimerValue) * 100;
+    timerBar.style.width = `${progressPercentage}%`;
+    
+    // Update timer appearance based on time remaining
+    if (secondsRemaining <= 5) {
+        // Danger zone - less than 5 seconds
+        timerDisplay.style.color = 'var(--mafia-color, #e53935)';
+        timerSection.classList.remove('timer-warning');
+        timerSection.classList.add('timer-danger');
+    } else if (secondsRemaining <= 10) {
+        // Warning zone - less than 10 seconds
         timerDisplay.style.color = 'var(--warning-color, #ff9800)';
+        timerSection.classList.add('timer-warning');
+        timerSection.classList.remove('timer-danger');
     } else {
+        // Normal zone
         timerDisplay.style.color = '';
+        timerSection.classList.remove('timer-warning', 'timer-danger');
     }
 }
 
@@ -246,7 +266,7 @@ function startTimer() {
         if (secondsRemaining <= 0) {
             clearInterval(timerInterval);
             isTimerRunning = false;
-            document.getElementById('start-timer-btn').disabled = false;
+            document.getElementById('start-timer-btn').disabled = true;
             document.getElementById('pause-timer-btn').disabled = true;
             
             // Play buzzer sound if available
@@ -279,6 +299,7 @@ function resetTimer() {
     secondsRemaining = typeof TIMER_CONFIG !== 'undefined' && TIMER_CONFIG.roleIdentification 
         ? TIMER_CONFIG.roleIdentification 
         : 30;
+    initialTimerValue = secondsRemaining;
     
     updateTimerDisplay();
     

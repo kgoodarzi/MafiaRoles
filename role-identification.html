@@ -22,6 +22,41 @@
     <script src="timer.js"></script>
     <!-- Role Identification JS -->
     <script src="role-identification.js"></script>
+    <style>
+        /* Timer specific styles */
+        .timer-display {
+            font-size: 2.5rem;
+            font-weight: bold;
+            text-align: center;
+            margin: 15px 0;
+            transition: color 0.3s ease;
+        }
+        
+        .timer-progress {
+            width: 100%;
+            height: 10px;
+            background-color: var(--border-color);
+            border-radius: 5px;
+            margin-bottom: 15px;
+            overflow: hidden;
+        }
+        
+        .timer-bar {
+            height: 100%;
+            width: 100%;
+            background-color: var(--primary-color);
+            border-radius: 5px;
+            transition: width 1s linear;
+        }
+        
+        .timer-warning .timer-bar {
+            background-color: var(--warning-color, #ff9800);
+        }
+        
+        .timer-danger .timer-bar {
+            background-color: var(--mafia-color, #e53935);
+        }
+    </style>
 </head>
 <body class="dark-theme">
     <div id="connection-status"></div>
@@ -41,10 +76,14 @@
 
                 <!-- Timer Section -->
                 <div id="timer-section" class="timer-section" style="margin-top:20px;padding:15px;border-radius:8px;background-color:var(--card-bg);border:1px solid var(--border-color);">
-                    <h3>Timer - <span id="timer-display">30</span> seconds</h3>
+                    <h3>Timer</h3>
+                    <div class="timer-display" id="timer-display">30</div>
+                    <div class="timer-progress">
+                        <div class="timer-bar" id="timer-bar"></div>
+                    </div>
                     <div class="timer-controls" style="display:flex;justify-content:space-between;margin-top:10px;">
                         <button id="start-timer-btn" class="btn btn-primary">Start</button>
-                        <button id="pause-timer-btn" class="btn">Pause</button>
+                        <button id="pause-timer-btn" class="btn" disabled>Pause</button>
                         <button id="reset-timer-btn" class="btn">Reset</button>
                     </div>
                 </div>
