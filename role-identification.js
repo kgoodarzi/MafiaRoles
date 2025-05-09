@@ -1,5 +1,8 @@
 // Global variables
 let gameState = null;
+let timerInterval = null;
+let secondsRemaining = 30; // Default timer value
+let isTimerRunning = false;
 
 // Initialize page when DOM is loaded
 document.addEventListener('DOMContentLoaded', async function() {
@@ -12,21 +15,32 @@ document.addEventListener('DOMContentLoaded', async function() {
     // Load game state from localStorage
     loadGameState();
     
+    // Set timer value from config if available
+    if (typeof TIMER_CONFIG !== 'undefined' && TIMER_CONFIG.roleIdentification) {
+        secondsRemaining = TIMER_CONFIG.roleIdentification;
+        updateTimerDisplay();
+        console.log(`Timer set to ${secondsRemaining} seconds from config`);
+    }
+    
     // Set up event listeners
     document.getElementById('next-phase-btn').addEventListener('click', goToNextPhase);
     document.getElementById('show-roles-btn').addEventListener('click', goToRoleAssignments);
     document.getElementById('reset-btn').addEventListener('click', resetGame);
     
-    // Event listeners for role group buttons
+    // Timer button event listeners
+    document.getElementById('start-timer-btn').addEventListener('click', startTimer);
+    document.getElementById('pause-timer-btn').addEventListener('click', pauseTimer);
+    document.getElementById('reset-timer-btn').addEventListener('click', resetTimer);
+    
+    // Event listener for mafia team button
     document.getElementById('call-mafia-btn').addEventListener('click', function() {
         highlightRoleGroup('mafia');
+        // Show mafia role action buttons
+        document.getElementById('mafia-actions').style.display = 'block';
     });
-    document.getElementById('call-independent-btn').addEventListener('click', function() {
-        highlightRoleGroup('independent');
-    });
-    document.getElementById('call-citizens-btn').addEventListener('click', function() {
-        highlightRoleGroup('citizen');
-    });
+    
+    // Event listeners for mafia role action buttons
+    setupMafiaRoleButtons();
 });
 
 // Wait for database initialization
@@ -64,6 +78,9 @@ function loadGameState() {
             
             // Update game status display
             updateGameStatus();
+            
+            // Check if specific Mafia roles exist and show/hide buttons accordingly
+            updateMafiaRoleButtons();
         } else {
             console.warn("No game state found in localStorage");
             document.getElementById('phase-info').innerHTML = `
@@ -77,8 +94,9 @@ function loadGameState() {
             document.getElementById('next-phase-btn').disabled = true;
             document.getElementById('show-roles-btn').disabled = true;
             document.getElementById('call-mafia-btn').disabled = true;
-            document.getElementById('call-independent-btn').disabled = true;
-            document.getElementById('call-citizens-btn').disabled = true;
+            document.getElementById('start-timer-btn').disabled = true;
+            document.getElementById('pause-timer-btn').disabled = true;
+            document.getElementById('reset-timer-btn').disabled = true;
         }
     } catch (error) {
         console.error("Error loading game state:", error);
@@ -96,11 +114,79 @@ function updateGameStatus() {
     if (!gameState) return;
     
     const gameStatusInfo = document.getElementById('game-status-info');
+    
+    // Count mafia players
+    const mafiaPlayers = gameState.players.filter(player => {
+        const role = getRoleById(player.role);
+        return role && role.team === 'mafia';
+    });
+    
     gameStatusInfo.innerHTML = `
-        <div><strong>Current Phase:</strong> Role Identification Night</div>
+        <div><strong>Current Phase:</strong> First Night - Role Identification</div>
         <div><strong>Round:</strong> ${gameState.currentRound}</div>
-        <div><strong>Players:</strong> ${gameState.players.length}</div>
+        <div><strong>Total Players:</strong> ${gameState.players.length}</div>
+        <div><strong>Mafia Players:</strong> ${mafiaPlayers.length}</div>
     `;
+}
+
+// Setup Mafia role action buttons
+function setupMafiaRoleButtons() {
+    // Godfather button
+    document.getElementById('godfather-action-btn').addEventListener('click', function() {
+        checkRolePresent('godfather');
+    });
+    
+    // Mafioso button
+    document.getElementById('mafioso-action-btn').addEventListener('click', function() {
+        checkRolePresent('mafioso');
+    });
+    
+    // Framer button
+    document.getElementById('framer-action-btn').addEventListener('click', function() {
+        checkRolePresent('framer');
+    });
+    
+    // Consort button
+    document.getElementById('consort-action-btn').addEventListener('click', function() {
+        checkRolePresent('consort');
+    });
+}
+
+// Update Mafia role buttons based on roles present in the game
+function updateMafiaRoleButtons() {
+    if (!gameState || !gameState.players) return;
+    
+    // Check if each role exists in the game
+    const hasGodfather = gameState.players.some(player => player.role === 'godfather');
+    const hasMafioso = gameState.players.some(player => player.role === 'mafioso');
+    const hasFramer = gameState.players.some(player => player.role === 'framer');
+    const hasConsort = gameState.players.some(player => player.role === 'consort');
+    
+    // Update button visibility
+    document.getElementById('godfather-action-btn').style.display = hasGodfather ? 'block' : 'none';
+    document.getElementById('mafioso-action-btn').style.display = hasMafioso ? 'block' : 'none';
+    document.getElementById('framer-action-btn').style.display = hasFramer ? 'block' : 'none';
+    document.getElementById('consort-action-btn').style.display = hasConsort ? 'block' : 'none';
+}
+
+// Check if a specific role is present in the game
+function checkRolePresent(roleId) {
+    if (!gameState || !gameState.players) return;
+    
+    const playersWithRole = gameState.players.filter(player => player.role === roleId);
+    
+    if (playersWithRole.length > 0) {
+        const roleInfo = getRoleById(roleId);
+        const roleName = roleInfo ? roleInfo.name : roleId;
+        
+        let playersList = playersWithRole.map(player => {
+            return `${player.name}`;
+        }).join('\n');
+        
+        alert(`${roleName}:\n${playersList}`);
+    } else {
+        alert(`No ${roleId} in this game.`);
+    }
 }
 
 // Highlight a specific role group
@@ -117,18 +203,6 @@ function highlightRoleGroup(teamType) {
             const role = getRoleById(player.role);
             return role && role.team === 'mafia';
         });
-    } else if (teamType === 'independent') {
-        teamName = 'Independent Roles';
-        players = gameState.players.filter(player => {
-            const role = getRoleById(player.role);
-            return role && role.team === 'independent';
-        });
-    } else if (teamType === 'citizen') {
-        teamName = 'Citizen Special Roles';
-        players = gameState.players.filter(player => {
-            const role = getRoleById(player.role);
-            return role && role.team === 'citizen' && role.id !== 'citizen';
-        });
     }
     
     if (players.length === 0) {
@@ -143,6 +217,74 @@ function highlightRoleGroup(teamType) {
     }).join('\n');
     
     alert(`${teamName}:\n${playersList}`);
+}
+
+// Timer functions
+function updateTimerDisplay() {
+    const timerDisplay = document.getElementById('timer-display');
+    timerDisplay.textContent = secondsRemaining;
+    
+    // Change color based on time remaining
+    if (secondsRemaining <= 10) {
+        timerDisplay.style.color = 'var(--warning-color, #ff9800)';
+    } else {
+        timerDisplay.style.color = '';
+    }
+}
+
+function startTimer() {
+    if (isTimerRunning) return;
+    
+    isTimerRunning = true;
+    document.getElementById('start-timer-btn').disabled = true;
+    document.getElementById('pause-timer-btn').disabled = false;
+    
+    timerInterval = setInterval(function() {
+        secondsRemaining--;
+        updateTimerDisplay();
+        
+        if (secondsRemaining <= 0) {
+            clearInterval(timerInterval);
+            isTimerRunning = false;
+            document.getElementById('start-timer-btn').disabled = false;
+            document.getElementById('pause-timer-btn').disabled = true;
+            
+            // Play buzzer sound if available
+            if (typeof playBuzzer === 'function') {
+                playBuzzer();
+            } else {
+                alert("Time's up!");
+            }
+        }
+    }, 1000);
+}
+
+function pauseTimer() {
+    if (!isTimerRunning) return;
+    
+    clearInterval(timerInterval);
+    isTimerRunning = false;
+    document.getElementById('start-timer-btn').disabled = false;
+    document.getElementById('pause-timer-btn').disabled = true;
+}
+
+function resetTimer() {
+    // Clear interval if running
+    if (isTimerRunning) {
+        clearInterval(timerInterval);
+        isTimerRunning = false;
+    }
+    
+    // Reset to initial time from config
+    secondsRemaining = typeof TIMER_CONFIG !== 'undefined' && TIMER_CONFIG.roleIdentification 
+        ? TIMER_CONFIG.roleIdentification 
+        : 30;
+    
+    updateTimerDisplay();
+    
+    // Reset button states
+    document.getElementById('start-timer-btn').disabled = false;
+    document.getElementById('pause-timer-btn').disabled = true;
 }
 
 // Go to the next phase

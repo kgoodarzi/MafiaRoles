@@ -16,6 +16,10 @@
     <script src="roles.js"></script>
     <!-- Connection Status -->
     <script src="connection-status.js"></script>
+    <!-- Configuration Settings -->
+    <script src="config.js"></script>
+    <!-- Timer JS -->
+    <script src="timer.js"></script>
     <!-- Role Identification JS -->
     <script src="role-identification.js"></script>
 </head>
@@ -25,21 +29,36 @@
     <div class="container">
         <header>
             <h1>Role Identification Night</h1>
-            <p>Roles identify themselves to the moderator</p>
+            <p>Mafia team members meet each other</p>
         </header>
 
         <main>
             <section id="role-identification-section">
                 <div id="phase-info" class="phase-info">
-                    <h2>Night Phase - Role Identification</h2>
-                    <p>The Moderator asks each role to identify themselves with a like. Mafia members learn who their teammates are.</p>
+                    <h2>First Night - Mafia Team Identification</h2>
+                    <p>The Moderator calls the Mafia team members to identify themselves and meet their teammates.</p>
+                </div>
+
+                <!-- Timer Section -->
+                <div id="timer-section" class="timer-section" style="margin-top:20px;padding:15px;border-radius:8px;background-color:var(--card-bg);border:1px solid var(--border-color);">
+                    <h3>Timer - <span id="timer-display">30</span> seconds</h3>
+                    <div class="timer-controls" style="display:flex;justify-content:space-between;margin-top:10px;">
+                        <button id="start-timer-btn" class="btn btn-primary">Start</button>
+                        <button id="pause-timer-btn" class="btn">Pause</button>
+                        <button id="reset-timer-btn" class="btn">Reset</button>
+                    </div>
                 </div>
 
                 <div id="role-group-actions" class="role-group-actions" style="margin-top:20px;">
-                    <h3>Call each role group</h3>
+                    <h3>Call Mafia Team</h3>
                     <button id="call-mafia-btn" class="btn" style="width: 100%; margin-bottom: 10px; background-color: var(--mafia-color);">Call Mafia Team</button>
-                    <button id="call-independent-btn" class="btn" style="width: 100%; margin-bottom: 10px; background-color: var(--independent-color);">Call Independent Roles</button>
-                    <button id="call-citizens-btn" class="btn" style="width: 100%; margin-bottom: 10px; background-color: var(--citizen-color);">Call Citizen Special Roles</button>
+                    <div id="mafia-actions" class="role-actions" style="margin-top:15px;display:none;">
+                        <h3>Mafia Role Actions</h3>
+                        <button id="godfather-action-btn" class="btn" style="width: 100%; margin-bottom: 10px;">Ask Godfather to Show Like</button>
+                        <button id="mafioso-action-btn" class="btn" style="width: 100%; margin-bottom: 10px;">Ask Mafioso to Show Like</button>
+                        <button id="framer-action-btn" class="btn" style="width: 100%; margin-bottom: 10px;">Ask Framer to Show Like</button>
+                        <button id="consort-action-btn" class="btn" style="width: 100%; margin-bottom: 10px;">Ask Consort to Show Like</button>
+                    </div>
                 </div>
 
                 <div id="game-status-info" class="game-status-info" style="margin-top:20px;padding:15px;border-radius:8px;background-color:var(--card-bg);border:1px solid var(--border-color);">
