@@ -18,10 +18,7 @@
     <script src="connection-status.js"></script>
     <!-- Configuration Settings -->
     <script src="config.js"></script>
-    <!-- Timer JS -->
-    <script src="timer.js"></script>
-    <!-- Role Identification JS -->
-    <script src="role-identification.js"></script>
+    <!-- All functionality is now inline and we've removed external JS references -->
     <style>
         /* Timer specific styles */
         .timer-display {
@@ -56,6 +53,16 @@
         .timer-danger .timer-bar {
             background-color: var(--mafia-color, #e53935);
         }
+        
+        #debug-log {
+            background-color: rgba(0,0,0,0.1);
+            border-radius: 5px;
+            padding: 10px;
+            height: 150px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
     </style>
 </head>
 <body class="dark-theme">
@@ -82,32 +89,33 @@
                         <div class="timer-bar" id="timer-bar"></div>
                     </div>
                     <div class="timer-controls" style="display:flex;justify-content:space-between;margin-top:10px;">
-                        <button id="start-timer-btn" class="btn btn-primary">Start</button>
-                        <button id="pause-timer-btn" class="btn" disabled>Pause</button>
-                        <button id="reset-timer-btn" class="btn">Reset</button>
+                        <button id="start-timer-btn" class="btn btn-primary" onclick="startTimer()">Start</button>
+                        <button id="pause-timer-btn" class="btn" onclick="pauseTimer()" disabled>Pause</button>
+                        <button id="reset-timer-btn" class="btn" onclick="resetTimer()">Reset</button>
                     </div>
                 </div>
 
                 <div id="role-group-actions" class="role-group-actions" style="margin-top:20px;">
                     <h3>Call Mafia Team</h3>
-                    <button id="call-mafia-btn" class="btn" style="width: 100%; margin-bottom: 10px; background-color: var(--mafia-color);">Call Mafia Team</button>
+                    <button id="call-mafia-btn" class="btn" style="width: 100%; margin-bottom: 10px; background-color: var(--mafia-color);" onclick="showMafiaTeam()">Call Mafia Team</button>
                     <div id="mafia-actions" class="role-actions" style="margin-top:15px;display:none;">
                         <h3>Mafia Role Actions</h3>
-                        <button id="godfather-action-btn" class="btn" style="width: 100%; margin-bottom: 10px;">Ask Godfather to Show Like</button>
-                        <button id="mafioso-action-btn" class="btn" style="width: 100%; margin-bottom: 10px;">Ask Mafioso to Show Like</button>
-                        <button id="framer-action-btn" class="btn" style="width: 100%; margin-bottom: 10px;">Ask Framer to Show Like</button>
-                        <button id="consort-action-btn" class="btn" style="width: 100%; margin-bottom: 10px;">Ask Consort to Show Like</button>
+                        <button id="godfather-action-btn" class="btn" style="width: 100%; margin-bottom: 10px;" onclick="showRoleAlert('godfather')">Ask Godfather to Show Like</button>
+                        <button id="mafioso-action-btn" class="btn" style="width: 100%; margin-bottom: 10px;" onclick="showRoleAlert('mafioso')">Ask Mafioso to Show Like</button>
+                        <button id="framer-action-btn" class="btn" style="width: 100%; margin-bottom: 10px;" onclick="showRoleAlert('framer')">Ask Framer to Show Like</button>
+                        <button id="consort-action-btn" class="btn" style="width: 100%; margin-bottom: 10px;" onclick="showRoleAlert('consort')">Ask Consort to Show Like</button>
                     </div>
                 </div>
 
-                <div id="game-status-info" class="game-status-info" style="margin-top:20px;padding:15px;border-radius:8px;background-color:var(--card-bg);border:1px solid var(--border-color);">
-                    <!-- Game status will be inserted here -->
+                <div id="debug-log-section" style="margin-top:20px;padding:15px;border-radius:8px;background-color:var(--card-bg);border:1px solid var(--border-color);">
+                    <h3>Debug Log</h3>
+                    <div id="debug-log"></div>
                 </div>
                 
                 <div id="game-actions" class="game-actions" style="margin-top:20px;">
-                    <button id="next-phase-btn" class="btn btn-primary" style="width: 100%; margin-bottom: 15px;">Next Phase</button>
-                    <button id="show-roles-btn" class="btn" style="width: 100%; margin-bottom: 15px;">Show Role Assignments</button>
-                    <button id="reset-btn" class="btn" style="width: 100%;">Back to Home</button>
+                    <button id="next-phase-btn" class="btn btn-primary" style="width: 100%; margin-bottom: 15px;" onclick="goToNextPage('day-phase.html')">Next Phase</button>
+                    <button id="show-roles-btn" class="btn" style="width: 100%; margin-bottom: 15px;" onclick="goToNextPage('role-assignments.html')">Show Role Assignments</button>
+                    <button id="reset-btn" class="btn" style="width: 100%;" onclick="goToNextPage('index.html')">Back to Home</button>
                 </div>
             </section>
         </main>
@@ -116,5 +124,144 @@
             <p>&copy; 2025 KRS Consulting Inc.</p>
         </footer>
     </div>
+
+    <script>
+        // Debug logging
+        function logDebug(message) {
+            const debugLog = document.getElementById('debug-log');
+            if (debugLog) {
+                const timestamp = new Date().toLocaleTimeString();
+                debugLog.innerHTML += `<div>[${timestamp}] ${message}</div>`;
+                debugLog.scrollTop = debugLog.scrollHeight;
+            }
+            console.log(message);
+        }
+        
+        // Simple navigation
+        function goToNextPage(page) {
+            logDebug(`Navigating to: ${page}`);
+            window.location.href = page;
+        }
+        
+        // Timer variables
+        let timerInterval = null;
+        let secondsRemaining = 30;
+        let isTimerRunning = false;
+        let initialTimerValue = 30;
+        
+        // Update timer display
+        function updateTimerDisplay() {
+            const timerDisplay = document.getElementById('timer-display');
+            const timerSection = document.getElementById('timer-section');
+            const timerBar = document.getElementById('timer-bar');
+            
+            // Update timer text
+            timerDisplay.textContent = secondsRemaining;
+            
+            // Calculate progress percentage
+            const progressPercentage = (secondsRemaining / initialTimerValue) * 100;
+            timerBar.style.width = `${progressPercentage}%`;
+            
+            // Update timer appearance based on time remaining
+            if (secondsRemaining <= 5) {
+                // Danger zone - less than 5 seconds
+                timerDisplay.style.color = 'var(--mafia-color, #e53935)';
+                timerSection.classList.remove('timer-warning');
+                timerSection.classList.add('timer-danger');
+            } else if (secondsRemaining <= 10) {
+                // Warning zone - less than 10 seconds
+                timerDisplay.style.color = 'var(--warning-color, #ff9800)';
+                timerSection.classList.add('timer-warning');
+                timerSection.classList.remove('timer-danger');
+            } else {
+                // Normal zone
+                timerDisplay.style.color = '';
+                timerSection.classList.remove('timer-warning', 'timer-danger');
+            }
+        }
+        
+        // Start timer
+        function startTimer() {
+            logDebug('Start timer button clicked');
+            if (isTimerRunning) {
+                logDebug('Timer is already running');
+                return;
+            }
+            
+            isTimerRunning = true;
+            document.getElementById('start-timer-btn').disabled = true;
+            document.getElementById('pause-timer-btn').disabled = false;
+            
+            logDebug(`Starting countdown from ${secondsRemaining} seconds`);
+            timerInterval = setInterval(function() {
+                secondsRemaining--;
+                logDebug(`Timer tick: ${secondsRemaining} seconds remaining`);
+                updateTimerDisplay();
+                
+                if (secondsRemaining <= 0) {
+                    logDebug('Timer finished!');
+                    clearInterval(timerInterval);
+                    isTimerRunning = false;
+                    document.getElementById('start-timer-btn').disabled = true;
+                    document.getElementById('pause-timer-btn').disabled = true;
+                    alert("Time's up!");
+                }
+            }, 1000);
+        }
+        
+        // Pause timer
+        function pauseTimer() {
+            logDebug('Pause timer button clicked');
+            if (!isTimerRunning) return;
+            
+            clearInterval(timerInterval);
+            isTimerRunning = false;
+            document.getElementById('start-timer-btn').disabled = false;
+            document.getElementById('pause-timer-btn').disabled = true;
+            logDebug(`Timer paused at ${secondsRemaining} seconds`);
+        }
+        
+        // Reset timer
+        function resetTimer() {
+            logDebug('Reset timer button clicked');
+            // Clear interval if running
+            if (isTimerRunning) {
+                clearInterval(timerInterval);
+                isTimerRunning = false;
+            }
+            
+            // Reset to initial time
+            secondsRemaining = initialTimerValue;
+            updateTimerDisplay();
+            
+            // Reset button states
+            document.getElementById('start-timer-btn').disabled = false;
+            document.getElementById('pause-timer-btn').disabled = true;
+            logDebug(`Timer reset to ${secondsRemaining} seconds`);
+        }
+        
+        // Show Mafia team
+        function showMafiaTeam() {
+            logDebug('Call Mafia Team button clicked');
+            document.getElementById('mafia-actions').style.display = 'block';
+            alert('Mafia team has been called');
+            logDebug('Showing Mafia role actions');
+        }
+        
+        // Show role alert
+        function showRoleAlert(roleId) {
+            logDebug(`Showing alert for role: ${roleId}`);
+            alert(`${roleId.charAt(0).toUpperCase() + roleId.slice(1)} has been asked to show like`);
+        }
+        
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            logDebug('Role identification page loaded');
+            
+            // Initialize timer display
+            updateTimerDisplay();
+            logDebug('Timer initialized');
+        });
+    </script>
 </body>
 </html> 
