@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mafia Game - Defense Phase</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="dark-theme.css">
+    <!-- Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Supabase initialization -->
+    <script src="supabase-init.js"></script>
+    <!-- Database Manager -->
+    <script src="database.js"></script>
+    <!-- Roles JS -->
+    <script src="roles.js"></script>
+    <!-- Connection Status -->
+    <script src="connection-status.js"></script>
+    <!-- Configuration Settings -->
+    <script src="config.js"></script>
+    <style>
+        /* Timer specific styles */
+        .timer-display {
+            font-size: 2.5rem;
+            font-weight: bold;
+            text-align: center;
+            margin: 15px 0;
+            transition: color 0.3s ease;
+        }
+        
+        .timer-progress {
+            width: 100%;
+            height: 10px;
+            background-color: var(--border-color);
+            border-radius: 5px;
+            margin-bottom: 15px;
+            overflow: hidden;
+        }
+        
+        .timer-bar {
+            height: 100%;
+            width: 100%;
+            background-color: var(--primary-color);
+            border-radius: 5px;
+            transition: width 1s linear;
+        }
+        
+        .timer-warning .timer-bar {
+            background-color: var(--warning-color, #ff9800);
+        }
+        
+        .timer-danger .timer-bar {
+            background-color: var(--mafia-color, #e53935);
+        }
+        
+        .defense-player {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .defense-player .player-card {
+            display: inline-block;
+            width: 80%;
+            max-width: 300px;
+        }
+        
+        .defense-player .player-image img {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        
+        .final-vote-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .final-vote-player {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .final-vote-player.selected {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        .final-vote-player .player-image img {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+    </style>
+</head>
+<body class="dark-theme">
+    <div id="connection-status"></div>
+    
+    <div class="container">
+        <header>
+            <h1>Defense Phase</h1>
+            <p id="defense-phase-subtitle">Players on trial defend themselves</p>
+        </header>
+
+        <main>
+            <section id="defense-phase-section">
+                <div id="phase-info" class="phase-info">
+                    <h2>Defense Phase</h2>
+                    <p>Players with the most votes can defend themselves before the final vote.</p>
+                </div>
+
+                <!-- Defense Player Section -->
+                <div id="current-defendant" class="defense-player" style="display:none;">
+                    <h3>Current Defendant</h3>
+                    <div class="player-card">
+                        <div class="player-image">
+                            <img id="defendant-img" src="images/default-avatar.svg" alt="Player">
+                        </div>
+                        <div class="player-info">
+                            <h3 id="defendant-name">Player Name</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Timer Section -->
+                <div id="timer-section" class="timer-section" style="margin-top:20px;padding:15px;border-radius:8px;background-color:var(--card-bg);border:1px solid var(--border-color);">
+                    <h3>Defense Timer</h3>
+                    <div class="timer-display" id="timer-display">60</div>
+                    <div class="timer-progress">
+                        <div class="timer-bar" id="timer-bar"></div>
+                    </div>
+                    <div class="timer-controls" style="display:flex;justify-content:space-between;margin-top:10px;">
+                        <button id="start-timer-btn" class="btn btn-primary" onclick="startTimer()">Start Defense</button>
+                        <button id="pause-timer-btn" class="btn" onclick="pauseTimer()" disabled>Pause</button>
+                        <button id="next-defendant-btn" class="btn btn-success" onclick="nextDefendant()" disabled>Next Defendant</button>
+                    </div>
+                </div>
+
+                <!-- Final Vote Section -->
+                <div id="final-vote-section" style="margin-top:20px;display:none;">
+                    <h3>Final Vote</h3>
+                    <p>Select one player to eliminate:</p>
+                    
+                    <div id="final-vote-grid" class="final-vote-grid">
+                        <!-- Final vote options will be added here -->
+                    </div>
+                    
+                    <div style="margin-top:20px;">
+                        <button id="submit-final-vote-btn" class="btn btn-primary" style="width:100%;" onclick="submitFinalVote()">Submit Final Vote</button>
+                    </div>
+                </div>
+
+                <!-- Final Results Section -->
+                <div id="final-results-section" style="margin-top:20px;display:none;">
+                    <h3>Final Results</h3>
+                    <div id="final-results-content"></div>
+                </div>
+                
+                <div id="game-actions" class="game-actions" style="margin-top:20px;">
+                    <button id="next-phase-btn" class="btn btn-primary" style="width: 100%; margin-bottom: 15px;" onclick="goToNextPhase()" disabled>Next Phase (Night)</button>
+                    <button id="show-roles-btn" class="btn" style="width: 100%; margin-bottom: 15px;" onclick="goToRoleAssignments()">Show Role Assignments</button>
+                    <button id="reset-btn" class="btn" style="width: 100%;" onclick="resetGame()">Back to Home</button>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>&copy; 2025 KRS Consulting Inc.</p>
+        </footer>
+    </div>
+
+    <script>
+        // Global variables
+        let gameState = null;
+        let defenseState = {
+            defendants: [],
+            currentDefendantIndex: -1,
+            selectedFinalPlayer: null,
+            finalVotingComplete: false
+        };
+        let timerInterval = null;
+        let secondsRemaining = 60;
+        let isTimerRunning = false;
+        let initialTimerValue = 60;
+        
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log("Defense Phase page loaded");
+            
+            // Load game state
+            loadGameState();
+            
+            // Initialize timer display
+            updateTimerDisplay();
+        });
+        
+        // Load game state from localStorage
+        function loadGameState() {
+            try {
+                const storedGameState = localStorage.getItem('gameState');
+                if (storedGameState) {
+                    gameState = JSON.parse(storedGameState);
+                    console.log("Game state loaded:", gameState);
+                    
+                    const storedDefenseState = localStorage.getItem('defenseState');
+                    if (storedDefenseState) {
+                        defenseState = JSON.parse(storedDefenseState);
+                        console.log("Defense state loaded:", defenseState);
+                    }
+                    
+                    // Check if defendants are set
+                    if (!defenseState.defendants || defenseState.defendants.length === 0) {
+                        document.getElementById('phase-info').innerHTML = `
+                            <div class="error-message">
+                                <h3>Error: No defendants</h3>
+                                <p>There are no players on trial. Please return to the voting phase.</p>
+                            </div>
+                        `;
+                        return;
+                    }
+                    
+                    // If there are defendants
+                    if (defenseState.defendants.length > 0) {
+                        if (defenseState.currentDefendantIndex === -1) {
+                            // Start with the first defendant
+                            defenseState.currentDefendantIndex = 0;
+                            showCurrentDefendant();
+                        } else if (defenseState.currentDefendantIndex >= defenseState.defendants.length) {
+                            // All defendants have spoken, show final vote
+                            showFinalVoteSection();
+                        } else {
+                            // Continue with current defendant
+                            showCurrentDefendant();
+                        }
+                    }
+                } else {
+                    console.warn("No game state found in localStorage");
+                    document.getElementById('phase-info').innerHTML = `
+                        <div class="error-message">
+                            <h3>Error: No game in progress</h3>
+                            <p>Please start a game first.</p>
+                        </div>
+                    `;
+                    
+                    // Disable buttons
+                    document.getElementById('next-phase-btn').disabled = true;
+                    document.getElementById('show-roles-btn').disabled = true;
+                    document.getElementById('start-timer-btn').disabled = true;
+                }
+            } catch (error) {
+                console.error("Error loading game state:", error);
+                document.getElementById('phase-info').innerHTML = `
+                    <div class="error-message">
+                        <h3>Error loading game data</h3>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+        
+        // Show current defendant
+        function showCurrentDefendant() {
+            if (!defenseState.defendants || defenseState.currentDefendantIndex >= defenseState.defendants.length) {
+                showFinalVoteSection();
+                return;
+            }
+            
+            const currentDefendant = defenseState.defendants[defenseState.currentDefendantIndex];
+            const player = gameState.players.find(p => p.id === currentDefendant.id);
+            
+            if (player) {
+                document.getElementById('defendant-name').textContent = player.name;
+                document.getElementById('defendant-img').src = player.photo_url || 'images/default-avatar.svg';
+                document.getElementById('defendant-img').onerror = function() {
+                    this.src = 'images/default-avatar.svg';
+                };
+                
+                document.getElementById('current-defendant').style.display = 'block';
+                document.getElementById('timer-section').style.display = 'block';
+                document.getElementById('final-vote-section').style.display = 'none';
+                
+                // Reset timer
+                resetTimer();
+                
+                // Enable start button
+                document.getElementById('start-timer-btn').disabled = false;
+                document.getElementById('next-defendant-btn').disabled = true;
+            }
+        }
+        
+        // Move to next defendant
+        function nextDefendant() {
+            // Stop timer if running
+            if (isTimerRunning) {
+                clearInterval(timerInterval);
+                isTimerRunning = false;
+            }
+            
+            defenseState.currentDefendantIndex++;
+            localStorage.setItem('defenseState', JSON.stringify(defenseState));
+            
+            if (defenseState.currentDefendantIndex >= defenseState.defendants.length) {
+                // All defendants have had their say, move to final vote
+                showFinalVoteSection();
+            } else {
+                // Show next defendant
+                showCurrentDefendant();
+            }
+        }
+        
+        // Show final vote section
+        function showFinalVoteSection() {
+            document.getElementById('current-defendant').style.display = 'none';
+            document.getElementById('timer-section').style.display = 'none';
+            document.getElementById('final-vote-section').style.display = 'block';
+            
+            // Build the final vote grid
+            const finalVoteGrid = document.getElementById('final-vote-grid');
+            let finalVoteHtml = '';
+            
+            defenseState.defendants.forEach(defendant => {
+                const player = gameState.players.find(p => p.id === defendant.id);
+                if (player) {
+                    finalVoteHtml += `
+                        <div class="final-vote-player" data-player-id="${player.id}" onclick="selectFinalPlayer('${player.id}')">
+                            <div class="player-image">
+                                <img src="${player.photo_url || 'images/default-avatar.svg'}" 
+                                     alt="${player.name}" 
+                                     onerror="this.src='images/default-avatar.svg'">
+                            </div>
+                            <div class="player-info">
+                                <h4>${player.name}</h4>
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+            
+            finalVoteGrid.innerHTML = finalVoteHtml;
+        }
+        
+        // Select player for final vote
+        function selectFinalPlayer(playerId) {
+            defenseState.selectedFinalPlayer = playerId;
+            
+            // Update UI to show selection
+            document.querySelectorAll('.final-vote-player').forEach(el => {
+                if (el.dataset.playerId === playerId) {
+                    el.classList.add('selected');
+                } else {
+                    el.classList.remove('selected');
+                }
+            });
+        }
+        
+        // Submit final vote
+        function submitFinalVote() {
+            if (!defenseState.selectedFinalPlayer) {
+                alert('Please select a player to eliminate first.');
+                return;
+            }
+            
+            // Find the selected player
+            const player = gameState.players.find(p => p.id === defenseState.selectedFinalPlayer);
+            if (!player) {
+                alert('Selected player not found.');
+                return;
+            }
+            
+            // Show final results
+            const finalResultsSection = document.getElementById('final-results-section');
+            const finalResultsContent = document.getElementById('final-results-content');
+            const roleInfo = getRoleById(player.role);
+            
+            finalResultsContent.innerHTML = `
+                <div class="eliminated-player">
+                    <div class="player-card large">
+                        <div class="player-image">
+                            <img src="${player.photo_url || 'images/default-avatar.svg'}" 
+                                 alt="${player.name}" 
+                                 onerror="this.src='images/default-avatar.svg'">
+                        </div>
+                        <div class="player-info">
+                            <h3>${player.name}</h3>
+                            <p>has been eliminated</p>
+                        </div>
+                    </div>
+                    <div class="revealed-role">
+                        <h4>Revealed Role: ${roleInfo ? roleInfo.name : player.role}</h4>
+                        <p>${roleInfo ? roleInfo.description : 'No role description available.'}</p>
+                    </div>
+                </div>
+            `;
+            
+            finalResultsSection.style.display = 'block';
+            document.getElementById('final-vote-section').style.display = 'none';
+            
+            // Add the player to eliminatedPlayers in gameState
+            if (!gameState.eliminatedPlayers) {
+                gameState.eliminatedPlayers = [];
+            }
+            
+            gameState.eliminatedPlayers.push({
+                id: player.id,
+                name: player.name,
+                role: player.role,
+                eliminatedInRound: gameState.currentRound,
+                eliminatedInPhase: 'defense'
+            });
+            
+            // Mark voting as complete
+            defenseState.finalVotingComplete = true;
+            localStorage.setItem('defenseState', JSON.stringify(defenseState));
+            
+            // Save updated gameState
+            localStorage.setItem('gameState', JSON.stringify(gameState));
+            
+            // Enable next phase button
+            document.getElementById('next-phase-btn').disabled = false;
+        }
+        
+        // Timer functions
+        function updateTimerDisplay() {
+            const timerDisplay = document.getElementById('timer-display');
+            const timerSection = document.getElementById('timer-section');
+            const timerBar = document.getElementById('timer-bar');
+            
+            // Update timer text
+            timerDisplay.textContent = secondsRemaining;
+            
+            // Calculate progress percentage
+            const progressPercentage = (secondsRemaining / initialTimerValue) * 100;
+            timerBar.style.width = `${progressPercentage}%`;
+            
+            // Update timer appearance based on time remaining
+            if (secondsRemaining <= 10) {
+                // Danger zone - less than 10 seconds
+                timerDisplay.style.color = 'var(--mafia-color, #e53935)';
+                timerSection.classList.remove('timer-warning');
+                timerSection.classList.add('timer-danger');
+            } else if (secondsRemaining <= 20) {
+                // Warning zone - less than 20 seconds
+                timerDisplay.style.color = 'var(--warning-color, #ff9800)';
+                timerSection.classList.add('timer-warning');
+                timerSection.classList.remove('timer-danger');
+            } else {
+                // Normal zone
+                timerDisplay.style.color = '';
+                timerSection.classList.remove('timer-warning', 'timer-danger');
+            }
+        }
+        
+        // Start timer
+        function startTimer() {
+            if (isTimerRunning) {
+                return;
+            }
+            
+            isTimerRunning = true;
+            document.getElementById('start-timer-btn').disabled = true;
+            document.getElementById('pause-timer-btn').disabled = false;
+            
+            timerInterval = setInterval(function() {
+                secondsRemaining--;
+                updateTimerDisplay();
+                
+                if (secondsRemaining <= 0) {
+                    clearInterval(timerInterval);
+                    isTimerRunning = false;
+                    document.getElementById('start-timer-btn').disabled = true;
+                    document.getElementById('pause-timer-btn').disabled = true;
+                    document.getElementById('next-defendant-btn').disabled = false;
+                    
+                    alert("Time's up! The defense period has ended.");
+                }
+            }, 1000);
+        }
+        
+        // Pause timer
+        function pauseTimer() {
+            if (!isTimerRunning) return;
+            
+            clearInterval(timerInterval);
+            isTimerRunning = false;
+            document.getElementById('start-timer-btn').disabled = false;
+            document.getElementById('pause-timer-btn').disabled = true;
+        }
+        
+        // Reset timer
+        function resetTimer() {
+            // Clear interval if running
+            if (isTimerRunning) {
+                clearInterval(timerInterval);
+                isTimerRunning = false;
+            }
+            
+            // Reset to initial time
+            secondsRemaining = initialTimerValue;
+            updateTimerDisplay();
+            
+            // Reset button states
+            document.getElementById('start-timer-btn').disabled = false;
+            document.getElementById('pause-timer-btn').disabled = true;
+            document.getElementById('next-defendant-btn').disabled = true;
+        }
+        
+        // Helper function to get role by ID
+        function getRoleById(roleId) {
+            if (typeof roles !== 'undefined' && roles) {
+                return roles.find(role => role.id === roleId);
+            }
+            return null;
+        }
+        
+        // Go to next phase
+        function goToNextPhase() {
+            if (!gameState) return;
+            
+            // Update game state to next phase
+            gameState.gamePhase = 'night';
+            localStorage.setItem('gameState', JSON.stringify(gameState));
+            
+            // Redirect to the next phase page
+            window.location.href = 'night-phase.html';
+        }
+        
+        // Go to role assignments page
+        function goToRoleAssignments() {
+            window.location.href = 'role-assignments.html';
+        }
+        
+        // Reset the game and return to home
+        function resetGame() {
+            // Clear game state
+            localStorage.removeItem('gameState');
+            localStorage.removeItem('defenseState');
+            
+            // Redirect to home page
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html> 

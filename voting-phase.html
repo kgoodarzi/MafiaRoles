@@ -16,8 +16,131 @@
     <script src="roles.js"></script>
     <!-- Connection Status -->
     <script src="connection-status.js"></script>
-    <!-- Voting Phase JS -->
-    <script src="voting-phase.js"></script>
+    <!-- Configuration Settings -->
+    <script src="config.js"></script>
+    <style>
+        .players-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .player-card {
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
+            box-shadow: 0 3px 5px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .player-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .player-image {
+            position: relative;
+            padding-top: 100%;
+            overflow: hidden;
+        }
+        
+        .player-image img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .player-info {
+            padding: 15px;
+            text-align: center;
+        }
+        
+        .vote-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .vote-controls {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .vote-btn {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            transition: all 0.2s ease;
+        }
+        
+        .vote-up {
+            background-color: var(--success-color, #4caf50);
+            color: white;
+        }
+        
+        .vote-down {
+            background-color: var(--mafia-color, #f44336);
+            color: white;
+        }
+        
+        .vote-btn:hover {
+            transform: scale(1.1);
+        }
+        
+        .vote-btn:active {
+            transform: scale(0.95);
+        }
+        
+        /* Eliminated player display */
+        .eliminated-player {
+            margin-top: 20px;
+            text-align: center;
+        }
+        
+        .eliminated-player .player-card {
+            display: inline-block;
+            width: 80%;
+            max-width: 300px;
+            margin: 0 auto;
+            cursor: default;
+        }
+        
+        .revealed-role {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: var(--card-bg);
+            border-radius: 8px;
+        }
+    </style>
 </head>
 <body class="dark-theme">
     <div id="connection-status"></div>
@@ -32,10 +155,17 @@
             <section id="voting-phase-section">
                 <div id="phase-info" class="phase-info">
                     <h2>Voting Phase</h2>
-                    <p>Players vote to eliminate a suspect. The player with the most votes is eliminated.</p>
+                    <p>Click on a player's card to add or subtract votes. Players with the most votes will face elimination.</p>
                 </div>
 
                 <div id="voting-area" class="voting-area" style="margin-top:20px;">
+                    <div class="voting-info" style="margin-bottom:20px;padding:15px;border-radius:8px;background-color:var(--card-bg);border:1px solid var(--border-color);">
+                        <h3>Voting Information</h3>
+                        <div><strong>Players Alive:</strong> <span id="players-alive-count">0</span></div>
+                        <div><strong>Votes Required to Pass:</strong> <span id="votes-required">0</span></div>
+                        <div><strong>Players Above Threshold:</strong> <span id="players-above-threshold">0</span></div>
+                    </div>
+                    
                     <h3>Vote to eliminate a player</h3>
                     <div id="voting-players" class="players-grid">
                         <!-- Players to vote on will be shown here -->
@@ -52,8 +182,8 @@
                 </div>
                 
                 <div id="game-actions" class="game-actions" style="margin-top:20px;">
-                    <button id="reveal-votes-btn" class="btn btn-success" style="width: 100%; margin-bottom: 15px;">Reveal Votes</button>
-                    <button id="next-phase-btn" class="btn btn-primary" style="width: 100%; margin-bottom: 15px;">Next Phase (Night)</button>
+                    <button id="apply-votes-btn" class="btn btn-success" style="width: 100%; margin-bottom: 15px;">Apply Votes</button>
+                    <button id="next-phase-btn" class="btn btn-primary" style="width: 100%; margin-bottom: 15px;" disabled>Next Phase (Night)</button>
                     <button id="show-roles-btn" class="btn" style="width: 100%; margin-bottom: 15px;">Show Role Assignments</button>
                     <button id="reset-btn" class="btn" style="width: 100%;">Back to Home</button>
                 </div>
@@ -64,5 +194,280 @@
             <p>&copy; 2025 KRS Consulting Inc.</p>
         </footer>
     </div>
+    
+    <script>
+        // Global variables
+        let gameState = null;
+        let playerVotes = {};
+        
+        // Initialize page when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log("Voting Phase page loaded");
+            
+            // Load game state from localStorage
+            loadGameState();
+            
+            // Set up event listeners
+            document.getElementById('next-phase-btn').addEventListener('click', goToNextPhase);
+            document.getElementById('apply-votes-btn').addEventListener('click', applyVotes);
+            document.getElementById('show-roles-btn').addEventListener('click', goToRoleAssignments);
+            document.getElementById('reset-btn').addEventListener('click', resetGame);
+        });
+        
+        // Load game state from localStorage
+        function loadGameState() {
+            try {
+                const storedGameState = localStorage.getItem('gameState');
+                if (storedGameState) {
+                    gameState = JSON.parse(storedGameState);
+                    console.log("Game state loaded:", gameState);
+                    
+                    // If game phase isn't set to voting, update it
+                    if (gameState.gamePhase !== 'voting') {
+                        gameState.gamePhase = 'voting';
+                        localStorage.setItem('gameState', JSON.stringify(gameState));
+                    }
+                    
+                    // Update page subtitle
+                    document.getElementById('voting-phase-subtitle').textContent = `Voting Phase - Round ${gameState.currentRound}`;
+                    
+                    // Initialize player votes
+                    initializePlayerVotes();
+                    
+                    // Update game status display
+                    updateGameStatus();
+                    
+                    // Display voting players
+                    displayVotingPlayers();
+                    
+                    // Initially disable next phase button until voting is complete
+                    document.getElementById('next-phase-btn').disabled = true;
+                } else {
+                    console.warn("No game state found in localStorage");
+                    document.getElementById('phase-info').innerHTML = `
+                        <div class="error-message">
+                            <h3>Error: No game in progress</h3>
+                            <p>Please start a game first.</p>
+                        </div>
+                    `;
+                    
+                    // Disable buttons
+                    document.getElementById('next-phase-btn').disabled = true;
+                    document.getElementById('apply-votes-btn').disabled = true;
+                    document.getElementById('show-roles-btn').disabled = true;
+                }
+            } catch (error) {
+                console.error("Error loading game state:", error);
+                document.getElementById('phase-info').innerHTML = `
+                    <div class="error-message">
+                        <h3>Error loading game data</h3>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+        
+        // Initialize player votes
+        function initializePlayerVotes() {
+            playerVotes = {};
+            const alivePlayers = getAlivePlayers();
+            
+            alivePlayers.forEach(player => {
+                playerVotes[player.id] = 0;
+            });
+        }
+        
+        // Update game status information
+        function updateGameStatus() {
+            if (!gameState) return;
+            
+            const gameStatusInfo = document.getElementById('game-status-info');
+            const alivePlayers = getAlivePlayers();
+            const votesRequired = Math.floor(alivePlayers.length / 2) + 1;
+            const playersAboveThreshold = countPlayersAboveThreshold(votesRequired);
+            
+            gameStatusInfo.innerHTML = `
+                <div><strong>Current Phase:</strong> Voting Phase</div>
+                <div><strong>Round:</strong> ${gameState.currentRound}</div>
+                <div><strong>Players Alive:</strong> ${alivePlayers.length} / ${gameState.players.length}</div>
+                <div><strong>Players Above Vote Threshold:</strong> ${playersAboveThreshold}</div>
+            `;
+            
+            // Update the voting information panel
+            document.getElementById('players-alive-count').textContent = alivePlayers.length;
+            document.getElementById('votes-required').textContent = votesRequired;
+            document.getElementById('players-above-threshold').textContent = playersAboveThreshold;
+        }
+        
+        // Display players for voting
+        function displayVotingPlayers() {
+            if (!gameState || !gameState.players) return;
+            
+            const alivePlayers = getAlivePlayers();
+            const votingPlayersElement = document.getElementById('voting-players');
+            
+            // Sort players by sequence if available
+            const sortedPlayers = [...alivePlayers].sort((a, b) => {
+                const seqA = a.sequence !== undefined ? a.sequence : 9999;
+                const seqB = b.sequence !== undefined ? b.sequence : 9999;
+                return seqA - seqB;
+            });
+            
+            let playersHtml = ``;
+            
+            sortedPlayers.forEach(player => {
+                playersHtml += `
+                    <div class="player-card" data-player-id="${player.id}">
+                        <div class="player-image">
+                            <img src="${player.photo_url || 'images/default-avatar.svg'}" 
+                                 alt="${player.name}" 
+                                 onerror="this.src='images/default-avatar.svg'">
+                            <div class="vote-badge" id="vote-count-${player.id}">0</div>
+                            <div class="vote-controls">
+                                <button class="vote-btn vote-up" onclick="changeVote('${player.id}', 1)">+</button>
+                                <button class="vote-btn vote-down" onclick="changeVote('${player.id}', -1)">-</button>
+                            </div>
+                        </div>
+                        <div class="player-info">
+                            <h4>${player.name}</h4>
+                            ${player.sequence !== undefined ? `<small>#${player.sequence}</small>` : ''}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            votingPlayersElement.innerHTML = playersHtml;
+        }
+        
+        // Change vote count for a player
+        function changeVote(playerId, change) {
+            // Don't allow negative votes
+            if (playerVotes[playerId] + change < 0) {
+                return;
+            }
+            
+            playerVotes[playerId] += change;
+            
+            // Update the vote badge
+            const voteBadge = document.getElementById(`vote-count-${playerId}`);
+            if (voteBadge) {
+                voteBadge.textContent = playerVotes[playerId];
+                
+                // Update the badge color based on vote threshold
+                const alivePlayers = getAlivePlayers();
+                const votesRequired = Math.floor(alivePlayers.length / 2) + 1;
+                
+                if (playerVotes[playerId] >= votesRequired) {
+                    voteBadge.style.backgroundColor = 'var(--mafia-color, #f44336)';
+                } else {
+                    voteBadge.style.backgroundColor = 'var(--primary-color)';
+                }
+            }
+            
+            // Update voting information
+            const votesRequired = Math.floor(getAlivePlayers().length / 2) + 1;
+            const playersAboveThreshold = countPlayersAboveThreshold(votesRequired);
+            document.getElementById('players-above-threshold').textContent = playersAboveThreshold;
+        }
+        
+        // Count players above threshold
+        function countPlayersAboveThreshold(threshold) {
+            let count = 0;
+            
+            for (const playerId in playerVotes) {
+                if (playerVotes[playerId] >= threshold) {
+                    count++;
+                }
+            }
+            
+            return count;
+        }
+        
+        // Apply votes and proceed to defense or elimination
+        function applyVotes() {
+            const alivePlayers = getAlivePlayers();
+            const votesRequired = Math.floor(alivePlayers.length / 2) + 1;
+            
+            // Get players who passed the vote threshold
+            const defendantsArray = [];
+            
+            for (const playerId in playerVotes) {
+                if (playerVotes[playerId] >= votesRequired) {
+                    const player = gameState.players.find(p => p.id === playerId);
+                    if (player) {
+                        defendantsArray.push({
+                            id: player.id,
+                            name: player.name,
+                            votes: playerVotes[playerId]
+                        });
+                    }
+                }
+            }
+            
+            // Sort by votes (highest first)
+            defendantsArray.sort((a, b) => b.votes - a.votes);
+            
+            if (defendantsArray.length === 0) {
+                alert('No players received enough votes for elimination. Please vote again.');
+                return;
+            }
+            
+            // Set up defense state
+            const defenseState = {
+                defendants: defendantsArray,
+                currentDefendantIndex: -1,
+                selectedFinalPlayer: null,
+                finalVotingComplete: false
+            };
+            
+            // Save defense state to localStorage
+            localStorage.setItem('defenseState', JSON.stringify(defenseState));
+            
+            // Navigate to defense phase
+            window.location.href = 'voting-phase-defense.html';
+        }
+        
+        // Get alive players (those not in eliminatedPlayers array)
+        function getAlivePlayers() {
+            if (!gameState || !gameState.players) return [];
+            
+            // If eliminatedPlayers doesn't exist, initialize it
+            if (!gameState.eliminatedPlayers) {
+                gameState.eliminatedPlayers = [];
+            }
+            
+            // Return players who are not in the eliminatedPlayers array
+            return gameState.players.filter(player => 
+                !gameState.eliminatedPlayers.some(eliminated => eliminated.id === player.id)
+            );
+        }
+        
+        // Go to the next phase
+        function goToNextPhase() {
+            if (!gameState) return;
+            
+            // Update game state to next phase
+            gameState.gamePhase = 'night';
+            localStorage.setItem('gameState', JSON.stringify(gameState));
+            
+            // Redirect to the next phase page
+            window.location.href = 'night-phase.html';
+        }
+        
+        // Go to role assignments page
+        function goToRoleAssignments() {
+            window.location.href = 'role-assignments.html';
+        }
+        
+        // Reset the game and return to home
+        function resetGame() {
+            // Clear game state
+            localStorage.removeItem('gameState');
+            localStorage.removeItem('defenseState');
+            
+            // Redirect to home page
+            window.location.href = 'index.html';
+        }
+    </script>
 </body>
 </html> 

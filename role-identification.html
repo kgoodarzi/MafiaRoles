@@ -53,16 +53,6 @@
         .timer-danger .timer-bar {
             background-color: var(--mafia-color, #e53935);
         }
-        
-        #debug-log {
-            background-color: rgba(0,0,0,0.1);
-            border-radius: 5px;
-            padding: 10px;
-            height: 150px;
-            overflow-y: auto;
-            font-family: monospace;
-            font-size: 12px;
-        }
     </style>
 </head>
 <body class="dark-theme">
@@ -106,11 +96,6 @@
                         <button id="consort-action-btn" class="btn" style="width: 100%; margin-bottom: 10px;" onclick="showRoleAlert('consort')">Ask Consort to Show Like</button>
                     </div>
                 </div>
-
-                <div id="debug-log-section" style="margin-top:20px;padding:15px;border-radius:8px;background-color:var(--card-bg);border:1px solid var(--border-color);">
-                    <h3>Debug Log</h3>
-                    <div id="debug-log"></div>
-                </div>
                 
                 <div id="game-actions" class="game-actions" style="margin-top:20px;">
                     <button id="next-phase-btn" class="btn btn-primary" style="width: 100%; margin-bottom: 15px;" onclick="goToNextPage('day-phase.html')">Next Phase</button>
@@ -126,20 +111,9 @@
     </div>
 
     <script>
-        // Debug logging
-        function logDebug(message) {
-            const debugLog = document.getElementById('debug-log');
-            if (debugLog) {
-                const timestamp = new Date().toLocaleTimeString();
-                debugLog.innerHTML += `<div>[${timestamp}] ${message}</div>`;
-                debugLog.scrollTop = debugLog.scrollHeight;
-            }
-            console.log(message);
-        }
-        
         // Simple navigation
         function goToNextPage(page) {
-            logDebug(`Navigating to: ${page}`);
+            console.log(`Navigating to: ${page}`);
             window.location.href = page;
         }
         
@@ -182,9 +156,7 @@
         
         // Start timer
         function startTimer() {
-            logDebug('Start timer button clicked');
             if (isTimerRunning) {
-                logDebug('Timer is already running');
                 return;
             }
             
@@ -192,14 +164,11 @@
             document.getElementById('start-timer-btn').disabled = true;
             document.getElementById('pause-timer-btn').disabled = false;
             
-            logDebug(`Starting countdown from ${secondsRemaining} seconds`);
             timerInterval = setInterval(function() {
                 secondsRemaining--;
-                logDebug(`Timer tick: ${secondsRemaining} seconds remaining`);
                 updateTimerDisplay();
                 
                 if (secondsRemaining <= 0) {
-                    logDebug('Timer finished!');
                     clearInterval(timerInterval);
                     isTimerRunning = false;
                     document.getElementById('start-timer-btn').disabled = true;
@@ -211,19 +180,16 @@
         
         // Pause timer
         function pauseTimer() {
-            logDebug('Pause timer button clicked');
             if (!isTimerRunning) return;
             
             clearInterval(timerInterval);
             isTimerRunning = false;
             document.getElementById('start-timer-btn').disabled = false;
             document.getElementById('pause-timer-btn').disabled = true;
-            logDebug(`Timer paused at ${secondsRemaining} seconds`);
         }
         
         // Reset timer
         function resetTimer() {
-            logDebug('Reset timer button clicked');
             // Clear interval if running
             if (isTimerRunning) {
                 clearInterval(timerInterval);
@@ -237,30 +203,23 @@
             // Reset button states
             document.getElementById('start-timer-btn').disabled = false;
             document.getElementById('pause-timer-btn').disabled = true;
-            logDebug(`Timer reset to ${secondsRemaining} seconds`);
         }
         
         // Show Mafia team
         function showMafiaTeam() {
-            logDebug('Call Mafia Team button clicked');
             document.getElementById('mafia-actions').style.display = 'block';
             alert('Mafia team has been called');
-            logDebug('Showing Mafia role actions');
         }
         
         // Show role alert
         function showRoleAlert(roleId) {
-            logDebug(`Showing alert for role: ${roleId}`);
             alert(`${roleId.charAt(0).toUpperCase() + roleId.slice(1)} has been asked to show like`);
         }
         
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
-            logDebug('Role identification page loaded');
-            
             // Initialize timer display
             updateTimerDisplay();
-            logDebug('Timer initialized');
         });
     </script>
 </body>
