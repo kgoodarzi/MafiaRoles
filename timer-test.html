@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Timer Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        
+        .timer-display {
+            font-size: 3rem;
+            font-weight: bold;
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .timer-progress {
+            width: 100%;
+            height: 10px;
+            background-color: #ddd;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            overflow: hidden;
+        }
+        
+        .timer-bar {
+            height: 100%;
+            width: 100%;
+            background-color: #2196F3;
+            border-radius: 5px;
+            transition: width 1s linear;
+        }
+        
+        .timer-section.timer-warning .timer-bar {
+            background-color: #FF9800;
+        }
+        
+        .timer-section.timer-danger .timer-bar {
+            background-color: #F44336;
+        }
+        
+        button {
+            padding: 10px 15px;
+            margin: 5px;
+            cursor: pointer;
+        }
+        
+        .timer-controls {
+            display: flex;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>Timer Test Page</h1>
+    
+    <div id="timer-section" class="timer-section">
+        <h2>Timer</h2>
+        <div class="timer-display" id="timer-display">30</div>
+        <div class="timer-progress">
+            <div class="timer-bar" id="timer-bar"></div>
+        </div>
+        <div class="timer-controls">
+            <button id="start-timer-btn">Start</button>
+            <button id="pause-timer-btn" disabled>Pause</button>
+            <button id="reset-timer-btn">Reset</button>
+        </div>
+    </div>
+    
+    <div style="margin-top: 20px;">
+        <h3>Debug Log:</h3>
+        <pre id="debug-log" style="background: #f0f0f0; padding: 10px; height: 200px; overflow-y: auto;"></pre>
+    </div>
+    
+    <script>
+        // Debugging helper
+        function log(message) {
+            const debugLog = document.getElementById('debug-log');
+            debugLog.textContent += message + '\n';
+            debugLog.scrollTop = debugLog.scrollHeight;
+            console.log(message);
+        }
+        
+        // Timer variables
+        let timerInterval = null;
+        let secondsRemaining = 30;
+        let isTimerRunning = false;
+        let initialTimerValue = 30;
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            log('Timer test page loaded');
+            
+            // Setup event listeners
+            document.getElementById('start-timer-btn').addEventListener('click', startTimer);
+            document.getElementById('pause-timer-btn').addEventListener('click', pauseTimer);
+            document.getElementById('reset-timer-btn').addEventListener('click', resetTimer);
+            
+            // Initialize display
+            updateTimerDisplay();
+        });
+        
+        function updateTimerDisplay() {
+            const timerDisplay = document.getElementById('timer-display');
+            const timerSection = document.getElementById('timer-section');
+            const timerBar = document.getElementById('timer-bar');
+            
+            // Update timer text
+            timerDisplay.textContent = secondsRemaining;
+            
+            // Calculate progress percentage
+            const progressPercentage = (secondsRemaining / initialTimerValue) * 100;
+            timerBar.style.width = `${progressPercentage}%`;
+            
+            // Update timer appearance based on time remaining
+            if (secondsRemaining <= 5) {
+                // Danger zone - less than 5 seconds
+                timerDisplay.style.color = '#F44336';
+                timerSection.classList.remove('timer-warning');
+                timerSection.classList.add('timer-danger');
+            } else if (secondsRemaining <= 10) {
+                // Warning zone - less than 10 seconds
+                timerDisplay.style.color = '#FF9800';
+                timerSection.classList.add('timer-warning');
+                timerSection.classList.remove('timer-danger');
+            } else {
+                // Normal zone
+                timerDisplay.style.color = '';
+                timerSection.classList.remove('timer-warning', 'timer-danger');
+            }
+        }
+        
+        function startTimer() {
+            log('Start timer clicked');
+            if (isTimerRunning) {
+                log('Timer is already running');
+                return;
+            }
+            
+            isTimerRunning = true;
+            document.getElementById('start-timer-btn').disabled = true;
+            document.getElementById('pause-timer-btn').disabled = false;
+            
+            log('Starting countdown from ' + secondsRemaining + ' seconds');
+            timerInterval = setInterval(function() {
+                secondsRemaining--;
+                log('Tick: ' + secondsRemaining + ' seconds remaining');
+                updateTimerDisplay();
+                
+                if (secondsRemaining <= 0) {
+                    log('Timer finished!');
+                    clearInterval(timerInterval);
+                    isTimerRunning = false;
+                    document.getElementById('start-timer-btn').disabled = true;
+                    document.getElementById('pause-timer-btn').disabled = true;
+                    alert("Time's up!");
+                }
+            }, 1000);
+        }
+        
+        function pauseTimer() {
+            log('Pause timer clicked');
+            if (!isTimerRunning) return;
+            
+            clearInterval(timerInterval);
+            isTimerRunning = false;
+            document.getElementById('start-timer-btn').disabled = false;
+            document.getElementById('pause-timer-btn').disabled = true;
+            log('Timer paused at ' + secondsRemaining + ' seconds');
+        }
+        
+        function resetTimer() {
+            log('Reset timer clicked');
+            // Clear interval if running
+            if (isTimerRunning) {
+                clearInterval(timerInterval);
+                isTimerRunning = false;
+            }
+            
+            // Reset to initial time
+            secondsRemaining = initialTimerValue;
+            updateTimerDisplay();
+            
+            // Reset button states
+            document.getElementById('start-timer-btn').disabled = false;
+            document.getElementById('pause-timer-btn').disabled = true;
+            log('Timer reset to ' + secondsRemaining + ' seconds');
+        }
+    </script>
+</body>
+</html> 

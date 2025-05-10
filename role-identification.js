@@ -6,12 +6,8 @@ let isTimerRunning = false;
 let initialTimerValue = 30; // Store initial value for progress bar calculation
 
 // Initialize page when DOM is loaded
-document.addEventListener('DOMContentLoaded', async function() {
+document.addEventListener('DOMContentLoaded', function() {
     console.log("Role Identification page loaded");
-    
-    // Wait for database manager to initialize
-    console.log("Waiting for database initialization...");
-    await waitForDatabaseInit();
     
     // Load game state from localStorage
     loadGameState();
@@ -25,17 +21,48 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
     
     // Set up event listeners
-    document.getElementById('next-phase-btn').addEventListener('click', goToNextPhase);
-    document.getElementById('show-roles-btn').addEventListener('click', goToRoleAssignments);
-    document.getElementById('reset-btn').addEventListener('click', resetGame);
+    const nextPhaseBtn = document.getElementById('next-phase-btn');
+    nextPhaseBtn.addEventListener('click', function() {
+        console.log("Next phase button clicked");
+        goToNextPhase();
+    });
+    
+    document.getElementById('show-roles-btn').addEventListener('click', function() {
+        console.log("Show roles button clicked");
+        goToRoleAssignments();
+    });
+    
+    document.getElementById('reset-btn').addEventListener('click', function() {
+        console.log("Reset button clicked");
+        resetGame();
+    });
     
     // Timer button event listeners
-    document.getElementById('start-timer-btn').addEventListener('click', startTimer);
-    document.getElementById('pause-timer-btn').addEventListener('click', pauseTimer);
-    document.getElementById('reset-timer-btn').addEventListener('click', resetTimer);
+    const startTimerBtn = document.getElementById('start-timer-btn');
+    startTimerBtn.addEventListener('click', function() {
+        console.log("Start timer button clicked");
+        startTimer();
+    });
+    
+    const pauseTimerBtn = document.getElementById('pause-timer-btn');
+    pauseTimerBtn.addEventListener('click', function() {
+        console.log("Pause timer button clicked");
+        pauseTimer();
+    });
+    
+    const resetTimerBtn = document.getElementById('reset-timer-btn');
+    resetTimerBtn.addEventListener('click', function() {
+        console.log("Reset timer button clicked");
+        resetTimer();
+    });
+    
+    // Debug the initial button state
+    console.log("Start timer button disabled:", startTimerBtn.disabled);
+    console.log("Next phase button disabled:", nextPhaseBtn.disabled);
     
     // Event listener for mafia team button
     document.getElementById('call-mafia-btn').addEventListener('click', function() {
+        console.log("Call mafia button clicked");
         highlightRoleGroup('mafia');
         // Show mafia role action buttons
         document.getElementById('mafia-actions').style.display = 'block';
@@ -43,26 +70,10 @@ document.addEventListener('DOMContentLoaded', async function() {
     
     // Event listeners for mafia role action buttons
     setupMafiaRoleButtons();
+    
+    // Initialize timer display
+    updateTimerDisplay();
 });
-
-// Wait for database initialization
-async function waitForDatabaseInit() {
-    const maxAttempts = 10;
-    let attempts = 0;
-    
-    while (attempts < maxAttempts) {
-        if (window.dbManager && window.dbManager.initialized) {
-            console.log("Database manager initialized");
-            return true;
-        }
-        
-        await new Promise(resolve => setTimeout(resolve, 500));
-        attempts++;
-    }
-    
-    console.error("Database manager initialization timed out");
-    return false;
-}
 
 // Load game state from localStorage
 function loadGameState() {
@@ -253,17 +264,25 @@ function updateTimerDisplay() {
 }
 
 function startTimer() {
-    if (isTimerRunning) return;
+    console.log("startTimer function called");
+    if (isTimerRunning) {
+        console.log("Timer is already running, returning");
+        return;
+    }
     
+    console.log("Setting isTimerRunning to true");
     isTimerRunning = true;
     document.getElementById('start-timer-btn').disabled = true;
     document.getElementById('pause-timer-btn').disabled = false;
     
+    console.log("Starting interval");
     timerInterval = setInterval(function() {
+        console.log("Timer tick, seconds remaining:", secondsRemaining);
         secondsRemaining--;
         updateTimerDisplay();
         
         if (secondsRemaining <= 0) {
+            console.log("Timer reached zero");
             clearInterval(timerInterval);
             isTimerRunning = false;
             document.getElementById('start-timer-btn').disabled = true;
@@ -277,20 +296,29 @@ function startTimer() {
             }
         }
     }, 1000);
+    console.log("Interval ID:", timerInterval);
 }
 
 function pauseTimer() {
-    if (!isTimerRunning) return;
+    console.log("pauseTimer function called");
+    if (!isTimerRunning) {
+        console.log("Timer is not running, returning");
+        return;
+    }
     
+    console.log("Clearing interval:", timerInterval);
     clearInterval(timerInterval);
     isTimerRunning = false;
     document.getElementById('start-timer-btn').disabled = false;
     document.getElementById('pause-timer-btn').disabled = true;
+    console.log("Timer paused at", secondsRemaining, "seconds");
 }
 
 function resetTimer() {
+    console.log("resetTimer function called");
     // Clear interval if running
     if (isTimerRunning) {
+        console.log("Clearing running timer interval");
         clearInterval(timerInterval);
         isTimerRunning = false;
     }
@@ -301,6 +329,7 @@ function resetTimer() {
         : 30;
     initialTimerValue = secondsRemaining;
     
+    console.log("Timer reset to", secondsRemaining, "seconds");
     updateTimerDisplay();
     
     // Reset button states
@@ -310,26 +339,42 @@ function resetTimer() {
 
 // Go to the next phase
 function goToNextPhase() {
-    if (!gameState) return;
+    console.log("goToNextPhase function called");
+    if (!gameState) {
+        console.error("No game state available");
+        return;
+    }
     
-    // Update game state to next phase
-    gameState.gamePhase = 'day';
-    localStorage.setItem('gameState', JSON.stringify(gameState));
+    console.log("Current game phase:", gameState.gamePhase);
     
-    // Redirect to the next phase page
-    window.location.href = 'day-phase.html';
+    try {
+        // Update game state to next phase
+        gameState.gamePhase = 'day';
+        localStorage.setItem('gameState', JSON.stringify(gameState));
+        console.log("Game state updated to day phase");
+        
+        // Redirect to the next phase page
+        console.log("Redirecting to day-phase.html");
+        window.location.href = 'day-phase.html';
+    } catch (error) {
+        console.error("Error navigating to next phase:", error);
+        alert("Error navigating to next phase: " + error.message);
+    }
 }
 
 // Go to role assignments page
 function goToRoleAssignments() {
+    console.log("Redirecting to role-assignments.html");
     window.location.href = 'role-assignments.html';
 }
 
 // Reset the game and return to home
 function resetGame() {
+    console.log("Resetting game");
     // Clear game state
     localStorage.removeItem('gameState');
     
     // Redirect to home page
+    console.log("Redirecting to index.html");
     window.location.href = 'index.html';
 } 
