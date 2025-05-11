@@ -245,12 +245,17 @@ function proceedToGame() {
         return;
     }
     
-    // Set game phase to night and save
-    gameState.gamePhase = 'night';
+    // Set game phase to "introduction-day" and initialize round to 0
+    // Round 0 will be the introduction day with no actions
+    gameState.gamePhase = 'day';
+    gameState.currentRound = 0;
+    gameState.isIntroductionDay = true; // Flag to indicate this is the introduction day
+    
+    // Save the updated game state
     localStorage.setItem('gameState', JSON.stringify(gameState));
     
-    // Redirect to night phase
-    window.location.href = 'night-phase.html';
+    // Redirect to day phase for introductions
+    window.location.href = 'day-phase.html';
 }
 
 // Go to role assignments page

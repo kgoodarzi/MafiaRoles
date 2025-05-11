@@ -86,8 +86,46 @@ function loadGameState() {
             // Update page subtitle
             document.getElementById('night-phase-subtitle').textContent = `Night Phase - Round ${gameState.currentRound}`;
             
-            // Update game status display
-            updateGameStatus();
+            // Check if this is the first night after introduction day (round 0)
+            const isFirstNight = gameState.currentRound === 0;
+            if (isFirstNight) {
+                // This is the first night after introduction day, display message
+                document.getElementById('phase-info').innerHTML = `
+                    <div class="night-info">
+                        <h3>First Night - No Actions</h3>
+                        <p>This is the first night of the game. Players should be asleep. The Mafia members open their eyes to see each other, but no eliminations occur tonight.</p>
+                        <p>Click the "Reveal Results" button to continue to the first day.</p>
+                    </div>
+                `;
+                
+                // Disable all role action buttons
+                document.getElementById('mafia-action-btn').disabled = true;
+                document.getElementById('detective-action-btn').disabled = true;
+                document.getElementById('doctor-action-btn').disabled = true;
+                document.getElementById('special-action-btn').disabled = true;
+                document.getElementById('zodiac-action-btn').disabled = true;
+                
+                // Hide all role call sections
+                document.querySelectorAll('.night-call-section').forEach(section => {
+                    section.style.display = 'none';
+                });
+                
+                // Show only mafia recognition section
+                document.getElementById('mafia-call').style.display = 'block';
+                
+                // Update the mafia section text
+                document.getElementById('mafia-call').querySelector('h3').textContent = 'Mafia Recognition';
+                document.getElementById('mafia-call').querySelector('p').textContent = 'The Mafia members should open their eyes to see each other. No elimination occurs tonight.';
+                
+                // Hide the mafia action elements
+                const mafiaActionElements = document.getElementById('mafia-call').querySelectorAll('.role-call, .action-result');
+                mafiaActionElements.forEach(element => {
+                    element.style.display = 'none';
+                });
+            } else {
+                // Regular night, update game status display
+                updateGameStatus();
+            }
             
             // Initially disable next phase button until night results are shown
             document.getElementById('next-phase-btn').disabled = true;
@@ -305,17 +343,44 @@ function handleRoleAction(roleType) {
 
 // Reveal night results
 function revealNightResults() {
+    // Check if this is the first night (round 0) with no actions
+    if (gameState.currentRound === 0) {
+        // For first night, just enable the next phase button and show a simple message
+        document.getElementById('night-results').innerHTML = `
+            <div class="night-results">
+                <h3>First Night Results</h3>
+                <p>The Mafia members have seen each other. No eliminations occurred.</p>
+                <p>Click "Next Phase" to continue to the first day with voting.</p>
+            </div>
+        `;
+        
+        // Enable the next phase button
+        document.getElementById('next-phase-btn').disabled = false;
+        document.getElementById('reveal-results-btn').disabled = true;
+        
+        // Initialize night results for the gameState
+        gameState.nightResults = { deaths: [] };
+        localStorage.setItem('gameState', JSON.stringify(gameState));
+        
+        return;
+    }
+
+    // For regular nights (round > 0)
     // Check if any actions were taken
     if (Object.keys(nightActionResults).length === 0) {
         alert('No night actions were recorded.');
         return;
     }
     
-    // Determine night outcomes
-    // (In a real game, this would have complex logic for determining
-    // the interactions between mafia kills, doctor saves, etc.)
+    // Initialize night results if not already present
+    if (!gameState.nightResults) {
+        gameState.nightResults = { deaths: [] };
+    } else {
+        // Reset deaths from previous nights
+        gameState.nightResults.deaths = [];
+    }
     
-    // For this demo, we'll just show the actions taken
+    // Determine night outcomes
     const nightResultsElement = document.getElementById('night-results-content');
     let resultsHtml = `<div class="night-actions-summary">`;
     
@@ -329,29 +394,64 @@ function revealNightResults() {
             </div>
         `;
         
-        // Add the player to eliminatedPlayers in gameState
-        // (unless saved by the doctor)
-        const wasSaved = nightActionResults.doctor && 
-                          nightActionResults.doctor.targetId === target.targetId;
+        // Process mafia kill
+        const targetPlayer = gameState.players.find(p => p.id === target.targetId);
         
-        if (!wasSaved) {
-            if (!gameState.eliminatedPlayers) {
-                gameState.eliminatedPlayers = [];
+        // Check if the target is protected by the doctor
+        const isProtected = nightActionResults.doctor && 
+                           nightActionResults.doctor.targetId === target.targetId;
+        
+        // Check if the target is the Zodiac (immune to Mafia)
+        const isZodiac = targetPlayer && targetPlayer.role === 'zodiac';
+        
+        if (targetPlayer && !isProtected && !isZodiac) {
+            // Target is eliminated unless they are the bodyguard and the bodyguard action saved them
+            let isBodyguardSaved = false;
+            if (targetPlayer.role === 'bodyguard' && gameState.bomberAction && 
+                gameState.bomberAction.targetId === targetPlayer.id) {
+                // Bodyguard was targeted by a bomb but saved themselves
+                isBodyguardSaved = gameState.bodyguardAction && gameState.bodyguardAction.choice === 'help';
             }
             
-            // Check if already eliminated
-            if (!gameState.eliminatedPlayers.some(p => p.id === target.targetId)) {
-                const player = gameState.players.find(p => p.id === target.targetId);
-                if (player) {
+            if (!isBodyguardSaved) {
+                // Add to eliminated players if not already there
+                if (!gameState.eliminatedPlayers.some(p => p.id === targetPlayer.id)) {
                     gameState.eliminatedPlayers.push({
-                        id: player.id,
-                        name: player.name,
-                        role: player.role,
-                        eliminatedInRound: gameState.currentRound,
-                        eliminatedInPhase: 'night'
+                        id: targetPlayer.id,
+                        name: targetPlayer.name,
+                        role: targetPlayer.role,
+                        eliminatedRound: gameState.currentRound,
+                        eliminatedPhase: 'night',
+                        eliminatedBy: 'mafia'
                     });
+                    
+                    // Add to night results deaths
+                    gameState.nightResults.deaths.push({
+                        id: targetPlayer.id,
+                        name: targetPlayer.name,
+                        role: targetPlayer.role,
+                        eliminatedBy: 'mafia'
+                    });
+                    
+                    resultsHtml += `
+                        <div class="action-result danger">
+                            <h4>${targetPlayer.name} was eliminated by the Mafia!</h4>
+                        </div>
+                    `;
                 }
             }
+        } else if (isProtected) {
+            resultsHtml += `
+                <div class="action-result save">
+                    <h4>Doctor saved ${target.targetName} from elimination!</h4>
+                </div>
+            `;
+        } else if (isZodiac) {
+            resultsHtml += `
+                <div class="action-result warning">
+                    <h4>The Zodiac is immune to Mafia elimination!</h4>
+                </div>
+            `;
         }
     }
     
@@ -365,14 +465,19 @@ function revealNightResults() {
             </div>
         `;
         
-        // If doctor protected the mafia's target, show that
-        if (nightActionResults.mafia && 
-            nightActionResults.mafia.targetId === target.targetId) {
-            resultsHtml += `
-                <div class="action-result save">
-                    <h4>Doctor saved ${target.targetName} from elimination!</h4>
-                </div>
-            `;
+        // Handle doctor self-save counting
+        const doctorPlayer = gameState.players.find(p => p.role === 'doctor');
+        if (doctorPlayer && target.targetId === doctorPlayer.id) {
+            // Doctor saved themselves
+            if (gameState.doctorSelfSaves > 0) {
+                gameState.doctorSelfSaves--;
+                resultsHtml += `
+                    <div class="action-result warning">
+                        <h4>Doctor used a self-save!</h4>
+                        <p>Remaining self-saves: ${gameState.doctorSelfSaves}</p>
+                    </div>
+                `;
+            }
         }
     }
     
@@ -394,17 +499,6 @@ function revealNightResults() {
                 <h4>Detective investigated:</h4>
                 <p>${target.targetName}</p>
                 <p>Result: <strong>${investigationResult}</strong></p>
-            </div>
-        `;
-    }
-    
-    // Add other special actions if any
-    if (nightActionResults.special) {
-        const target = nightActionResults.special;
-        resultsHtml += `
-            <div class="action-result special">
-                <h4>Special ability was used on:</h4>
-                <p>${target.targetName}</p>
             </div>
         `;
     }
@@ -433,27 +527,24 @@ function revealNightResults() {
             // Find the Zodiac player to mark as eliminated
             const zodiacPlayer = gameState.players.find(p => p.role === 'zodiac');
             if (zodiacPlayer) {
-                // Check if eliminatedPlayers exists, if not create it
-                if (!gameState.eliminatedPlayers) {
-                    gameState.eliminatedPlayers = [];
-                }
-                
                 // Add Zodiac to eliminated players if not already there
-                const alreadyEliminated = gameState.eliminatedPlayers.some(
-                    p => p.id === zodiacPlayer.id
-                );
-                
-                if (!alreadyEliminated) {
+                if (!gameState.eliminatedPlayers.some(p => p.id === zodiacPlayer.id)) {
                     gameState.eliminatedPlayers.push({
                         id: zodiacPlayer.id,
                         name: zodiacPlayer.name,
                         role: 'zodiac',
-                        eliminatedBy: 'bodyguard',
-                        round: gameState.currentRound
+                        eliminatedRound: gameState.currentRound,
+                        eliminatedPhase: 'night',
+                        eliminatedBy: 'bodyguard'
                     });
                     
-                    // Save the updated game state
-                    localStorage.setItem('gameState', JSON.stringify(gameState));
+                    // Add to night results deaths
+                    gameState.nightResults.deaths.push({
+                        id: zodiacPlayer.id,
+                        name: zodiacPlayer.name,
+                        role: zodiacPlayer.role,
+                        eliminatedBy: 'bodyguard'
+                    });
                 }
             }
         } else {
@@ -467,38 +558,34 @@ function revealNightResults() {
                 `;
             } else {
                 // Target is eliminated (if not immune)
-                // Check if target is immune (Zodiac is immune to Mafia and Professional)
-                if (targetPlayer && (targetPlayer.role === 'professional' || targetPlayer.role === 'regular_mafia' || 
-                    targetPlayer.role === 'godfather' || targetPlayer.role === 'bomber' || 
-                    targetPlayer.role === 'magician')) {
-                    // Target was not eliminated
+                // Check if target is immune to Zodiac
+                if (targetPlayer && ['professional', 'regular_mafia', 'godfather', 
+                                    'bomber', 'magician'].includes(targetPlayer.role)) {
+                    // Target was not eliminated due to immunity
                     resultsHtml += `
                         <div class="action-result warning">
-                            <h4>${target.targetName} was not affected!</h4>
+                            <h4>${target.targetName} was not affected by Zodiac's attack!</h4>
                         </div>
                     `;
-                } else {
-                    // Check if eliminatedPlayers exists, if not create it
-                    if (!gameState.eliminatedPlayers) {
-                        gameState.eliminatedPlayers = [];
-                    }
-                    
+                } else if (targetPlayer) {
                     // Add target to eliminated players if not already there
-                    const alreadyEliminated = gameState.eliminatedPlayers.some(
-                        p => p.id === target.targetId
-                    );
-                    
-                    if (!alreadyEliminated && targetPlayer) {
+                    if (!gameState.eliminatedPlayers.some(p => p.id === targetPlayer.id)) {
                         gameState.eliminatedPlayers.push({
                             id: targetPlayer.id,
                             name: targetPlayer.name,
                             role: targetPlayer.role,
-                            eliminatedBy: 'zodiac',
-                            round: gameState.currentRound
+                            eliminatedRound: gameState.currentRound,
+                            eliminatedPhase: 'night',
+                            eliminatedBy: 'zodiac'
                         });
                         
-                        // Save the updated game state
-                        localStorage.setItem('gameState', JSON.stringify(gameState));
+                        // Add to night results deaths
+                        gameState.nightResults.deaths.push({
+                            id: targetPlayer.id,
+                            name: targetPlayer.name,
+                            role: targetPlayer.role,
+                            eliminatedBy: 'zodiac'
+                        });
                         
                         resultsHtml += `
                             <div class="action-result danger">
@@ -509,6 +596,17 @@ function revealNightResults() {
                 }
             }
         }
+    }
+    
+    // Add other special actions if any
+    if (nightActionResults.special) {
+        const target = nightActionResults.special;
+        resultsHtml += `
+            <div class="action-result special">
+                <h4>Special ability was used on:</h4>
+                <p>${target.targetName}</p>
+            </div>
+        `;
     }
     
     resultsHtml += `</div>`;

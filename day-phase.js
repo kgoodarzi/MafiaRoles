@@ -6,15 +6,17 @@ document.addEventListener('DOMContentLoaded', async function() {
     console.log("Day Phase page loaded");
     
     // Wait for database manager to initialize
-    console.log("Waiting for database initialization...");
-    await waitForDatabaseInit();
+    if (typeof waitForDatabaseInit === 'function') {
+        console.log("Waiting for database initialization...");
+        await waitForDatabaseInit();
+    }
     
     // Load game state from localStorage
     loadGameState();
     
     // Set up event listeners
-    document.getElementById('next-phase-btn').addEventListener('click', goToNextPhase);
     document.getElementById('discussion-timer-btn').addEventListener('click', startDiscussionTimer);
+    document.getElementById('next-phase-btn').addEventListener('click', goToNextPhase);
     document.getElementById('show-roles-btn').addEventListener('click', goToRoleAssignments);
     document.getElementById('reset-btn').addEventListener('click', resetGame);
 });
@@ -55,11 +57,47 @@ function loadGameState() {
             // Update page subtitle
             document.getElementById('day-phase-subtitle').textContent = `Day Phase - Round ${gameState.currentRound}`;
             
+            // Check for game-ending conditions
+            const gameEndResult = checkGameEndingConditions();
+            
+            if (gameEndResult.gameOver) {
+                // Game has ended, redirect to the game over page or show end game dialog
+                gameState.gameOver = true;
+                gameState.winningTeam = gameEndResult.winningTeam;
+                gameState.endReason = gameEndResult.reason;
+                
+                // Save game state
+                localStorage.setItem('gameState', JSON.stringify(gameState));
+                
+                // If it's a Chaos Day (3 players with at least one Mafia/Zodiac), go to Chaos Day page
+                if (gameEndResult.chaosDay) {
+                    gameState.chaosDay = true;
+                    localStorage.setItem('gameState', JSON.stringify(gameState));
+                    window.location.href = 'chaos-day.html';
+                    return;
+                }
+                
+                // Otherwise, go to game over page
+                window.location.href = 'game-over.html';
+                return;
+            }
+            
             // Update game status display
             updateGameStatus();
             
+            // Display night events summary
+            displayNightEvents();
+            
             // Display alive players
             displayAlivePlayers();
+            
+            // Update Next Phase button text if there's a bomb
+            if (gameState.bomberAction && gameState.bomberAction.targetId && gameState.bomberAction.code) {
+                const nextPhaseBtn = document.getElementById('next-phase-btn');
+                if (nextPhaseBtn) {
+                    nextPhaseBtn.textContent = 'Proceed to Bomb Defusing';
+                }
+            }
         } else {
             console.warn("No game state found in localStorage");
             document.getElementById('phase-info').innerHTML = `
@@ -95,6 +133,19 @@ function updateGameStatus() {
         <div><strong>Round:</strong> ${gameState.currentRound}</div>
         <div><strong>Players Alive:</strong> ${getAlivePlayers().length} / ${gameState.players.length}</div>
     `;
+    
+    // Add bomb info if there's a bomb placed
+    if (gameState.bomberAction && gameState.bomberAction.targetId && gameState.bomberAction.code) {
+        const targetPlayer = gameState.players.find(p => p.id === gameState.bomberAction.targetId);
+        if (targetPlayer) {
+            gameStatusInfo.innerHTML += `
+                <div style="margin-top: 10px; color: #ff4c4c;">
+                    <strong>⚠️ A bomb has been placed in front of ${targetPlayer.name}!</strong>
+                    <div>Bomb defusing will happen before voting.</div>
+                </div>
+            `;
+        }
+    }
 }
 
 // Display alive players
@@ -114,8 +165,16 @@ function displayAlivePlayers() {
     let playersHtml = `<h3>Alive Players</h3><div class="players-grid">`;
     
     sortedPlayers.forEach(player => {
+        // Check if this player has a bomb in front of them
+        const hasBomb = gameState.bomberAction && 
+                      gameState.bomberAction.targetId === player.id;
+        
+        const bombIndicator = hasBomb ? 
+            `<div style="position: absolute; top: -10px; right: -10px; background-color: #ff4c4c; color: white; border-radius: 50%; width: 25px; height: 25px; display: flex; align-items: center; justify-content: center; font-weight: bold;">💣</div>` : '';
+        
         playersHtml += `
-            <div class="player-card small">
+            <div class="player-card small position-relative">
+                ${bombIndicator}
                 <div class="player-image">
                     <img src="${player.photo_url || 'images/default-avatar.svg'}" 
                          alt="${player.name}" 
@@ -133,6 +192,43 @@ function displayAlivePlayers() {
     playersStatusElement.innerHTML = playersHtml;
 }
 
+// Display summary of night events
+function displayNightEvents() {
+    if (!gameState || !gameState.nightResults) return;
+    
+    const nightEventsElement = document.getElementById('night-events');
+    if (!nightEventsElement) return;
+    
+    // Skip displaying night events during introduction day (round 0)
+    if (gameState.isIntroductionDay || gameState.currentRound === 0) {
+        nightEventsElement.innerHTML = `
+            <h3>Introduction Day</h3>
+            <p>This is the introduction day. Players should introduce themselves and get to know each other.</p>
+            <p>No night actions have occurred yet.</p>
+        `;
+        return;
+    }
+    
+    let eventsHtml = `<h3>Night Events</h3>`;
+    
+    // Show deaths
+    if (gameState.nightResults.deaths && gameState.nightResults.deaths.length > 0) {
+        eventsHtml += `<div class="night-deaths">`;
+        gameState.nightResults.deaths.forEach(death => {
+            eventsHtml += `
+                <div class="death-report">
+                    <h4>${death.name} was eliminated during the night</h4>
+                </div>
+            `;
+        });
+        eventsHtml += `</div>`;
+    } else {
+        eventsHtml += `<p>No players were eliminated during the night.</p>`;
+    }
+    
+    nightEventsElement.innerHTML = eventsHtml;
+}
+
 // Get alive players (those not in eliminatedPlayers array)
 function getAlivePlayers() {
     if (!gameState || !gameState.players) return [];
@@ -148,11 +244,133 @@ function getAlivePlayers() {
     );
 }
 
+// Check for game-ending conditions
+function checkGameEndingConditions() {
+    const alivePlayers = getAlivePlayers();
+    
+    // Get counts of each team
+    const mafiaCount = alivePlayers.filter(p => 
+        ['godfather', 'magician', 'bomber', 'regular_mafia'].includes(p.role)
+    ).length;
+    
+    const townCount = alivePlayers.filter(p => 
+        !['godfather', 'magician', 'bomber', 'regular_mafia', 'zodiac'].includes(p.role)
+    ).length;
+    
+    const zodiacAlive = alivePlayers.some(p => p.role === 'zodiac');
+    
+    // Check if zodiac exists in the game at all
+    const zodiacExists = gameState.players.some(p => p.role === 'zodiac');
+    
+    // 1. Only one player left
+    if (alivePlayers.length === 1) {
+        const lastPlayer = alivePlayers[0];
+        let winningTeam = 'town'; // Default
+        
+        // Determine winning team based on last player
+        if (['godfather', 'magician', 'bomber', 'regular_mafia'].includes(lastPlayer.role)) {
+            winningTeam = 'mafia';
+        } else if (lastPlayer.role === 'zodiac') {
+            winningTeam = 'zodiac';
+        }
+        
+        return {
+            gameOver: true,
+            winningTeam: winningTeam,
+            reason: `Only ${lastPlayer.name} (${capitalizeFirstLetter(lastPlayer.role)}) remains alive.`,
+            chaosDay: false
+        };
+    }
+    
+    // 2. Two players left
+    if (alivePlayers.length === 2) {
+        // If Zodiac is one of them, Zodiac wins
+        if (zodiacAlive) {
+            return {
+                gameOver: true,
+                winningTeam: 'zodiac',
+                reason: 'Zodiac has reached final 2 players and wins!',
+                chaosDay: false
+            };
+        }
+        
+        // If both are town, town wins
+        if (mafiaCount === 0) {
+            return {
+                gameOver: true,
+                winningTeam: 'town',
+                reason: 'Only townsfolk remain - Town wins!',
+                chaosDay: false
+            };
+        }
+        
+        // If at least one is Mafia, Mafia wins
+        if (mafiaCount > 0) {
+            return {
+                gameOver: true,
+                winningTeam: 'mafia',
+                reason: 'Mafia has reached parity with Town - Mafia wins!',
+                chaosDay: false
+            };
+        }
+    }
+    
+    // 3. Mafia equals or outnumbers town (and no Zodiac)
+    if (mafiaCount >= townCount && !zodiacAlive && alivePlayers.length > 2) {
+        return {
+            gameOver: true,
+            winningTeam: 'mafia',
+            reason: 'Mafia has reached parity with or outnumbers Town - Mafia wins!',
+            chaosDay: false
+        };
+    }
+    
+    // 4. Chaos Day - exactly 3 players with at least one Mafia or Zodiac
+    if (alivePlayers.length === 3 && (mafiaCount > 0 || zodiacAlive)) {
+        return {
+            gameOver: true,
+            winningTeam: 'undecided', // To be determined in Chaos Day
+            reason: 'Three players remain with at least one Mafia or Zodiac - Chaos Day!',
+            chaosDay: true
+        };
+    }
+    
+    // Game continues
+    return {
+        gameOver: false
+    };
+}
+
 // Go to the next phase
 function goToNextPhase() {
     if (!gameState) return;
     
-    // Update game state to next phase
+    // Check if there's a bomb to defuse first
+    if (gameState.bomberAction && gameState.bomberAction.targetId && gameState.bomberAction.code) {
+        console.log("Bomb detected, redirecting to bomb defuse page before voting...");
+        window.location.href = 'bomb-defuse.html';
+        return;
+    }
+    
+    // Handle introduction day transition
+    if (gameState.isIntroductionDay || gameState.currentRound === 0) {
+        // After introduction day, proceed to night with no actions
+        gameState.gamePhase = 'night';
+        gameState.isIntroductionDay = false;
+        
+        // Initialize empty night results if not present
+        if (!gameState.nightResults) {
+            gameState.nightResults = { deaths: [] };
+        }
+        
+        localStorage.setItem('gameState', JSON.stringify(gameState));
+        
+        // Go to night phase with no actions
+        window.location.href = 'night-phase.html';
+        return;
+    }
+    
+    // If no bomb and not introduction day, go directly to voting phase
     gameState.gamePhase = 'voting';
     localStorage.setItem('gameState', JSON.stringify(gameState));
     
@@ -178,4 +396,9 @@ function resetGame() {
     
     // Redirect to home page
     window.location.href = 'index.html';
+}
+
+// Helper function to capitalize first letter of a string
+function capitalizeFirstLetter(string) {
+    return string.charAt(0).toUpperCase() + string.slice(1);
 } 
