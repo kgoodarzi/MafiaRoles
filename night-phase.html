@@ -224,6 +224,20 @@
             border-radius: 8px;
             background-color: var(--card-bg-darker, #222);
         }
+        
+        /* Button disabled styles */
+        button:disabled,
+        .btn:disabled,
+        .code-btn:disabled {
+            background-color: #666666 !important;
+            color: #999999 !important;
+            cursor: not-allowed !important;
+            opacity: 0.7 !important;
+            transform: none !important;
+            box-shadow: none !important;
+            pointer-events: none !important;
+            border-color: #666666 !important;
+        }
     </style>
 </head>
 <body class="dark-theme">
@@ -1691,6 +1705,11 @@
             const allPlayers = gameState.players || [];
             const alivePlayers = getAlivePlayers();
             
+            // Check if any Mafia members are alive
+            const hasAliveMafia = alivePlayers.some(p => 
+                ['godfather', 'regular_mafia', 'magician', 'bomber'].includes(p.role)
+            );
+            
             // Check if magician was in the original game setup
             const magicianExists = allPlayers.some(p => p.role === 'magician');
             const magicianAlive = alivePlayers.some(p => p.role === 'magician');
@@ -1698,6 +1717,30 @@
             // Check if bomber was in the original game setup
             const bomberExists = allPlayers.some(p => p.role === 'bomber');
             const bomberAlive = alivePlayers.some(p => p.role === 'bomber');
+            
+            // Godfather section - make inactive if no Mafia members are alive
+            const godfatherAction = document.getElementById('godfather-action');
+            if (godfatherAction) {
+                if (!hasAliveMafia) {
+                    // If no Mafia are alive, disable the godfather section
+                    godfatherAction.classList.add('inactive-role');
+                    // Add warning message if not already present
+                    if (!godfatherAction.querySelector('.no-mafia-indicator')) {
+                        const godfatherStatus = document.createElement('div');
+                        godfatherStatus.className = 'action-result warning no-mafia-indicator';
+                        godfatherStatus.innerHTML = '<p><strong>No Mafia members are alive. This action cannot be performed.</strong></p>';
+                        godfatherAction.appendChild(godfatherStatus);
+                    }
+                    
+                    // Disable Godfather player selection
+                    const godfatherPlayers = document.getElementById('godfather-players');
+                    if (godfatherPlayers) {
+                        godfatherPlayers.classList.add('disabled');
+                        godfatherPlayers.style.opacity = '0.5';
+                        godfatherPlayers.style.pointerEvents = 'none';
+                    }
+                }
+            }
             
             // Magician section
             const magicianAction = document.getElementById('magician-action');
@@ -1720,7 +1763,6 @@
             
             // Update Godfather section title based on inheritance
             const activeGodfather = getActiveGodfather();
-            const godfatherAction = document.getElementById('godfather-action');
             
             if (godfatherAction && activeGodfather) {
                 const godfatherHeader = godfatherAction.querySelector('h4');

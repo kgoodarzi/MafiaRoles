@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mafia Game - Chaos Day</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="dark-theme.css">
+    <!-- Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Supabase initialization -->
+    <script src="supabase-init.js"></script>
+    <!-- Database Manager -->
+    <script src="database.js"></script>
+    <!-- Roles JS -->
+    <script src="roles.js"></script>
+    <!-- Connection Status -->
+    <script src="connection-status.js"></script>
+    <style>
+        /* Timer specific styles */
+        .timer-container {
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .timer-display {
+            font-size: 2.5rem;
+            font-weight: bold;
+            text-align: center;
+            margin: 15px 0;
+            transition: color 0.3s ease;
+        }
+        
+        .timer-progress {
+            width: 100%;
+            height: 10px;
+            background-color: var(--border-color);
+            border-radius: 5px;
+            margin-bottom: 15px;
+            overflow: hidden;
+        }
+        
+        .timer-bar {
+            height: 100%;
+            width: 100%;
+            background-color: var(--primary-color);
+            border-radius: 5px;
+            transition: width 1s linear;
+        }
+        
+        .timer-warning .timer-bar {
+            background-color: var(--warning-color, #ff9800);
+        }
+        
+        .timer-danger .timer-bar {
+            background-color: var(--mafia-color, #e53935);
+        }
+        
+        .chaos-players {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            margin: 30px 0;
+        }
+        
+        .player-card {
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 3px 5px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            width: 200px;
+            margin: 10px;
+            padding: 15px;
+            position: relative;
+        }
+        
+        .player-image {
+            width: 150px;
+            height: 150px;
+            margin: 0 auto;
+            overflow: hidden;
+            border-radius: 8px;
+        }
+        
+        .player-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .player-info {
+            padding: 10px 5px;
+            text-align: center;
+        }
+        
+        .handshake-controls {
+            margin-top: 20px;
+            text-align: center;
+        }
+        
+        .handshake-btn {
+            margin: 5px;
+            width: 100%;
+        }
+        
+        .handshake-result {
+            display: none;
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+            font-weight: bold;
+        }
+        
+        .selected {
+            border: 3px solid var(--primary-color);
+        }
+        
+        .mutual-handshake {
+            border: 3px solid var(--success-color, #4caf50);
+        }
+        
+        .results-section {
+            display: none;
+            margin-top: 30px;
+            padding: 20px;
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .phase-info {
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .player-alive-indicator .status-dead {
+            background-color: var(--mafia-color, #e53935);
+        }
+        
+        /* Button disabled styles */
+        button:disabled,
+        .btn:disabled {
+            background-color: #666666 !important;
+            color: #999999 !important;
+            cursor: not-allowed !important;
+            opacity: 0.7 !important;
+            transform: none !important;
+            box-shadow: none !important;
+            pointer-events: none !important;
+            border-color: #666666 !important;
+        }
+    </style>
+</head>
+<body class="dark-theme">
+    <div id="connection-status"></div>
+    
+    <div class="container">
+        <header>
+            <h1>Chaos Day</h1>
+            <p id="chaos-day-subtitle">Final 3 Players Remain!</p>
+        </header>
+
+        <main>
+            <section id="chaos-day-section">
+                <div id="phase-info" class="phase-info">
+                    <h2>Chaos Day</h2>
+                    <p>The game has reached a critical moment with only 3 players left!</p>
+                    <p>You have 2 minutes to discuss, then each player must choose another player to shake hands with.</p>
+                    <p>If two townspeople shake hands, Town wins. If a townsperson shakes hands with a mafia, Mafia wins. If anyone shakes hands with Zodiac, Zodiac wins.</p>
+                </div>
+
+                <div id="timer-container" class="timer-container">
+                    <h3>Discussion Time</h3>
+                    <div class="timer-display" id="timer-display">120</div>
+                    <div class="timer-progress">
+                        <div class="timer-bar" id="timer-bar"></div>
+                    </div>
+                    <button id="start-timer-btn" class="btn btn-primary">Start Discussion</button>
+                </div>
+                
+                <div id="chaos-players" class="chaos-players">
+                    <!-- Players will be dynamically inserted here -->
+                </div>
+                
+                <div id="handshake-controls" style="display:none">
+                    <h3>Select a Player to Shake Hands With</h3>
+                    <p>Choose carefully, your selection will determine the winner!</p>
+                    <div id="handshake-buttons">
+                        <!-- Handshake buttons will be dynamically inserted here -->
+                    </div>
+                </div>
+                
+                <div id="results-section" class="results-section">
+                    <h2>Final Results</h2>
+                    <div id="results-content"></div>
+                    <button id="game-over-btn" class="btn btn-primary" style="margin-top:20px;">Game Over</button>
+                </div>
+                
+                <div id="game-actions" class="game-actions" style="margin-top:20px;">
+                    <button id="show-roles-btn" class="btn" style="width: 100%; margin-bottom: 15px;">Show Role Assignments</button>
+                    <button id="reset-btn" class="btn" style="width: 100%;">Back to Home</button>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>&copy; 2025 KRS Consulting Inc.</p>
+        </footer>
+    </div>
+
+    <script>
+        // Global variables
+        let gameState = null;
+        let chaosState = {
+            timerRunning: false,
+            discussionComplete: false,
+            playersReady: {},
+            handshakes: {},
+            winningTeam: null
+        };
+        let timerInterval = null;
+        let timeRemaining = 120; // 2 minutes
+        
+        // Initialize page when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log("Chaos Day page loaded");
+            
+            // Load game state from localStorage
+            loadGameState();
+            
+            // Set up event listeners
+            document.getElementById('start-timer-btn').addEventListener('click', toggleTimer);
+            document.getElementById('show-roles-btn').addEventListener('click', goToRoleAssignments);
+            document.getElementById('reset-btn').addEventListener('click', resetGame);
+            document.getElementById('game-over-btn').addEventListener('click', goToGameOver);
+        });
+        
+        // Load game state from localStorage
+        function loadGameState() {
+            try {
+                const storedGameState = localStorage.getItem('gameState');
+                if (storedGameState) {
+                    gameState = JSON.parse(storedGameState);
+                    console.log("Game state loaded:", gameState);
+                    
+                    // Verify this is a chaos day scenario
+                    if (!gameState.chaosDay) {
+                        showError("This is not a Chaos Day scenario. Redirecting to home...");
+                        setTimeout(() => { window.location.href = 'index.html'; }, 3000);
+                        return;
+                    }
+                    
+                    // Display the 3 remaining players
+                    displayRemainingPlayers();
+                } else {
+                    showError("No game state found. Redirecting to home...");
+                    setTimeout(() => { window.location.href = 'index.html'; }, 3000);
+                }
+            } catch (error) {
+                console.error("Error loading game state:", error);
+                showError(`Error loading game data: ${error.message}`);
+            }
+        }
+        
+        // Display the 3 remaining players
+        function displayRemainingPlayers() {
+            const alivePlayers = getAlivePlayers();
+            const playersContainer = document.getElementById('chaos-players');
+            playersContainer.innerHTML = '';
+            
+            if (alivePlayers.length !== 3) {
+                showError("Error: There should be exactly 3 players for Chaos Day.");
+                return;
+            }
+            
+            // Initialize handshake state for each player
+            alivePlayers.forEach(player => {
+                chaosState.playersReady[player.id] = false;
+                chaosState.handshakes[player.id] = null;
+            });
+            
+            // Create player cards
+            alivePlayers.forEach(player => {
+                const playerCard = document.createElement('div');
+                playerCard.className = 'player-card';
+                playerCard.dataset.playerId = player.id;
+                
+                const defaultImage = 'images/default-avatar.svg';
+                const imageUrl = player.photo_url || defaultImage;
+                
+                playerCard.innerHTML = `
+                    <div class="player-image">
+                        <img src="${imageUrl}" 
+                             alt="${player.name}" 
+                             onerror="this.src='${defaultImage}';">
+                    </div>
+                    <div class="player-info">
+                        <h4>${player.name}</h4>
+                        ${player.sequence !== undefined ? `<small>#${player.sequence}</small>` : ''}
+                    </div>
+                    <div class="handshake-result" id="handshake-result-${player.id}"></div>
+                `;
+                
+                playersContainer.appendChild(playerCard);
+            });
+        }
+        
+        // Toggle the discussion timer
+        function toggleTimer() {
+            const button = document.getElementById('start-timer-btn');
+            
+            if (!chaosState.timerRunning) {
+                // Start the timer
+                chaosState.timerRunning = true;
+                button.textContent = "End Discussion";
+                button.className = "btn btn-danger";
+                
+                startTimer();
+            } else {
+                // End the timer
+                endTimer();
+            }
+        }
+        
+        // Start the discussion timer
+        function startTimer() {
+            updateTimerDisplay();
+            
+            timerInterval = setInterval(function() {
+                timeRemaining--;
+                updateTimerDisplay();
+                
+                if (timeRemaining <= 0) {
+                    endTimer();
+                }
+            }, 1000);
+        }
+        
+        // End the discussion timer
+        function endTimer() {
+            clearInterval(timerInterval);
+            chaosState.timerRunning = false;
+            chaosState.discussionComplete = true;
+            
+            const button = document.getElementById('start-timer-btn');
+            button.textContent = "Discussion Complete";
+            button.className = "btn";
+            button.disabled = true;
+            
+            // Show handshake controls
+            showHandshakeControls();
+        }
+        
+        // Update the timer display
+        function updateTimerDisplay() {
+            const timerDisplay = document.getElementById('timer-display');
+            const timerBar = document.getElementById('timer-bar');
+            const timerContainer = document.getElementById('timer-container');
+            
+            // Update timer text
+            timerDisplay.textContent = timeRemaining;
+            
+            // Calculate progress percentage
+            const progressPercentage = (timeRemaining / 120) * 100;
+            timerBar.style.width = `${progressPercentage}%`;
+            
+            // Update timer appearance based on time remaining
+            if (timeRemaining <= 30) {
+                timerContainer.className = 'timer-container timer-danger';
+                timerDisplay.style.color = 'var(--mafia-color, #e53935)';
+            } else if (timeRemaining <= 60) {
+                timerContainer.className = 'timer-container timer-warning';
+                timerDisplay.style.color = 'var(--warning-color, #ff9800)';
+            } else {
+                timerContainer.className = 'timer-container';
+                timerDisplay.style.color = '';
+            }
+        }
+        
+        // Show handshake controls
+        function showHandshakeControls() {
+            const handshakeControls = document.getElementById('handshake-controls');
+            handshakeControls.style.display = 'block';
+            
+            const alivePlayers = getAlivePlayers();
+            const handshakeButtons = document.getElementById('handshake-buttons');
+            handshakeButtons.innerHTML = '';
+            
+            // Create handshake buttons for each player
+            alivePlayers.forEach(playerA => {
+                const handshakeDiv = document.createElement('div');
+                handshakeDiv.className = 'handshake-player-section';
+                handshakeDiv.innerHTML = `<h4>${playerA.name}'s Selection:</h4>`;
+                
+                const buttonContainer = document.createElement('div');
+                
+                alivePlayers.forEach(playerB => {
+                    // Players can't shake hands with themselves
+                    if (playerA.id === playerB.id) return;
+                    
+                    const button = document.createElement('button');
+                    button.className = 'btn handshake-btn';
+                    button.dataset.fromPlayer = playerA.id;
+                    button.dataset.toPlayer = playerB.id;
+                    button.textContent = `Shake hands with ${playerB.name}`;
+                    
+                    button.addEventListener('click', function() {
+                        selectHandshake(playerA.id, playerB.id);
+                    });
+                    
+                    buttonContainer.appendChild(button);
+                });
+                
+                handshakeDiv.appendChild(buttonContainer);
+                handshakeButtons.appendChild(handshakeDiv);
+            });
+        }
+        
+        // Select a handshake
+        function selectHandshake(fromPlayerId, toPlayerId) {
+            console.log(`${fromPlayerId} wants to shake hands with ${toPlayerId}`);
+            
+            // Record the handshake
+            chaosState.handshakes[fromPlayerId] = toPlayerId;
+            chaosState.playersReady[fromPlayerId] = true;
+            
+            // Highlight the selected player card
+            const buttons = document.querySelectorAll(`button[data-from-player="${fromPlayerId}"]`);
+            buttons.forEach(button => {
+                button.disabled = true;
+                if (button.dataset.toPlayer === toPlayerId) {
+                    button.classList.add('selected');
+                }
+            });
+            
+            // Visual feedback for the selection
+            const fromPlayerCard = document.querySelector(`.player-card[data-player-id="${fromPlayerId}"]`);
+            const toPlayerCard = document.querySelector(`.player-card[data-player-id="${toPlayerId}"]`);
+            
+            if (fromPlayerCard && toPlayerCard) {
+                const resultElement = document.getElementById(`handshake-result-${fromPlayerId}`);
+                resultElement.textContent = `Selected: ${getPlayerName(toPlayerId)}`;
+                resultElement.style.display = 'block';
+            }
+            
+            // Check if all players have made their selections
+            checkAllSelectionsComplete();
+        }
+        
+        // Check if all players have made their handshake selections
+        function checkAllSelectionsComplete() {
+            const alivePlayers = getAlivePlayers();
+            const allReady = alivePlayers.every(player => chaosState.playersReady[player.id]);
+            
+            if (allReady) {
+                // All players have made their selections, determine the winner
+                determineWinner();
+            }
+        }
+        
+        // Determine the winner based on handshakes
+        function determineWinner() {
+            const alivePlayers = getAlivePlayers();
+            let mutualHandshakes = [];
+            
+            // Find mutual handshakes
+            alivePlayers.forEach(playerA => {
+                alivePlayers.forEach(playerB => {
+                    if (playerA.id !== playerB.id) {
+                        // Check if they chose each other
+                        if (chaosState.handshakes[playerA.id] === playerB.id && 
+                            chaosState.handshakes[playerB.id] === playerA.id) {
+                            mutualHandshakes.push({
+                                player1: playerA,
+                                player2: playerB
+                            });
+                        }
+                    }
+                });
+            });
+            
+            // Determine the winner
+            let winningTeam = null;
+            let winReason = "";
+            
+            if (mutualHandshakes.length > 0) {
+                // Process mutual handshakes
+                for (const handshake of mutualHandshakes) {
+                    // Highlight mutual handshake visually
+                    const player1Card = document.querySelector(`.player-card[data-player-id="${handshake.player1.id}"]`);
+                    const player2Card = document.querySelector(`.player-card[data-player-id="${handshake.player2.id}"]`);
+                    
+                    if (player1Card && player2Card) {
+                        player1Card.classList.add('mutual-handshake');
+                        player2Card.classList.add('mutual-handshake');
+                    }
+                    
+                    // Check roles for winning conditions
+                    const player1IsMafia = ['godfather', 'magician', 'bomber', 'regular_mafia'].includes(handshake.player1.role);
+                    const player2IsMafia = ['godfather', 'magician', 'bomber', 'regular_mafia'].includes(handshake.player2.role);
+                    const player1IsZodiac = handshake.player1.role === 'zodiac';
+                    const player2IsZodiac = handshake.player2.role === 'zodiac';
+                    
+                    // Zodiac wins if anyone shakes hands with them
+                    if (player1IsZodiac || player2IsZodiac) {
+                        winningTeam = 'zodiac';
+                        winReason = `${getPlayerName(player1IsZodiac ? handshake.player1.id : handshake.player2.id)} (Zodiac) received a handshake and wins!`;
+                        break;
+                    }
+                    // If town shakes hands with mafia, mafia wins
+                    else if ((player1IsMafia && !player2IsMafia) || (!player1IsMafia && player2IsMafia)) {
+                        winningTeam = 'mafia';
+                        winReason = `A townsperson shook hands with a Mafia member - Mafia wins!`;
+                        break;
+                    }
+                    // If two town shake hands, town wins
+                    else if (!player1IsMafia && !player2IsMafia) {
+                        winningTeam = 'town';
+                        winReason = `Two townspeople shook hands - Town wins!`;
+                        break;
+                    }
+                    // If two mafia shake hands
+                    else if (player1IsMafia && player2IsMafia) {
+                        winningTeam = 'mafia';
+                        winReason = `Two Mafia members shook hands - Mafia wins!`;
+                        break;
+                    }
+                }
+            } else {
+                // No mutual handshakes, use fallback determination
+                // Check if anyone selected Zodiac
+                const zodiacPlayer = alivePlayers.find(p => p.role === 'zodiac');
+                
+                if (zodiacPlayer) {
+                    // Check if anyone selected Zodiac
+                    const someoneSelectedZodiac = alivePlayers.some(p => 
+                        chaosState.handshakes[p.id] === zodiacPlayer.id
+                    );
+                    
+                    if (someoneSelectedZodiac) {
+                        winningTeam = 'zodiac';
+                        winReason = `${getPlayerName(zodiacPlayer.id)} (Zodiac) received a handshake and wins!`;
+                    }
+                }
+                
+                // If Zodiac didn't win, default to Mafia
+                if (!winningTeam) {
+                    winningTeam = 'mafia';
+                    winReason = 'No mutual handshakes occurred - Mafia wins by default!';
+                }
+            }
+            
+            // Display the results
+            chaosState.winningTeam = winningTeam;
+            displayResults(winningTeam, winReason);
+            
+            // Update game state
+            gameState.gameOver = true;
+            gameState.winningTeam = winningTeam;
+            gameState.endReason = winReason;
+            localStorage.setItem('gameState', JSON.stringify(gameState));
+        }
+        
+        // Display the final results
+        function displayResults(winningTeam, reason) {
+            const resultsSection = document.getElementById('results-section');
+            const resultsContent = document.getElementById('results-content');
+            
+            let teamColor = '';
+            switch(winningTeam) {
+                case 'mafia':
+                    teamColor = 'var(--mafia-color, #e53935)';
+                    break;
+                case 'town':
+                    teamColor = 'var(--town-color, #4caf50)';
+                    break;
+                case 'zodiac':
+                    teamColor = 'var(--zodiac-color, #673ab7)';
+                    break;
+            }
+            
+            resultsContent.innerHTML = `
+                <h3 style="color:${teamColor}">${capitalizeFirstLetter(winningTeam)} Wins!</h3>
+                <p>${reason}</p>
+                <div class="player-roles" style="margin-top:20px;">
+                    <h4>Player Roles:</h4>
+                    <ul style="list-style-type:none;padding:0;">
+                        ${getAlivePlayers().map(player => `
+                            <li style="margin:10px 0;font-weight:bold;">
+                                ${player.name}: ${capitalizeFirstLetter(player.role)}
+                            </li>
+                        `).join('')}
+                    </ul>
+                </div>
+            `;
+            
+            resultsSection.style.display = 'block';
+        }
+        
+        // Go to the game over page
+        function goToGameOver() {
+            window.location.href = 'game-over.html';
+        }
+        
+        // Go to role assignments page
+        function goToRoleAssignments() {
+            window.location.href = 'role-assignments.html';
+        }
+        
+        // Reset the game and return to home
+        function resetGame() {
+            // Clear game state
+            localStorage.removeItem('gameState');
+            
+            // Redirect to home page
+            window.location.href = 'index.html';
+        }
+        
+        // Get alive players (those not in eliminatedPlayers array)
+        function getAlivePlayers() {
+            if (!gameState || !gameState.players) return [];
+            
+            // If eliminatedPlayers doesn't exist, initialize it
+            if (!gameState.eliminatedPlayers) {
+                gameState.eliminatedPlayers = [];
+            }
+            
+            // Return players who are not in the eliminatedPlayers array
+            return gameState.players.filter(player => 
+                !gameState.eliminatedPlayers.some(eliminated => eliminated.id === player.id)
+            );
+        }
+        
+        // Get player name by ID
+        function getPlayerName(playerId) {
+            const player = gameState.players.find(p => p.id === playerId);
+            return player ? player.name : 'Unknown Player';
+        }
+        
+        // Show error message
+        function showError(message) {
+            document.getElementById('phase-info').innerHTML = `
+                <div class="error-message">
+                    <h3>Error</h3>
+                    <p>${message}</p>
+                </div>
+            `;
+        }
+        
+        // Helper function to capitalize first letter of a string
+        function capitalizeFirstLetter(string) {
+            return string.charAt(0).toUpperCase() + string.slice(1);
+        }
+    </script>
+</body>
+</html> 

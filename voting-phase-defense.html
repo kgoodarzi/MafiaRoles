@@ -68,28 +68,37 @@
             max-width: 300px;
         }
         
+        .defense-player .player-image {
+            position: relative;
+            width: 150px;
+            height: 150px;
+            margin: 0 auto;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
         .defense-player .player-image img {
-            width: 100px;
-            height: 100px;
-            border-radius: 50%;
+            width: 100%;
+            height: 100%;
             object-fit: cover;
         }
         
         .final-vote-grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 20px;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 25px;
             margin-top: 20px;
         }
         
         .final-vote-player {
             background-color: var(--card-bg);
-            border: 1px solid var(--border-color);
             border-radius: 8px;
-            padding: 15px;
             text-align: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            overflow: visible;
+            box-shadow: 0 3px 5px rgba(0,0,0,0.1);
+            margin: 10px;
+            padding: 8px;
         }
         
         .final-vote-player.selected {
@@ -97,11 +106,121 @@
             border-color: var(--primary-color);
         }
         
+        .final-vote-player .player-image {
+            position: relative;
+            width: 150px;
+            height: 150px;
+            overflow: hidden;
+            margin: 0 auto;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .final-vote-player .player-image:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
         .final-vote-player .player-image img {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
+            width: 100%;
+            height: 100%;
             object-fit: cover;
+        }
+        
+        .final-vote-player .player-info {
+            padding: 10px 5px;
+            text-align: center;
+        }
+        
+        .vote-badge {
+            position: absolute;
+            top: 50px;
+            right: -63px;
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+            z-index: 5;
+        }
+        
+        .vote-controls {
+            position: absolute;
+            top: 35px;
+            right: -23px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 5;
+        }
+        
+        .vote-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 2px solid white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            transition: all 0.2s ease;
+            z-index: 10;
+        }
+        
+        .vote-up {
+            background-color: var(--success-color, #4caf50);
+            color: white;
+        }
+        
+        .vote-down {
+            background-color: var(--mafia-color, #f44336);
+            color: white;
+        }
+        
+        .vote-btn:hover {
+            transform: scale(1.1);
+        }
+        
+        .vote-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .vote-btn:disabled,
+        .vote-btn[disabled] {
+            background-color: #666666 !important;
+            color: #999999 !important;
+            cursor: not-allowed !important;
+            opacity: 0.7 !important;
+            transform: none !important;
+            box-shadow: none !important;
+            pointer-events: none !important;
+            border-color: #666666 !important;
+        }
+        
+        .position-relative {
+            position: relative;
+        }
+        
+        .player-card.selected {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        /* Eliminated player display */
+        .eliminated-player {
+            margin-top: 20px;
+            text-align: center;
         }
     </style>
 </head>
@@ -144,21 +263,27 @@
                     <div class="timer-controls" style="display:flex;justify-content:space-between;margin-top:10px;">
                         <button id="start-timer-btn" class="btn btn-primary" onclick="startTimer()">Start Defense</button>
                         <button id="pause-timer-btn" class="btn" onclick="pauseTimer()" disabled>Pause</button>
-                        <button id="next-defendant-btn" class="btn btn-success" onclick="nextDefendant()" disabled>Next Defendant</button>
+                        <button id="next-defendant-btn" class="btn btn-success" onclick="nextDefendant()">Next Defendant</button>
                     </div>
                 </div>
 
                 <!-- Final Vote Section -->
                 <div id="final-vote-section" style="margin-top:20px;display:none;">
+                    <div class="voting-info" style="margin-bottom:20px;padding:15px;border-radius:8px;background-color:var(--card-bg);border:1px solid var(--border-color);">
+                        <h3>Final Voting Information</h3>
+                        <div><strong>Players Alive:</strong> <span id="final-players-alive-count">0</span></div>
+                        <div><strong>Votes Per Player:</strong> <span id="final-votes-info">Cast your votes for elimination</span></div>
+                    </div>
+                    
                     <h3>Final Vote</h3>
-                    <p>Select one player to eliminate:</p>
+                    <p>Vote to eliminate one player:</p>
                     
                     <div id="final-vote-grid" class="final-vote-grid">
                         <!-- Final vote options will be added here -->
                     </div>
                     
                     <div style="margin-top:20px;">
-                        <button id="submit-final-vote-btn" class="btn btn-primary" style="width:100%;" onclick="submitFinalVote()">Submit Final Vote</button>
+                        <button id="submit-final-vote-btn" class="btn btn-success" style="width:100%;" onclick="submitFinalVote()">Apply Final Votes</button>
                     </div>
                 </div>
 
@@ -194,6 +319,7 @@
         let secondsRemaining = 60;
         let isTimerRunning = false;
         let initialTimerValue = 60;
+        let finalPlayerVotes = {}; // Store final vote counts
         
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
@@ -294,9 +420,9 @@
                 // Reset timer
                 resetTimer();
                 
-                // Enable start button
+                // Enable buttons - Next Defendant is always enabled
                 document.getElementById('start-timer-btn').disabled = false;
-                document.getElementById('next-defendant-btn').disabled = true;
+                document.getElementById('next-defendant-btn').disabled = false;
             }
         }
         
@@ -326,6 +452,12 @@
             document.getElementById('timer-section').style.display = 'none';
             document.getElementById('final-vote-section').style.display = 'block';
             
+            // Update voting information
+            const alivePlayers = getAlivePlayers();
+            document.getElementById('final-players-alive-count').textContent = alivePlayers.length;
+            document.getElementById('final-votes-info').textContent = 
+                `Use +/- buttons to cast votes. Player with most votes will be eliminated.`;
+            
             // Build the final vote grid
             const finalVoteGrid = document.getElementById('final-vote-grid');
             let finalVoteHtml = '';
@@ -333,18 +465,30 @@
             defenseState.defendants.forEach(defendant => {
                 const player = gameState.players.find(p => p.id === defendant.id);
                 if (player) {
+                    const defaultImage = 'images/default-avatar.svg';
+                    const imageUrl = player.photo_url || defaultImage;
+                    
                     finalVoteHtml += `
-                        <div class="final-vote-player" data-player-id="${player.id}" onclick="selectFinalPlayer('${player.id}')">
-                            <div class="player-image">
-                                <img src="${player.photo_url || 'images/default-avatar.svg'}" 
+                        <div class="player-card position-relative" data-player-id="${player.id}">
+                            <div class="player-image" onclick="changeFinalVote('${player.id}', 1)">
+                                <img src="${imageUrl}" 
                                      alt="${player.name}" 
-                                     onerror="this.src='images/default-avatar.svg'">
+                                     onerror="this.onerror=null; this.src='${defaultImage}';">
+                            </div>
+                            <div class="vote-badge" id="final-vote-count-${player.id}">0</div>
+                            <div class="vote-controls">
+                                <button class="vote-btn vote-up" onclick="event.stopPropagation(); changeFinalVote('${player.id}', 1)">+</button>
+                                <button class="vote-btn vote-down" onclick="event.stopPropagation(); changeFinalVote('${player.id}', -1)">-</button>
                             </div>
                             <div class="player-info">
                                 <h4>${player.name}</h4>
+                                ${player.sequence !== undefined ? `<small>#${player.sequence}</small>` : ''}
                             </div>
                         </div>
                     `;
+                    
+                    // Initialize final votes
+                    finalPlayerVotes[player.id] = 0;
                 }
             });
             
@@ -356,7 +500,7 @@
             defenseState.selectedFinalPlayer = playerId;
             
             // Update UI to show selection
-            document.querySelectorAll('.final-vote-player').forEach(el => {
+            document.querySelectorAll('.player-card').forEach(el => {
                 if (el.dataset.playerId === playerId) {
                     el.classList.add('selected');
                 } else {
@@ -365,41 +509,162 @@
             });
         }
         
+        // Change vote for final voting
+        function changeFinalVote(playerId, change) {
+            const alivePlayers = getAlivePlayers();
+            const maxVotes = alivePlayers.length;
+            
+            // Don't allow votes below 0 or above max votes (alive players count)
+            if ((finalPlayerVotes[playerId] + change < 0) || (finalPlayerVotes[playerId] + change > maxVotes)) {
+                return;
+            }
+            
+            finalPlayerVotes[playerId] += change;
+            
+            // Update the vote badge
+            const voteBadge = document.getElementById(`final-vote-count-${playerId}`);
+            if (voteBadge) {
+                voteBadge.textContent = finalPlayerVotes[playerId];
+                
+                // Update badge color based on votes
+                const halfAlive = Math.floor(alivePlayers.length / 2);
+                
+                if (finalPlayerVotes[playerId] > halfAlive) {
+                    voteBadge.style.backgroundColor = 'var(--mafia-color, #f44336)';
+                } else {
+                    voteBadge.style.backgroundColor = 'var(--primary-color)';
+                }
+            }
+            
+            // Update voting information text
+            document.getElementById('final-votes-info').textContent = 
+                `Cast your votes! Player with most votes will be eliminated.`;
+        }
+        
+        // Get alive players (those not in eliminatedPlayers array)
+        function getAlivePlayers() {
+            if (!gameState || !gameState.players) return [];
+            
+            // If eliminatedPlayers doesn't exist, initialize it
+            if (!gameState.eliminatedPlayers) {
+                gameState.eliminatedPlayers = [];
+            }
+            
+            // Return players who are not in the eliminatedPlayers array
+            return gameState.players.filter(player => 
+                !gameState.eliminatedPlayers.some(eliminated => eliminated.id === player.id)
+            );
+        }
+        
         // Submit final vote
         function submitFinalVote() {
-            if (!defenseState.selectedFinalPlayer) {
-                alert('Please select a player to eliminate first.');
+            // Find player with highest votes
+            let maxVotes = -1;
+            let playerWithMaxVotes = null;
+            
+            for (const playerId in finalPlayerVotes) {
+                if (finalPlayerVotes[playerId] > maxVotes) {
+                    maxVotes = finalPlayerVotes[playerId];
+                    playerWithMaxVotes = playerId;
+                }
+            }
+            
+            if (!playerWithMaxVotes || maxVotes === 0) {
+                alert('No votes cast. Please vote to eliminate a player.');
                 return;
             }
             
             // Find the selected player
-            const player = gameState.players.find(p => p.id === defenseState.selectedFinalPlayer);
+            const player = gameState.players.find(p => p.id === playerWithMaxVotes);
             if (!player) {
                 alert('Selected player not found.');
                 return;
             }
             
-            // Show final results
+            // Get alive players and calculate required votes
+            const alivePlayers = getAlivePlayers();
+            const votesRequired = Math.floor(alivePlayers.length / 2) + 1;
+            
+            // Check if there's only one defendant and they didn't receive enough votes
+            if (defenseState.defendants.length === 1 && maxVotes < votesRequired) {
+                // Show final results with "No Elimination" message
+                const finalResultsSection = document.getElementById('final-results-section');
+                const finalResultsContent = document.getElementById('final-results-content');
+                
+                // Prepare vote summary
+                let voteSummary = '<div class="vote-summary" style="margin-top:15px;padding:10px;background-color:var(--card-bg-darker, #2a2a2a);border-radius:8px;">';
+                voteSummary += '<h4>Vote Results:</h4><ul style="padding-left:20px;">';
+                
+                for (const playerId in finalPlayerVotes) {
+                    if (finalPlayerVotes[playerId] > 0) {
+                        const votedPlayer = gameState.players.find(p => p.id === playerId);
+                        if (votedPlayer) {
+                            voteSummary += `<li><strong>${votedPlayer.name}</strong>: ${finalPlayerVotes[playerId]} votes</li>`;
+                        }
+                    }
+                }
+                
+                voteSummary += '</ul></div>';
+                
+                finalResultsContent.innerHTML = `
+                    <div class="alert alert-info" style="padding: 20px; background-color: var(--card-bg-darker); border-radius: 8px; margin-top: 15px;">
+                        <h3 style="color: var(--primary-color);">No Elimination</h3>
+                        <p>Player did not receive enough votes for elimination (${maxVotes} votes received, ${votesRequired} required).</p>
+                        <p>The town will proceed to Night Phase.</p>
+                        ${voteSummary}
+                    </div>
+                `;
+                
+                finalResultsSection.style.display = 'block';
+                document.getElementById('final-vote-section').style.display = 'none';
+                
+                // Mark voting as complete
+                defenseState.finalVotingComplete = true;
+                localStorage.setItem('defenseState', JSON.stringify(defenseState));
+                
+                // Enable next phase button
+                document.getElementById('next-phase-btn').disabled = false;
+                
+                return;
+            }
+            
+            // Show final results for normal elimination
             const finalResultsSection = document.getElementById('final-results-section');
             const finalResultsContent = document.getElementById('final-results-content');
             const roleInfo = getRoleById(player.role);
             
+            // Prepare vote summary
+            let voteSummary = '<div class="vote-summary" style="margin-top:15px;padding:10px;background-color:var(--card-bg-darker, #2a2a2a);border-radius:8px;">';
+            voteSummary += '<h4>Vote Results:</h4><ul style="padding-left:20px;">';
+            
+            for (const playerId in finalPlayerVotes) {
+                if (finalPlayerVotes[playerId] > 0) {
+                    const votedPlayer = gameState.players.find(p => p.id === playerId);
+                    if (votedPlayer) {
+                        voteSummary += `<li><strong>${votedPlayer.name}</strong>: ${finalPlayerVotes[playerId]} votes</li>`;
+                    }
+                }
+            }
+            
+            voteSummary += '</ul></div>';
+            
             finalResultsContent.innerHTML = `
                 <div class="eliminated-player">
-                    <div class="player-card large">
-                        <div class="player-image">
+                    <div class="player-card large position-relative" style="width: 100%; max-width: 300px; margin: 0 auto; padding: 15px;">
+                        <div class="player-image" style="width: 150px; height: 150px; border-radius: 8px; margin: 0 auto;">
                             <img src="${player.photo_url || 'images/default-avatar.svg'}" 
                                  alt="${player.name}" 
                                  onerror="this.src='images/default-avatar.svg'">
                         </div>
-                        <div class="player-info">
+                        <div class="player-info" style="margin-top: 10px;">
                             <h3>${player.name}</h3>
-                            <p>has been eliminated</p>
+                            <p>has been eliminated with ${maxVotes} votes</p>
                         </div>
                     </div>
                     <div class="revealed-role">
                         <h4>Revealed Role: ${roleInfo ? roleInfo.name : player.role}</h4>
                         <p>${roleInfo ? roleInfo.description : 'No role description available.'}</p>
+                        ${voteSummary}
                     </div>
                 </div>
             `;
@@ -481,7 +746,7 @@
                     isTimerRunning = false;
                     document.getElementById('start-timer-btn').disabled = true;
                     document.getElementById('pause-timer-btn').disabled = true;
-                    document.getElementById('next-defendant-btn').disabled = false;
+                    // Next Defendant button is always enabled
                     
                     alert("Time's up! The defense period has ended.");
                 }
@@ -510,10 +775,9 @@
             secondsRemaining = initialTimerValue;
             updateTimerDisplay();
             
-            // Reset button states
+            // Reset timer control buttons - Next Defendant stays enabled
             document.getElementById('start-timer-btn').disabled = false;
             document.getElementById('pause-timer-btn').disabled = true;
-            document.getElementById('next-defendant-btn').disabled = true;
         }
         
         // Helper function to get role by ID

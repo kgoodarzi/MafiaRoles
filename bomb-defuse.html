@@ -115,6 +115,17 @@
             border-color: var(--primary-color);
         }
         
+        .code-btn:disabled {
+            background-color: #666666 !important;
+            color: #999999 !important;
+            cursor: not-allowed !important;
+            opacity: 0.7 !important;
+            transform: none !important;
+            box-shadow: none !important;
+            pointer-events: none !important;
+            border-color: #666666 !important;
+        }
+        
         .bodyguard-action, .target-action, .result-section {
             background-color: var(--card-bg);
             border-radius: 10px;
@@ -255,6 +266,8 @@
                         <button class="code-btn bodyguard-code-btn" data-code="4">4</button>
                     </div>
                     
+                    <button id="bodyguard-submit-btn" class="btn btn-primary" style="margin-top: 20px; width: 100%; font-weight: bold; font-size: 1.2rem;">Check Defuse Code</button>
+                    
                     <div id="bodyguard-defuse-result" class="action-result" style="display:none;"></div>
                 </div>
 
@@ -269,6 +282,8 @@
                         <button class="code-btn target-code-btn" data-code="3">3</button>
                         <button class="code-btn target-code-btn" data-code="4">4</button>
                     </div>
+                    
+                    <button id="target-submit-btn" class="btn btn-primary" style="margin-top: 20px; width: 100%; font-weight: bold; font-size: 1.2rem;">Check Defuse Code</button>
                     
                     <div id="target-defuse-result" class="action-result" style="display:none;"></div>
                 </div>

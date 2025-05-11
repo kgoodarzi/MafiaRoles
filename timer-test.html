@@ -52,6 +52,26 @@
             display: flex;
             justify-content: center;
         }
+        
+        #timer-display.danger {
+            color: #e53935;
+        }
+        
+        /* Button disabled styles */
+        button:disabled {
+            background-color: #666666 !important;
+            color: #999999 !important;
+            cursor: not-allowed !important;
+            opacity: 0.7 !important;
+            transform: none !important;
+            box-shadow: none !important;
+            pointer-events: none !important;
+        }
+        
+        .player-card {
+            border: 2px solid #ddd;
+            padding: 10px;
+        }
     </style>
 </head>
 <body>

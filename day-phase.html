@@ -18,6 +18,46 @@
     <script src="connection-status.js"></script>
     <!-- Day Phase JS -->
     <script src="day-phase.js"></script>
+    <style>
+        .night-deaths {
+            background-color: var(--card-bg-darker);
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+        
+        .death-report {
+            border-left: 3px solid var(--mafia-color, #e53935);
+            padding-left: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .death-report h4 {
+            margin: 0 0 5px 0;
+            color: var(--mafia-color, #e53935);
+        }
+        
+        .death-report p {
+            margin: 0;
+        }
+
+        .day-announcement p {
+            margin-bottom: 10px;
+        }
+
+        /* Button disabled styles */
+        button:disabled,
+        .btn:disabled {
+            background-color: #666666 !important;
+            color: #999999 !important;
+            cursor: not-allowed !important;
+            opacity: 0.7 !important;
+            transform: none !important;
+            box-shadow: none !important;
+            pointer-events: none !important;
+            border-color: #666666 !important;
+        }
+    </style>
 </head>
 <body class="dark-theme">
     <div id="connection-status"></div>
@@ -33,6 +73,10 @@
                 <div id="phase-info" class="phase-info">
                     <h2>Day Phase</h2>
                     <p>Players discuss to identify potential Mafia members. Information sharing and deduction happens here.</p>
+                </div>
+                
+                <div id="night-events" class="night-events" style="margin-top:20px;padding:15px;border-radius:8px;background-color:var(--card-bg);border:1px solid var(--border-color);">
+                    <!-- Night events will be displayed here -->
                 </div>
 
                 <div id="players-status" class="players-status" style="margin-top:20px;">

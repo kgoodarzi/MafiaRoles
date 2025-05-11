@@ -21,85 +21,90 @@
     <style>
         .players-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 25px;
             margin-top: 20px;
         }
         
         .player-card {
             background-color: var(--card-bg);
             border-radius: 8px;
-            overflow: hidden;
-            position: relative;
+            overflow: visible;
             box-shadow: 0 3px 5px rgba(0,0,0,0.1);
-            cursor: pointer;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-        
-        .player-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            margin: 10px;
+            padding: 8px;
         }
         
         .player-image {
             position: relative;
-            padding-top: 100%;
+            width: 150px;
+            height: 150px;
             overflow: hidden;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
         
         .player-image img {
-            position: absolute;
-            top: 0;
-            left: 0;
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
         
+        .player-image:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
         .player-info {
-            padding: 15px;
+            padding: 10px 5px;
             text-align: center;
         }
         
         .vote-badge {
             position: absolute;
-            top: 10px;
-            right: 10px;
+            top: 170px;
+            right: -63px;
             background-color: var(--primary-color);
             color: white;
             border-radius: 50%;
-            width: 30px;
-            height: 30px;
+            width: 40px;
+            height: 40px;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: bold;
             font-size: 18px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            box-shadow: 0 3px 8px rgba(0,0,0,0.3);
             transition: all 0.3s ease;
+            z-index: 5;
         }
         
         .vote-controls {
             position: absolute;
-            top: 10px;
-            left: 10px;
+            top: 155px;
+            right: -23px;
             display: flex;
             flex-direction: column;
-            gap: 5px;
+            gap: 10px;
+            z-index: 5;
         }
         
         .vote-btn {
-            width: 30px;
-            height: 30px;
+            width: 32px;
+            height: 32px;
             border-radius: 50%;
-            border: none;
+            border: 2px solid white;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: bold;
+            font-size: 18px;
             cursor: pointer;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
             transition: all 0.2s ease;
+            z-index: 10;
         }
         
         .vote-up {
@@ -118,6 +123,18 @@
         
         .vote-btn:active {
             transform: scale(0.95);
+        }
+        
+        .vote-btn:disabled,
+        .vote-btn[disabled] {
+            background-color: #666666 !important;
+            color: #999999 !important;
+            cursor: not-allowed !important;
+            opacity: 0.7 !important;
+            transform: none !important;
+            box-shadow: none !important;
+            pointer-events: none !important;
+            border-color: #666666 !important;
         }
         
         /* Eliminated player display */
@@ -139,6 +156,17 @@
             padding: 15px;
             background-color: var(--card-bg);
             border-radius: 8px;
+        }
+        
+        .position-relative {
+            position: relative;
+        }
+        
+        /* Button to show it has been applied */
+        .btn-applied {
+            background-color: var(--bg-darkest) !important;
+            opacity: 0.7;
+            cursor: not-allowed;
         }
     </style>
 </head>
@@ -242,6 +270,13 @@
                     
                     // Initially disable next phase button until voting is complete
                     document.getElementById('next-phase-btn').disabled = true;
+                    
+                    // Log information about players for debugging
+                    if (gameState && gameState.players) {
+                        console.log(`Total players: ${gameState.players.length}`);
+                        console.log(`Alive players: ${getAlivePlayers().length}`);
+                        console.log("Player data sample:", gameState.players[0]);
+                    }
                 } else {
                     console.warn("No game state found in localStorage");
                     document.getElementById('phase-info').innerHTML = `
@@ -316,17 +351,20 @@
             let playersHtml = ``;
             
             sortedPlayers.forEach(player => {
+                const defaultImage = 'images/default-avatar.svg';
+                const imageUrl = player.photo_url || defaultImage;
+                
                 playersHtml += `
-                    <div class="player-card" data-player-id="${player.id}">
-                        <div class="player-image">
-                            <img src="${player.photo_url || 'images/default-avatar.svg'}" 
+                    <div class="player-card position-relative" data-player-id="${player.id}">
+                        <div class="player-image" onclick="changeVote('${player.id}', 1)">
+                            <img src="${imageUrl}" 
                                  alt="${player.name}" 
-                                 onerror="this.src='images/default-avatar.svg'">
-                            <div class="vote-badge" id="vote-count-${player.id}">0</div>
-                            <div class="vote-controls">
-                                <button class="vote-btn vote-up" onclick="changeVote('${player.id}', 1)">+</button>
-                                <button class="vote-btn vote-down" onclick="changeVote('${player.id}', -1)">-</button>
-                            </div>
+                                 onerror="this.onerror=null; this.src='${defaultImage}';">
+                        </div>
+                        <div class="vote-badge" id="vote-count-${player.id}">0</div>
+                        <div class="vote-controls">
+                            <button class="vote-btn vote-up" onclick="changeVote('${player.id}', 1)">+</button>
+                            <button class="vote-btn vote-down" onclick="changeVote('${player.id}', -1)">-</button>
                         </div>
                         <div class="player-info">
                             <h4>${player.name}</h4>
@@ -341,12 +379,16 @@
         
         // Change vote count for a player
         function changeVote(playerId, change) {
-            // Don't allow negative votes
-            if (playerVotes[playerId] + change < 0) {
+            const alivePlayers = getAlivePlayers();
+            const maxVotes = alivePlayers.length;
+            
+            // Don't allow votes below 0 or above max votes (alive players count)
+            if ((playerVotes[playerId] + change < 0) || (playerVotes[playerId] + change > maxVotes)) {
                 return;
             }
             
             playerVotes[playerId] += change;
+            votesRequired = 0;
             
             // Update the vote badge
             const voteBadge = document.getElementById(`vote-count-${playerId}`);
@@ -354,8 +396,7 @@
                 voteBadge.textContent = playerVotes[playerId];
                 
                 // Update the badge color based on vote threshold
-                const alivePlayers = getAlivePlayers();
-                const votesRequired = Math.floor(alivePlayers.length / 2) + 1;
+                votesRequired = Math.floor(alivePlayers.length / 2) + 1;
                 
                 if (playerVotes[playerId] >= votesRequired) {
                     voteBadge.style.backgroundColor = 'var(--mafia-color, #f44336)';
@@ -365,7 +406,6 @@
             }
             
             // Update voting information
-            const votesRequired = Math.floor(getAlivePlayers().length / 2) + 1;
             const playersAboveThreshold = countPlayersAboveThreshold(votesRequired);
             document.getElementById('players-above-threshold').textContent = playersAboveThreshold;
         }
@@ -408,7 +448,37 @@
             defendantsArray.sort((a, b) => b.votes - a.votes);
             
             if (defendantsArray.length === 0) {
-                alert('No players received enough votes for elimination. Please vote again.');
+                // Show message in the voting results section instead of an alert
+                const votingResultElement = document.getElementById('voting-result');
+                const votingResultsContent = document.getElementById('voting-results-content');
+                
+                votingResultsContent.innerHTML = `
+                    <div class="alert alert-info" style="padding: 15px; background-color: var(--card-bg-darker); border-radius: 8px; margin-top: 10px;">
+                        <h4 style="color: var(--primary-color);">No Elimination</h4>
+                        <p>No players received enough votes for elimination. The town will proceed to Night Phase.</p>
+                        <p><strong>Votes Required:</strong> ${votesRequired}</p>
+                    </div>
+                `;
+                
+                votingResultElement.style.display = 'block';
+                
+                // Update game status to show voting is complete
+                const gameStatusInfo = document.getElementById('game-status-info');
+                gameStatusInfo.innerHTML = `
+                    <div><strong>Current Phase:</strong> Voting Phase</div>
+                    <div><strong>Round:</strong> ${gameState.currentRound}</div>
+                    <div><strong>Players Alive:</strong> ${alivePlayers.length} / ${gameState.players.length}</div>
+                    <div><strong>Voting Result:</strong> <span style="color: var(--success-color);">No Elimination</span></div>
+                    <div><strong>Next Phase:</strong> <span style="color: var(--primary-color);">Night Phase</span></div>
+                `;
+                
+                // Highlight the Apply Votes button to show it's been pressed
+                document.getElementById('apply-votes-btn').classList.add('btn-applied');
+                document.getElementById('apply-votes-btn').disabled = true;
+                
+                // Enable the next phase button
+                document.getElementById('next-phase-btn').disabled = false;
+                
                 return;
             }
             
