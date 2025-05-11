@@ -1178,7 +1178,13 @@ class DatabaseManager {
         return [...this.selectedPlayers];
     }
 
-    saveSelectedPlayers() {
+    /**
+     * Saves the selected players to localStorage and updates the database
+     * Returns a Promise that resolves after all operations are complete
+     * 
+     * Version 1.0.2 - Modified to be properly async to ensure saves complete before navigation
+     */
+    async saveSelectedPlayers() {
         console.log('Saving selected players');
         try {
             // Sort selected players by sequence
@@ -1197,9 +1203,13 @@ class DatabaseManager {
             }
             
             // Try to update selected status in database
-            this.updatePreviouslySelectedFlag()
-                .then(() => console.log('Updated previously_selected flags in database'))
-                .catch(error => console.error('Error updating previously_selected flags:', error));
+            try {
+                await this.updatePreviouslySelectedFlag();
+                console.log('Updated previously_selected flags in database');
+            } catch (error) {
+                console.error('Error updating previously_selected flags:', error);
+                // We continue even if database update fails - localStorage is enough
+            }
             
             return this.selectedPlayers;
         } catch (error) {

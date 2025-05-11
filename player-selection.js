@@ -1,5 +1,13 @@
 console.log('Player selection page loaded');
 
+/**
+ * Player Selection Page Controller
+ * 
+ * Version 1.0.2
+ * - Fixed issue with player selection not being properly saved before page navigation
+ * - Improved error handling and retry logic for database operations
+ */
+
 // Wait for DOM content to load
 document.addEventListener('DOMContentLoaded', async function() {
     console.log('DOM content loaded in player-selection.js');
@@ -186,7 +194,7 @@ function loadDefaultPlayers() {
                 
                 return this.selectedPlayers.length;
             },
-            saveSelectedPlayers: function() {
+            saveSelectedPlayers: async function() {
                 localStorage.setItem('selectedPlayers', JSON.stringify(this.selectedPlayers));
                 return this.selectedPlayers;
             }
@@ -524,7 +532,7 @@ function setupEventListeners() {
                 if (!window.supabase) {
                     console.log('Supabase not available, using localStorage only');
                     // Save to localStorage and redirect
-                    window.dbManager.saveSelectedPlayers();
+                    await window.dbManager.saveSelectedPlayers();
                     return true; // Success without Supabase
                 }
                 
@@ -632,8 +640,10 @@ function setupEventListeners() {
                         if (shouldProceed) {
                             // User chose to proceed with localStorage only
                             console.log('Proceeding with localStorage only');
-                            window.dbManager.saveSelectedPlayers();
+                            // Make sure saveSelectedPlayers completes before navigation
+                            await Promise.resolve(window.dbManager.saveSelectedPlayers());
                             localStorage.setItem('selectedPlayers', JSON.stringify(selectedPlayers));
+                            // Only redirect after saving is complete
                             window.location.href = 'role-selection.html';
                         } else {
                             // User chose to cancel
@@ -642,17 +652,23 @@ function setupEventListeners() {
                         }
                     } else {
                         // Third attempt succeeded
-                        window.dbManager.saveSelectedPlayers();
+                        // Make sure saveSelectedPlayers completes before navigation
+                        await Promise.resolve(window.dbManager.saveSelectedPlayers());
+                        // Only redirect after saving is complete
                         window.location.href = 'role-selection.html';
                     }
                 } else {
                     // Second attempt succeeded
-                    window.dbManager.saveSelectedPlayers();
+                    // Make sure saveSelectedPlayers completes before navigation
+                    await Promise.resolve(window.dbManager.saveSelectedPlayers());
+                    // Only redirect after saving is complete
                     window.location.href = 'role-selection.html';
                 }
             } else {
                 // First attempt succeeded
-                window.dbManager.saveSelectedPlayers();
+                // Make sure saveSelectedPlayers completes before navigation
+                await Promise.resolve(window.dbManager.saveSelectedPlayers());
+                // Only redirect after saving is complete
                 window.location.href = 'role-selection.html';
             }
         });
