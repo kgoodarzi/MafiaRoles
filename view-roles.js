@@ -2,7 +2,6 @@
 let gameState = null;
 let currentPlayerIndex = 0;
 let allRolesViewed = false;
-let allRolesAssigned = false;
 
 // Initialize page when DOM is loaded
 document.addEventListener('DOMContentLoaded', async function() {
@@ -27,8 +26,9 @@ document.addEventListener('DOMContentLoaded', async function() {
     document.getElementById('view-role-btn').addEventListener('click', viewRole);
     document.getElementById('hide-role-btn').addEventListener('click', hideRole);
     document.getElementById('next-player-btn').addEventListener('click', nextPlayer);
-    document.getElementById('proceed-btn').addEventListener('click', proceedToGame);
-    document.getElementById('skip-all-btn').addEventListener('click', skipAllRoles);
+    document.getElementById('start-game-btn').addEventListener('click', proceedToGame);
+    document.getElementById('view-assignments-btn').addEventListener('click', goToRoleAssignments);
+    document.getElementById('back-home-btn').addEventListener('click', goToHomePage);
 });
 
 // Wait for database initialization
@@ -126,7 +126,9 @@ function showCurrentPlayer() {
     document.getElementById('view-role-btn').style.display = 'block';
     document.getElementById('hide-role-btn').style.display = 'none';
     document.getElementById('next-player-btn').style.display = 'none';
-    document.getElementById('proceed-btn').style.display = 'none';
+    document.getElementById('start-game-btn').style.display = 'none';
+    document.getElementById('view-assignments-btn').style.display = 'none';
+    document.getElementById('back-home-btn').style.display = 'none';
 }
 
 // View the current player's role
@@ -227,7 +229,9 @@ function nextPlayer() {
         document.getElementById('view-role-btn').style.display = 'none';
         document.getElementById('hide-role-btn').style.display = 'none';
         document.getElementById('next-player-btn').style.display = 'none';
-        document.getElementById('proceed-btn').style.display = 'block';
+        document.getElementById('start-game-btn').style.display = 'block';
+        document.getElementById('view-assignments-btn').style.display = 'block';
+        document.getElementById('back-home-btn').style.display = 'block';
     } else {
         // Show the next player
         showCurrentPlayer();
@@ -241,8 +245,22 @@ function proceedToGame() {
         return;
     }
     
-    // Redirect to role assignments page
+    // Set game phase to night and save
+    gameState.gamePhase = 'night';
+    localStorage.setItem('gameState', JSON.stringify(gameState));
+    
+    // Redirect to night phase
+    window.location.href = 'night-phase.html';
+}
+
+// Go to role assignments page
+function goToRoleAssignments() {
     window.location.href = 'role-assignments.html';
+}
+
+// Go to home page
+function goToHomePage() {
+    window.location.href = 'index.html';
 }
 
 // Helper function to get role information
@@ -294,36 +312,4 @@ function getRoleInfo(roleId) {
 function isPlayerEliminated(playerId) {
     if (!gameState || !gameState.eliminatedPlayers) return false;
     return gameState.eliminatedPlayers.some(eliminatedPlayer => eliminatedPlayer.id === playerId);
-}
-
-// New function to skip all roles
-function skipAllRoles() {
-    // Confirm with user
-    if (!confirm("Are you sure you want to skip showing all roles? Players won't see their roles.")) {
-        return;
-    }
-    
-    // Mark all roles as assigned
-    allRolesAssigned = true;
-    currentPlayerIndex = gameState.players.length;
-    
-    // Show game start button
-    document.getElementById('game-status').textContent = "Role viewing was skipped";
-    document.getElementById('current-player').innerHTML = `
-        <div class="all-assigned">
-            <h3>Role viewing skipped</h3>
-            <p>You can now start the game</p>
-        </div>
-    `;
-    document.getElementById('role-display').innerHTML = '';
-    
-    // Show the summary table of player roles
-    showRolesSummaryTable();
-    
-    // Update buttons
-    document.getElementById('view-role-btn').style.display = 'none';
-    document.getElementById('hide-role-btn').style.display = 'none';
-    document.getElementById('next-player-btn').style.display = 'none';
-    document.getElementById('skip-all-btn').style.display = 'none';
-    document.getElementById('start-game-btn').style.display = 'block';
 } 
