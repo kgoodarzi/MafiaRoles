@@ -10,6 +10,8 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Supabase initialization -->
     <script src="supabase-init.js"></script>
+    <!-- Database manager -->
+    <script src="database.js"></script>
     <!-- Connection status -->
     <script src="connection-status.js"></script>
 </head>
@@ -60,5 +62,194 @@
             <p>&copy; 2025 KRS Consulting Inc.</p>
         </footer>
     </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM content loaded in add-player.html');
+            
+            // Check for dbManager
+            setTimeout(function() {
+                if (window.dbManager) {
+                    console.log('dbManager is available:', window.dbManager);
+                } else {
+                    console.warn('dbManager not created by database.js, will use fallback if needed');
+                }
+            }, 1000);
+            
+            // Set up avatar preview functionality
+            const avatarPreview = document.getElementById('avatar-preview');
+            const avatarPreviewImg = document.getElementById('avatar-preview-img');
+            const avatarInput = document.getElementById('player-avatar');
+            
+            // Trigger file input click when avatar preview is clicked
+            avatarPreview.addEventListener('click', function() {
+                avatarInput.click();
+            });
+            
+            // Update preview image when a file is selected
+            avatarInput.addEventListener('change', function() {
+                if (this.files && this.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        avatarPreviewImg.src = e.target.result;
+                    };
+                    reader.readAsDataURL(this.files[0]);
+                }
+            });
+            
+            // Create fallback database manager if needed
+            function createFallbackDbManager() {
+                console.log('Creating fallback database manager');
+                return {
+                    addPlayer: function(name, username, email, photoFile) {
+                        console.log('Fallback addPlayer called with:', { name, username, email, hasPhoto: !!photoFile });
+                        
+                        // Generate username if not provided
+                        const actualUsername = username || `user_${Date.now()}`;
+                        
+                        // Create player in format expected by the player selection page
+                        const player = {
+                            username: actualUsername,
+                            full_name: name,
+                            name: name, // Include both formats for compatibility
+                            email: email || '',
+                            photo: 'images/default-avatar.svg',
+                            photo_url: 'images/default-avatar.svg', // Include both formats
+                            created_at: new Date().toISOString(),
+                            previously_selected: false,
+                            sequence: 9999 // High sequence so it appears at the end
+                        };
+                        
+                        // Try to save to localStorage
+                        try {
+                            // Update or add to the players list
+                            const storedPlayersJSON = localStorage.getItem('players') || '[]';
+                            let storedPlayers = [];
+                            try {
+                                storedPlayers = JSON.parse(storedPlayersJSON);
+                            } catch (e) {
+                                console.error('Error parsing stored players:', e);
+                                storedPlayers = [];
+                            }
+                            
+                            // Check if player with this username already exists
+                            const existingIndex = storedPlayers.findIndex(p => p.username === actualUsername);
+                            if (existingIndex >= 0) {
+                                // Update existing player
+                                storedPlayers[existingIndex] = {
+                                    ...storedPlayers[existingIndex],
+                                    ...player
+                                };
+                            } else {
+                                // Add new player
+                                storedPlayers.push(player);
+                            }
+                            
+                            localStorage.setItem('players', JSON.stringify(storedPlayers));
+                            console.log('Player saved to localStorage');
+                        } catch (e) {
+                            console.error('Error saving to localStorage:', e);
+                        }
+                        
+                        return Promise.resolve(player);
+                    }
+                };
+            }
+            
+            // Add form submission handler
+            const addPlayerForm = document.getElementById('add-player-form');
+            if (addPlayerForm) {
+                console.log('Add player form found, setting up submit event listener');
+                addPlayerForm.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    console.log('Form submitted');
+                    
+                    const nameInput = document.getElementById('player-name');
+                    const usernameInput = document.getElementById('player-username');
+                    const emailInput = document.getElementById('player-email');
+                    const photoInput = document.getElementById('player-avatar');
+                    
+                    const name = nameInput.value.trim();
+                    const username = usernameInput.value.trim();
+                    const email = emailInput.value.trim();
+                    const photoFile = photoInput.files.length > 0 ? photoInput.files[0] : null;
+                    
+                    console.log('Form data:', { name, username, email, hasPhoto: !!photoFile });
+                    
+                    if (!name) {
+                        alert('Please enter a player name');
+                        return;
+                    }
+                    
+                    // Show loading state
+                    const submitBtn = this.querySelector('button[type="submit"]');
+                    const originalText = submitBtn.textContent;
+                    submitBtn.textContent = 'Adding...';
+                    submitBtn.disabled = true;
+                    
+                    try {
+                        console.log('Checking if dbManager exists:', !!window.dbManager);
+                        
+                        // Get or create database manager
+                        let dbManager = window.dbManager;
+                        
+                        // If no dbManager exists, try to create a fallback
+                        if (!dbManager) {
+                            console.log('No dbManager found, using fallback');
+                            dbManager = createFallbackDbManager();
+                            window.dbManager = dbManager;
+                        }
+                        
+                        console.log('Calling dbManager.addPlayer...');
+                        // Add player to database
+                        const newPlayer = await dbManager.addPlayer(name, username, email, photoFile);
+                        
+                        console.log('Player added successfully:', newPlayer);
+                        
+                        if (newPlayer) {
+                            // Show success message
+                            alert(`Player ${name} added successfully!`);
+                            // Redirect back to player-selection.html
+                            window.location.href = 'player-selection.html';
+                        } else {
+                            throw new Error('Failed to add player (no player data returned)');
+                        }
+                    } catch (error) {
+                        console.error('Error adding player:', error);
+                        
+                        // More detailed error diagnostic
+                        console.log('Error details:', {
+                            message: error.message,
+                            stack: error.stack,
+                            type: error.constructor.name
+                        });
+                        
+                        // Try the fallback implementation as a last resort
+                        try {
+                            console.log('Attempting fallback implementation...');
+                            const fallbackManager = createFallbackDbManager();
+                            const newPlayer = await fallbackManager.addPlayer(name, username, email, photoFile);
+                            
+                            console.log('Player added using fallback:', newPlayer);
+                            alert(`Player ${name} added successfully (using fallback method)!`);
+                            window.location.href = 'player-selection.html';
+                            return;
+                        } catch (fallbackError) {
+                            console.error('Even fallback failed:', fallbackError);
+                        }
+                        
+                        // If all else fails, show the error
+                        alert(`Failed to add player: ${error.message || 'Unknown error'}`);
+                        
+                        // Reset button state
+                        submitBtn.textContent = originalText;
+                        submitBtn.disabled = false;
+                    }
+                });
+            } else {
+                console.error('Add player form not found');
+            }
+        });
+    </script>
 </body>
 </html> 

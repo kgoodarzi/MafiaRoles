@@ -1,5 +1,20 @@
 /* Game Role Display Styles - Ensures role images display at 200x300px without cropping */
 
+/* Button container styling */
+.button-container {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    width: 100% !important;
+    margin: 1rem auto !important;
+}
+
+/* Ensure all buttons in the view-roles page are centered */
+.button-container .btn {
+    display: block !important;
+    margin: 0.5rem auto !important;
+}
+
 /* Increase the size of the role card in the game view */
 .role-reveal .role-card,
 .role-display .role-card,

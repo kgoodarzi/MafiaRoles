@@ -408,11 +408,13 @@ function setupEventListeners() {
             e.preventDefault();
             
             const nameInput = document.getElementById('player-name');
-            const phoneInput = document.getElementById('player-phone');
-            const photoInput = document.getElementById('player-photo');
+            const usernameInput = document.getElementById('player-username');
+            const emailInput = document.getElementById('player-email');
+            const photoInput = document.getElementById('player-avatar');
             
             const name = nameInput.value.trim();
-            const phone = phoneInput.value.trim();
+            const username = usernameInput.value.trim();
+            const email = emailInput.value.trim();
             const photoFile = photoInput.files.length > 0 ? photoInput.files[0] : null;
             
             if (!name) {
@@ -428,7 +430,7 @@ function setupEventListeners() {
                 submitBtn.disabled = true;
                 
                 // Add player to database
-                const newPlayer = await window.dbManager.addPlayer(name, phone, photoFile);
+                const newPlayer = await window.dbManager.addPlayer(name, username, email, photoFile);
                 
                 if (newPlayer) {
                     // Reset form

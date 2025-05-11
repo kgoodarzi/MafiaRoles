@@ -161,7 +161,7 @@ function viewRole() {
     
     // Fallback for known roles if getRoleById is not available or fails
     if (roleId === 'godfather' || roleId === 'regular_mafia' || roleId === 'bomber' || 
-        roleId === 'magician' || roleId === 'al-capon') {
+        roleId === 'magician') {
         teamClass = 'mafia';
     } else if (roleId === 'zodiac') {
         teamClass = 'independent';
@@ -244,6 +244,9 @@ function showRolesSummaryTable() {
         let roleId = player.role;
         let teamClass = 'citizen';  // Default team class
         
+        // Check if player is eliminated
+        const isEliminated = isPlayerEliminated(player.id);
+        
         // Try to get team from ROLES array
         if (typeof getRoleById === 'function') {
             const role = getRoleById(roleId);
@@ -254,7 +257,7 @@ function showRolesSummaryTable() {
         
         // Fallback for known roles if getRoleById is not available or fails
         if (roleId === 'mafia' || roleId === 'godfather' || roleId === 'bomber' || 
-            roleId === 'al-capon' || roleId === 'magician' || roleId === 'regular_mafia') {
+            roleId === 'magician') {
             if (teamClass !== 'mafia') {
                 teamClass = 'mafia';
             }
@@ -279,20 +282,28 @@ function showRolesSummaryTable() {
         
         const roleImageSrc = `images/Role - ${roleImageName}.jpg`;
         
+        // Get sequence display (add sequence number if available)
+        const sequenceDisplay = player.sequence !== undefined ? ` (Seq #${player.sequence})` : '';
+        
+        // Set background color based on elimination status
+        const bgColor = isEliminated ? 'rgba(128, 128, 128, 0.3)' : 'var(--card-bg)';
+        const opacity = isEliminated ? '0.7' : '1';
+        
         // Add summary item
         summaryHtml += `
-            <div class="summary-item" data-team="${teamClass}" style="padding:12px;border-bottom:1px solid var(--border-color);display:flex;align-items:center;background-color:var(--card-bg);border-left:4px solid ${getTeamBorderColor(teamClass)};">
+            <div class="summary-item" data-team="${teamClass}" style="padding:12px;border-bottom:1px solid var(--border-color);display:flex;align-items:center;background-color:${bgColor};opacity:${opacity};border-left:4px solid ${getTeamBorderColor(teamClass)};">
                 <div class="summary-avatar" style="margin-right:12px;">
                     <img src="${player.photo_url || 'images/default-avatar.svg'}" 
                          alt="${player.name}" 
                          style="width:50px;height:50px;object-fit:cover;border-radius:50%;"
                          onerror="this.src='images/default-avatar.svg'">
                 </div>
-                <div class="summary-info" style="flex-grow:1;">
-                    <h3 style="margin:0;font-size:1rem;">${player.name}</h3>
-                    <p class="summary-role" style="margin:0;color:var(--text-secondary);font-size:0.9rem;">${roleName}</p>
+                <div class="summary-info" style="flex-grow:1;display:flex;justify-content:space-between;align-items:center;">
+                    <div style="font-weight:bold;text-align:left;">${player.name}</div>
+                    ${isEliminated ? '<div style="color:#ff4c4c;font-size:0.8rem;text-align:center;flex-grow:1;">Eliminated</div>' : '<div style="flex-grow:1;"></div>'}
+                    <div style="color:var(--text-secondary);font-size:0.9rem;text-align:right;">${roleName}</div>
                 </div>
-                <div class="summary-role-icon" style="width:40px;height:40px;border-radius:4px;overflow:hidden;">
+                <div class="summary-role-icon" style="margin-left:12px;width:40px;height:40px;border-radius:4px;overflow:hidden;">
                     <img src="${roleImageSrc}" 
                          alt="${roleName}" 
                          style="width:100%;height:100%;object-fit:cover;"
@@ -479,6 +490,32 @@ function displayRoleAssignmentsTable() {
     
     const roleAssignmentsContent = document.getElementById('role-assignments-content');
     
+    // Calculate team tallies
+    const teamTallies = calculateTeamTallies();
+    
+    // Create team tallies section
+    let talliesHtml = `
+        <div class="team-tallies" style="margin-bottom:20px;padding:15px;border-radius:8px;background-color:var(--card-bg);border:1px solid var(--border-color);">
+            <h3 style="margin-top:0;margin-bottom:15px;text-align:center;">Team Elimination Status</h3>
+            <div style="display:flex;justify-content:space-around;flex-wrap:wrap;">
+                <div class="team-tally" style="text-align:center;padding:10px;min-width:120px;">
+                    <div style="font-weight:bold;color:var(--town-color, #4caf50);">Citizens</div>
+                    <div style="margin-top:5px;font-size:1.1rem;">${teamTallies.town.alive} Alive / ${teamTallies.town.eliminated} Eliminated</div>
+                </div>
+                <div class="team-tally" style="text-align:center;padding:10px;min-width:120px;">
+                    <div style="font-weight:bold;color:var(--mafia-color, #e53935);">Mafia</div>
+                    <div style="margin-top:5px;font-size:1.1rem;">${teamTallies.mafia.alive} Alive / ${teamTallies.mafia.eliminated} Eliminated</div>
+                </div>
+                ${teamTallies.zodiacExists ? `
+                <div class="team-tally" style="text-align:center;padding:10px;min-width:120px;">
+                    <div style="font-weight:bold;color:var(--zodiac-color, #673ab7);">Zodiac</div>
+                    <div style="margin-top:5px;font-size:1.1rem;">${teamTallies.zodiac.alive} Alive / ${teamTallies.zodiac.eliminated} Eliminated</div>
+                </div>
+                ` : ''}
+            </div>
+        </div>
+    `;
+    
     // Sort players by sequence if available
     const sortedPlayers = [...gameState.players].sort((a, b) => {
         const seqA = a.sequence !== undefined ? a.sequence : 9999;
@@ -495,6 +532,9 @@ function displayRoleAssignmentsTable() {
         let roleId = player.role;
         let teamClass = 'citizen';  // Default team class
         
+        // Check if player is eliminated
+        const isEliminated = isPlayerEliminated(player.id);
+        
         // Try to get team from ROLES array
         if (typeof getRoleById === 'function') {
             const role = getRoleById(roleId);
@@ -505,7 +545,7 @@ function displayRoleAssignmentsTable() {
         
         // Fallback for known roles if getRoleById is not available or fails
         if (roleId === 'mafia' || roleId === 'godfather' || roleId === 'bomber' || 
-            roleId === 'al-capon' || roleId === 'magician' || roleId === 'regular_mafia') {
+            roleId === 'magician') {
             if (teamClass !== 'mafia') {
                 teamClass = 'mafia';
             }
@@ -533,20 +573,27 @@ function displayRoleAssignmentsTable() {
         // Get sequence display (add sequence number if available)
         const sequenceDisplay = player.sequence !== undefined ? ` (Seq #${player.sequence})` : '';
         
+        // Set background color based on elimination status
+        const bgColor = isEliminated ? 'rgba(128, 128, 128, 0.3)' : 'var(--card-bg)';
+        const opacity = isEliminated ? '0.7' : '1';
+        
         // Add table row
         tableHtml += `
-            <div class="roles-table-row" data-team="${teamClass}" style="padding:12px;border-bottom:1px solid var(--border-color);display:flex;align-items:center;background-color:var(--card-bg);border-left:4px solid ${getTeamBorderColor(teamClass)};">
+            <div class="roles-table-row" data-team="${teamClass}" data-eliminated="${isEliminated}" 
+                 style="padding:12px;border-bottom:1px solid var(--border-color);display:flex;align-items:center;
+                 background-color:${bgColor};opacity:${opacity};border-left:4px solid ${getTeamBorderColor(teamClass)};">
                 <div class="roles-table-avatar" style="margin-right:12px;width:40px;height:40px;border-radius:50%;overflow:hidden;">
                     <img src="${player.photo_url || 'images/default-avatar.svg'}" 
                          alt="${player.name}" 
                          style="width:100%;height:100%;object-fit:cover;"
                          onerror="this.src='images/default-avatar.svg'">
                 </div>
-                <div class="roles-table-info" style="flex-grow:1;">
-                    <div style="font-weight:bold;">${player.name}${sequenceDisplay}</div>
-                    <div style="color:var(--text-secondary);font-size:0.9rem;">${roleName}</div>
+                <div class="roles-table-info" style="flex-grow:1;display:flex;justify-content:space-between;align-items:center;">
+                    <div style="font-weight:bold;text-align:left;">${player.name}${sequenceDisplay}</div>
+                    ${isEliminated ? '<div style="color:#ff4c4c;font-size:0.8rem;text-align:center;flex-grow:1;">Eliminated</div>' : '<div style="flex-grow:1;"></div>'}
+                    <div style="color:var(--text-secondary);font-size:0.9rem;text-align:right;">${roleName}</div>
                 </div>
-                <div class="roles-table-role-icon" style="width:35px;height:35px;border-radius:4px;overflow:hidden;">
+                <div class="roles-table-role-icon" style="margin-left:12px;width:35px;height:35px;border-radius:4px;overflow:hidden;">
                     <img src="${roleImageSrc}" 
                          alt="${roleName}" 
                          style="width:100%;height:100%;object-fit:cover;"
@@ -566,7 +613,72 @@ function displayRoleAssignmentsTable() {
         </div>
     `;
     
-    roleAssignmentsContent.innerHTML = tableHtml;
+    // Combine tallies and table
+    roleAssignmentsContent.innerHTML = talliesHtml + tableHtml;
+}
+
+// Calculate team tallies
+function calculateTeamTallies() {
+    const tallies = {
+        town: { alive: 0, eliminated: 0 },
+        mafia: { alive: 0, eliminated: 0 },
+        zodiac: { alive: 0, eliminated: 0 },
+        zodiacExists: false
+    };
+    
+    // Check if zodiac was in the original game setup
+    tallies.zodiacExists = gameState.players.some(p => p.role === 'zodiac');
+    
+    // Count players by team and status
+    gameState.players.forEach(player => {
+        const isEliminated = isPlayerEliminated(player.id);
+        const team = getPlayerTeam(player.role);
+        
+        if (team === 'mafia') {
+            if (isEliminated) {
+                tallies.mafia.eliminated++;
+            } else {
+                tallies.mafia.alive++;
+            }
+        } else if (team === 'independent' || player.role === 'zodiac') {
+            if (isEliminated) {
+                tallies.zodiac.eliminated++;
+            } else {
+                tallies.zodiac.alive++;
+            }
+        } else {
+            // Default to town
+            if (isEliminated) {
+                tallies.town.eliminated++;
+            } else {
+                tallies.town.alive++;
+            }
+        }
+    });
+    
+    return tallies;
+}
+
+// Helper function to determine a player's team
+function getPlayerTeam(role) {
+    // Mafia team roles
+    if (['godfather', 'magician', 'bomber', 'regular_mafia', 'mafia'].includes(role)) {
+        return 'mafia';
+    }
+    // Independent roles (zodiac)
+    else if (role === 'zodiac') {
+        return 'independent';
+    }
+    // All other roles are town
+    else {
+        return 'town';
+    }
+}
+
+// Helper function to check if a player is eliminated
+function isPlayerEliminated(playerId) {
+    if (!gameState.eliminatedPlayers) return false;
+    return gameState.eliminatedPlayers.some(eliminatedPlayer => eliminatedPlayer.id === playerId);
 }
 
 // Advance to the next phase following the new game flow

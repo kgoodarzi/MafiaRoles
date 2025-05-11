@@ -937,12 +937,56 @@ class DatabaseManager {
         }
     }
 
-    async addPlayer(playerData) {
-        console.log(`Adding new player:`, playerData);
+    async addPlayer(name, username, email, photoFile) {
+        console.log(`Adding new player: ${name}, username: ${username}, email: ${email}, with photo: ${photoFile ? 'yes' : 'no'}`);
+        
         try {
-            // Add player to database
+            // Create player data object
+            const playerData = {
+                full_name: name,
+                username: username || `user_${Date.now()}`, // Generate a username if not provided
+                email: email || '',
+                previously_selected: false
+            };
+            
+            // Upload photo if provided
+            if (photoFile) {
+                try {
+                    console.log('Uploading player photo...');
+                    
+                    // Upload file to storage - use 'images' bucket which exists
+                    const fileName = `player_photo_${Date.now()}_${photoFile.name}`;
+                    const { data: uploadData, error: uploadError } = await window.supabase.storage
+                        .from('images') // Use 'images' bucket instead of 'profiles'
+                        .upload(fileName, photoFile, {
+                            cacheControl: '3600',
+                            upsert: true
+                        });
+                    
+                    if (uploadError) {
+                        console.error('Error uploading photo:', uploadError);
+                        throw uploadError;
+                    }
+                    
+                    // Get public URL for the uploaded file
+                    const { data: urlData } = await window.supabase.storage
+                        .from('images') // Use 'images' bucket here too
+                        .getPublicUrl(fileName);
+                    
+                    if (urlData && urlData.publicUrl) {
+                        console.log('Photo uploaded successfully:', urlData.publicUrl);
+                        playerData.photo = urlData.publicUrl;
+                    }
+                    
+                } catch (photoError) {
+                    console.error('Error processing photo:', photoError);
+                    // Continue without photo if upload fails
+                }
+            }
+            
+            // Add player to database - use 'profiles' table instead of 'mafia.players'
             const { data, error } = await window.supabase
-                .from('mafia.players')
+                .from('profiles') // Use 'profiles' table
                 .insert(playerData)
                 .select();
             
