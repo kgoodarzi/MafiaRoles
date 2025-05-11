@@ -2,10 +2,19 @@
 let gameState = null;
 let currentPlayerIndex = 0;
 let allRolesViewed = false;
+let allRolesAssigned = false;
 
 // Initialize page when DOM is loaded
 document.addEventListener('DOMContentLoaded', async function() {
     console.log("View roles page loaded");
+    
+    // Check for Supabase client
+    if (!window.supabase) {
+        console.error("Supabase client not initialized");
+        document.getElementById('role-status').textContent = 
+            "Error: Database connection not available";
+        return;
+    }
     
     // Wait for database manager to initialize
     console.log("Waiting for database initialization...");
@@ -19,6 +28,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     document.getElementById('hide-role-btn').addEventListener('click', hideRole);
     document.getElementById('next-player-btn').addEventListener('click', nextPlayer);
     document.getElementById('proceed-btn').addEventListener('click', proceedToGame);
+    document.getElementById('skip-all-btn').addEventListener('click', skipAllRoles);
 });
 
 // Wait for database initialization
@@ -157,7 +167,7 @@ function viewRole() {
     
     // Fallback for known roles if getRoleById is not available or fails
     if (roleId === 'godfather' || roleId === 'regular_mafia' || roleId === 'bomber' || 
-        roleId === 'magician' || roleId === 'al-capon') {
+        roleId === 'magician' || roleId === 'godfather') {
         teamClass = 'mafia';
     } else if (roleId === 'zodiac') {
         teamClass = 'independent';
@@ -278,4 +288,42 @@ function getRoleInfo(roleId) {
         description: 'This role is not defined in detail.',
         image: 'images/default-avatar.svg'
     };
+}
+
+// Helper function to check if a player is eliminated
+function isPlayerEliminated(playerId) {
+    if (!gameState || !gameState.eliminatedPlayers) return false;
+    return gameState.eliminatedPlayers.some(eliminatedPlayer => eliminatedPlayer.id === playerId);
+}
+
+// New function to skip all roles
+function skipAllRoles() {
+    // Confirm with user
+    if (!confirm("Are you sure you want to skip showing all roles? Players won't see their roles.")) {
+        return;
+    }
+    
+    // Mark all roles as assigned
+    allRolesAssigned = true;
+    currentPlayerIndex = gameState.players.length;
+    
+    // Show game start button
+    document.getElementById('game-status').textContent = "Role viewing was skipped";
+    document.getElementById('current-player').innerHTML = `
+        <div class="all-assigned">
+            <h3>Role viewing skipped</h3>
+            <p>You can now start the game</p>
+        </div>
+    `;
+    document.getElementById('role-display').innerHTML = '';
+    
+    // Show the summary table of player roles
+    showRolesSummaryTable();
+    
+    // Update buttons
+    document.getElementById('view-role-btn').style.display = 'none';
+    document.getElementById('hide-role-btn').style.display = 'none';
+    document.getElementById('next-player-btn').style.display = 'none';
+    document.getElementById('skip-all-btn').style.display = 'none';
+    document.getElementById('start-game-btn').style.display = 'block';
 } 

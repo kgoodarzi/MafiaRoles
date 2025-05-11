@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mafia Game - Game Over</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="dark-theme.css">
+    <!-- Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Supabase initialization -->
+    <script src="supabase-init.js"></script>
+    <!-- Database Manager -->
+    <script src="database.js"></script>
+    <!-- Roles JS -->
+    <script src="roles.js"></script>
+    <!-- Connection Status -->
+    <script src="connection-status.js"></script>
+    <style>
+        .game-over-card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 30px;
+            border: 1px solid var(--border-color);
+        }
+        
+        .winner-banner {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+        
+        .town-win {
+            background-color: rgba(76, 175, 80, 0.2);
+            color: var(--town-color, #4caf50);
+            border: 2px solid var(--town-color, #4caf50);
+        }
+        
+        .mafia-win {
+            background-color: rgba(229, 57, 53, 0.2);
+            color: var(--mafia-color, #e53935);
+            border: 2px solid var(--mafia-color, #e53935);
+        }
+        
+        .zodiac-win {
+            background-color: rgba(103, 58, 183, 0.2);
+            color: var(--zodiac-color, #673ab7);
+            border: 2px solid var(--zodiac-color, #673ab7);
+        }
+        
+        .win-reason {
+            font-size: 1.2rem;
+            margin: 20px 0;
+            padding: 15px;
+            background-color: var(--card-bg-darker, #222);
+            border-radius: 8px;
+        }
+        
+        .role-assignments-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 30px 0;
+        }
+        
+        .role-assignments-table th, 
+        .role-assignments-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .role-assignments-table th {
+            background-color: var(--card-bg-darker);
+            font-weight: bold;
+        }
+        
+        .role-assignments-table .player-photo {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            overflow: hidden;
+            margin-right: 10px;
+        }
+        
+        .role-assignments-table .player-photo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .role-assignments-table .role-photo {
+            width: 50px;
+            height: 50px;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-right: 10px;
+        }
+        
+        .role-assignments-table .role-photo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .role-assignments-table .player-cell,
+        .role-assignments-table .role-cell {
+            display: flex;
+            align-items: center;
+        }
+        
+        .role-assignments-table .team-mafia {
+            background-color: rgba(229, 57, 53, 0.1);
+        }
+        
+        .role-assignments-table .team-town {
+            background-color: rgba(76, 175, 80, 0.1);
+        }
+        
+        .role-assignments-table .team-independent {
+            background-color: rgba(103, 58, 183, 0.1);
+        }
+        
+        .role-assignments-table .player-status {
+            font-size: 0.8rem;
+            padding: 3px 6px;
+            border-radius: 4px;
+            margin-left: 8px;
+            display: inline-block;
+        }
+        
+        .role-assignments-table .status-alive {
+            background-color: rgba(76, 175, 80, 0.2);
+            color: var(--town-color, #4caf50);
+        }
+        
+        .role-assignments-table .status-dead {
+            background-color: rgba(229, 57, 53, 0.2);
+            color: var(--mafia-color, #e53935);
+        }
+        
+        .player-achievements {
+            margin-top: 30px;
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            padding: 15px;
+        }
+        
+        .player-achievements h3 {
+            margin-top: 0;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+        
+        .achievement {
+            display: flex;
+            align-items: center;
+            margin: 15px 0;
+            padding: 10px;
+            background-color: var(--card-bg-darker, #222);
+            border-radius: 8px;
+        }
+        
+        .achievement-icon {
+            margin-right: 15px;
+            font-size: 1.5rem;
+        }
+        
+        .achievement-details {
+            flex: 1;
+        }
+        
+        .achievement-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .game-stats {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 30px;
+        }
+        
+        .stat-card {
+            flex: 1;
+            min-width: 200px;
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            border: 1px solid var(--border-color);
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body class="dark-theme">
+    <div id="connection-status"></div>
+    
+    <div class="container">
+        <header>
+            <h1>Game Over</h1>
+            <p id="game-over-subtitle">The Mafia Game Has Concluded</p>
+        </header>
+
+        <main>
+            <section id="game-over-section">
+                <div class="game-over-card">
+                    <div id="winner-banner" class="winner-banner">
+                        <!-- Will be filled dynamically -->
+                    </div>
+                    
+                    <div id="win-reason" class="win-reason">
+                        <!-- Will be filled dynamically -->
+                    </div>
+                    
+                    <div class="game-stats">
+                        <div class="stat-card">
+                            <div class="stat-value" id="rounds-played">0</div>
+                            <div class="stat-label">Rounds Played</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="players-eliminated">0</div>
+                            <div class="stat-label">Players Eliminated</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="surviving-players">0</div>
+                            <div class="stat-label">Surviving Players</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <h2>Role Assignments</h2>
+                <div id="role-assignments-container">
+                    <table class="role-assignments-table">
+                        <thead>
+                            <tr>
+                                <th>Player</th>
+                                <th>Role</th>
+                                <th>Team</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="role-assignments-body">
+                            <!-- Will be filled dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div id="game-actions" class="game-actions" style="margin-top:30px;text-align:center;">
+                    <button id="home-btn" class="btn" style="width:100%;">Back to Home</button>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>&copy; 2025 KRS Consulting Inc.</p>
+        </footer>
+    </div>
+
+    <script>
+        // Global variables
+        let gameState = null;
+        
+        // Initialize page when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log("Game Over page loaded");
+            
+            // Load game state from localStorage
+            loadGameState();
+            
+            // Set up event listeners
+            document.getElementById('home-btn').addEventListener('click', goToHome);
+        });
+        
+        // Load game state from localStorage
+        function loadGameState() {
+            try {
+                const storedGameState = localStorage.getItem('gameState');
+                if (storedGameState) {
+                    gameState = JSON.parse(storedGameState);
+                    console.log("Game state loaded:", gameState);
+                    
+                    // Verify this is a game over scenario
+                    if (!gameState.gameOver) {
+                        showError("This is not a Game Over scenario. Redirecting to home...");
+                        setTimeout(() => { window.location.href = 'index.html'; }, 3000);
+                        return;
+                    }
+                    
+                    // Display the winner
+                    displayWinner();
+                    
+                    // Display game statistics
+                    displayGameStats();
+                    
+                    // Display role assignments
+                    displayRoleAssignments();
+                    
+                } else {
+                    showError("No game state found. Redirecting to home...");
+                    setTimeout(() => { window.location.href = 'index.html'; }, 3000);
+                }
+            } catch (error) {
+                console.error("Error loading game state:", error);
+                showError(`Error loading game data: ${error.message}`);
+            }
+        }
+        
+        // Display the winner
+        function displayWinner() {
+            const winnerBanner = document.getElementById('winner-banner');
+            const winReason = document.getElementById('win-reason');
+            
+            // Set winner banner
+            if (gameState.winner) {
+                winnerBanner.textContent = `${capitalizeFirstLetter(gameState.winner)} Wins!`;
+                winnerBanner.className = `winner-banner ${gameState.winner}-win`;
+            } else if (gameState.winningTeam) {
+                winnerBanner.textContent = `${capitalizeFirstLetter(gameState.winningTeam)} Wins!`;
+                winnerBanner.className = `winner-banner ${gameState.winningTeam}-win`;
+            } else {
+                winnerBanner.textContent = "Game Over";
+                winnerBanner.className = "winner-banner";
+            }
+            
+            // Set win reason
+            if (gameState.winReason) {
+                winReason.textContent = gameState.winReason;
+            } else if (gameState.endReason) {
+                winReason.textContent = gameState.endReason;
+            } else {
+                winReason.textContent = "The game has come to an end.";
+            }
+        }
+        
+        // Display game statistics
+        function displayGameStats() {
+            // Set rounds played
+            document.getElementById('rounds-played').textContent = gameState.currentRound || 0;
+            
+            // Set players eliminated
+            const eliminatedCount = gameState.eliminatedPlayers ? gameState.eliminatedPlayers.length : 0;
+            document.getElementById('players-eliminated').textContent = eliminatedCount;
+            
+            // Set surviving players
+            const totalPlayers = gameState.players ? gameState.players.length : 0;
+            document.getElementById('surviving-players').textContent = totalPlayers - eliminatedCount;
+        }
+        
+        // Display role assignments
+        function displayRoleAssignments() {
+            if (!gameState || !gameState.players) return;
+            
+            const tableBody = document.getElementById('role-assignments-body');
+            tableBody.innerHTML = '';
+            
+            // Sort players by elimination status (alive first), then by team
+            const sortedPlayers = [...gameState.players].sort((a, b) => {
+                // First sort by alive status
+                const aIsAlive = !isPlayerEliminated(a.id);
+                const bIsAlive = !isPlayerEliminated(b.id);
+                
+                if (aIsAlive !== bIsAlive) {
+                    return aIsAlive ? -1 : 1;
+                }
+                
+                // Then sort by team
+                const aTeam = getPlayerTeam(a.role);
+                const bTeam = getPlayerTeam(b.role);
+                
+                if (aTeam !== bTeam) {
+                    // Put winning team first
+                    if (aTeam === gameState.winningTeam) return -1;
+                    if (bTeam === gameState.winningTeam) return 1;
+                    
+                    // Otherwise sort alphabetically
+                    return aTeam.localeCompare(bTeam);
+                }
+                
+                // Then sort by name
+                return a.name.localeCompare(b.name);
+            });
+            
+            // Create row for each player
+            sortedPlayers.forEach(player => {
+                const isAlive = !isPlayerEliminated(player.id);
+                const team = getPlayerTeam(player.role);
+                const row = document.createElement('tr');
+                
+                // Apply team class to the row
+                row.className = `team-${team}`;
+                
+                // Create player cell with photo
+                const playerCell = document.createElement('td');
+                const playerCellContent = document.createElement('div');
+                playerCellContent.className = 'player-cell';
+                
+                const playerPhoto = document.createElement('div');
+                playerPhoto.className = 'player-photo';
+                
+                const playerImg = document.createElement('img');
+                playerImg.src = player.photo_url || 'images/default-avatar.svg';
+                playerImg.alt = player.name;
+                playerImg.onerror = function() { this.src = 'images/default-avatar.svg'; };
+                
+                playerPhoto.appendChild(playerImg);
+                playerCellContent.appendChild(playerPhoto);
+                
+                const playerName = document.createElement('span');
+                playerName.textContent = player.name;
+                if (player.sequence !== undefined) {
+                    playerName.textContent += ` (#${player.sequence})`;
+                }
+                playerCellContent.appendChild(playerName);
+                
+                playerCell.appendChild(playerCellContent);
+                row.appendChild(playerCell);
+                
+                // Create role cell with photo
+                const roleCell = document.createElement('td');
+                const roleCellContent = document.createElement('div');
+                roleCellContent.className = 'role-cell';
+                
+                const rolePhoto = document.createElement('div');
+                rolePhoto.className = 'role-photo';
+                
+                const roleImg = document.createElement('img');
+                const roleInfo = getRoleInfo(player.role);
+                roleImg.src = roleInfo.image || `images/Role - ${capitalizeFirstLetter(player.role)}.jpg`;
+                roleImg.alt = roleInfo.name || capitalizeFirstLetter(player.role);
+                roleImg.onerror = function() { this.src = 'images/default-avatar.svg'; };
+                
+                rolePhoto.appendChild(roleImg);
+                roleCellContent.appendChild(rolePhoto);
+                
+                const roleName = document.createElement('span');
+                roleName.textContent = roleInfo.name || capitalizeFirstLetter(player.role);
+                roleCellContent.appendChild(roleName);
+                
+                roleCell.appendChild(roleCellContent);
+                row.appendChild(roleCell);
+                
+                // Create team cell
+                const teamCell = document.createElement('td');
+                teamCell.textContent = capitalizeFirstLetter(team);
+                row.appendChild(teamCell);
+                
+                // Create status cell
+                const statusCell = document.createElement('td');
+                const statusSpan = document.createElement('span');
+                statusSpan.className = `player-status status-${isAlive ? 'alive' : 'dead'}`;
+                statusSpan.textContent = isAlive ? 'Alive' : 'Eliminated';
+                statusCell.appendChild(statusSpan);
+                
+                // Add elimination details if player is eliminated
+                if (!isAlive) {
+                    const eliminationInfo = getEliminationInfo(player.id);
+                    if (eliminationInfo) {
+                        const eliminationDetails = document.createElement('div');
+                        eliminationDetails.style.fontSize = '0.8rem';
+                        eliminationDetails.style.marginTop = '5px';
+                        eliminationDetails.textContent = `Round ${eliminationInfo.eliminatedInRound}, ${capitalizeFirstLetter(eliminationInfo.eliminatedInPhase)} Phase`;
+                        statusCell.appendChild(eliminationDetails);
+                    }
+                }
+                
+                row.appendChild(statusCell);
+                
+                // Add row to table
+                tableBody.appendChild(row);
+            });
+        }
+        
+        // Check if a player is eliminated
+        function isPlayerEliminated(playerId) {
+            if (!gameState.eliminatedPlayers) return false;
+            return gameState.eliminatedPlayers.some(p => p.id === playerId);
+        }
+        
+        // Get elimination info for a player
+        function getEliminationInfo(playerId) {
+            if (!gameState.eliminatedPlayers) return null;
+            return gameState.eliminatedPlayers.find(p => p.id === playerId);
+        }
+        
+        // Get team for a role
+        function getPlayerTeam(role) {
+            const mafiaRoles = ['godfather', 'magician', 'bomber', 'regular_mafia'];
+            const independentRoles = ['zodiac'];
+            
+            if (mafiaRoles.includes(role)) {
+                return 'mafia';
+            } else if (independentRoles.includes(role)) {
+                return 'independent';
+            } else {
+                return 'town';
+            }
+        }
+        
+        // Get role information
+        function getRoleInfo(roleId) {
+            // Try to get from global ROLES array if available
+            if (typeof getRoleById === 'function') {
+                const role = getRoleById(roleId);
+                if (role) {
+                    return {
+                        name: role.name,
+                        description: role.description,
+                        image: role.image
+                    };
+                }
+            }
+            
+            // Fallback to basic info
+            return {
+                name: capitalizeFirstLetter(roleId.replace('_', ' ')),
+                description: '',
+                image: `images/Role - ${capitalizeFirstLetter(roleId)}.jpg`
+            };
+        }
+        
+        // Start a new game
+        function startNewGame() {
+            // Clear the current game state
+            localStorage.removeItem('gameState');
+            
+            // Redirect to the setup page
+            window.location.href = 'setup.html';
+        }
+        
+        // Go to home page
+        function goToHome() {
+            // Redirect to the home page
+            window.location.href = 'index.html';
+        }
+        
+        // Show error message
+        function showError(message) {
+            const gameOverSection = document.getElementById('game-over-section');
+            gameOverSection.innerHTML = `
+                <div class="error-message">
+                    <h3>Error</h3>
+                    <p>${message}</p>
+                </div>
+            `;
+        }
+        
+        // Helper function to capitalize first letter of a string
+        function capitalizeFirstLetter(string) {
+            if (!string) return '';
+            return string.charAt(0).toUpperCase() + string.slice(1);
+        }
+    </script>
+</body>
+</html> 

@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mafia Game - Bomb Defuse</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="dark-theme.css">
+    <!-- Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Supabase initialization -->
+    <script src="supabase-init.js"></script>
+    <!-- Database Manager -->
+    <script src="database.js"></script>
+    <!-- Roles JS -->
+    <script src="roles.js"></script>
+    <!-- Connection Status -->
+    <script src="connection-status.js"></script>
+    <style>
+        .bomb-container {
+            background-color: var(--card-bg);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .bomb-warning {
+            color: #ff4c4c;
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 0.8; }
+            50% { opacity: 1; }
+            100% { opacity: 0.8; }
+        }
+        
+        .player-info {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .player-image {
+            width: 150px;
+            height: 150px;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 10px;
+            border: 3px solid #ff4c4c;
+            box-shadow: 0 0 15px rgba(255, 76, 76, 0.6);
+        }
+        
+        .player-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .timer-container {
+            background-color: var(--card-bg-darker);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        
+        .timer-display {
+            font-size: 2.5rem;
+            font-weight: bold;
+            text-align: center;
+            margin: 15px 0;
+            transition: color 0.3s ease;
+        }
+        
+        .timer-controls {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+        }
+        
+        .code-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .code-btn {
+            width: 60px;
+            height: 60px;
+            font-size: 1.8rem;
+            font-weight: bold;
+            background-color: var(--card-bg-darker);
+            color: white;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .code-btn:hover {
+            transform: scale(1.05);
+            border-color: var(--primary-color);
+        }
+        
+        .code-btn.selected {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        .bodyguard-action, .target-action, .result-section {
+            background-color: var(--card-bg);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .bodyguard-image, .result-image {
+            width: 150px;
+            height: 150px;
+            border-radius: 8px;
+            overflow: hidden;
+            margin: 10px auto;
+            border: 3px solid #4c9aff;
+            box-shadow: 0 0 15px rgba(76, 154, 255, 0.6);
+        }
+        
+        .bodyguard-image img, .result-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .bodyguard-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .target-defusing, .bodyguard-defusing {
+            margin: 20px 0;
+        }
+        
+        .success-message {
+            color: #4caf50;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+        
+        .failure-message {
+            color: #f44336;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+        
+        /* New styles for highlighting sections */
+        .highlight-section {
+            border: 3px solid gold;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+            animation: highlight-pulse 2s infinite;
+        }
+        
+        @keyframes highlight-pulse {
+            0% { box-shadow: 0 0 10px rgba(255, 215, 0, 0.5); }
+            50% { box-shadow: 0 0 20px rgba(255, 215, 0, 0.8); }
+            100% { box-shadow: 0 0 10px rgba(255, 215, 0, 0.5); }
+        }
+        
+        /* Larger, more prominent buttons */
+        #help-defuse-btn, #dont-help-btn {
+            padding: 12px 20px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            min-width: 160px;
+            transition: all 0.2s ease;
+        }
+        
+        #help-defuse-btn:hover, #dont-help-btn:hover {
+            transform: scale(1.05);
+        }
+        
+        .attention-note {
+            border-left: 4px solid gold;
+            font-size: 1.1rem;
+        }
+    </style>
+</head>
+<body class="dark-theme">
+    <div id="connection-status"></div>
+    
+    <div class="container">
+        <header>
+            <h1>Bomb Defuse</h1>
+            <p id="bomb-phase-subtitle">Attempt to defuse the bomb</p>
+        </header>
+
+        <main>
+            <section id="bomb-phase-section">
+                <div id="phase-info" class="phase-info">
+                    <h2>Bomb Defusing Phase</h2>
+                    <p>A bomb has been planted and must be defused before proceeding to the voting phase.</p>
+                </div>
+
+                <!-- Bomb information -->
+                <div id="bomb-container" class="bomb-container highlight-section">
+                    <div class="bomb-warning">⚠️ ACTIVE BOMB DETECTED ⚠️</div>
+                    <div class="player-info">
+                        <h3>Bomb placed in front of:</h3>
+                        <div class="player-image">
+                            <img id="target-img" src="images/default-avatar.svg" alt="Target Player">
+                        </div>
+                        <h3 id="target-name">Player Name</h3>
+                        <p class="attention-note">This player must attempt to defuse the bomb!</p>
+                    </div>
+                </div>
+
+                <!-- Bodyguard Action Section -->
+                <div id="bodyguard-action" class="bodyguard-action highlight-section" style="display:none;">
+                    <h3>Bodyguard Action Required</h3>
+                    <p class="attention-note">The Bodyguard must decide whether to help defuse the bomb.</p>
+                    
+                    <div class="bodyguard-image">
+                        <img id="bodyguard-img" src="images/default-avatar.svg" alt="Bodyguard">
+                    </div>
+                    <h3 id="bodyguard-name">Bodyguard Name</h3>
+                    
+                    <div class="bodyguard-buttons">
+                        <button id="help-defuse-btn" class="btn btn-success">Help Defuse</button>
+                        <button id="dont-help-btn" class="btn btn-danger">Don't Help</button>
+                    </div>
+                    
+                    <div id="bodyguard-action-message" style="margin-top: 15px; display: none;">
+                        <p class="success-message">The Bodyguard has chosen to help defuse the bomb.</p>
+                    </div>
+                </div>
+
+                <!-- Bodyguard Defusing Section -->
+                <div id="bodyguard-defusing" class="bodyguard-defusing highlight-section" style="display:none;">
+                    <h3>Bodyguard Defusing Attempt</h3>
+                    <p class="attention-note">Select a number from 1 to 4 to attempt to defuse the bomb:</p>
+                    
+                    <div class="code-buttons">
+                        <button class="code-btn bodyguard-code-btn" data-code="1">1</button>
+                        <button class="code-btn bodyguard-code-btn" data-code="2">2</button>
+                        <button class="code-btn bodyguard-code-btn" data-code="3">3</button>
+                        <button class="code-btn bodyguard-code-btn" data-code="4">4</button>
+                    </div>
+                    
+                    <div id="bodyguard-defuse-result" class="action-result" style="display:none;"></div>
+                </div>
+
+                <!-- Target Defusing Section -->
+                <div id="target-defusing" class="target-defusing highlight-section" style="display:none;">
+                    <h3>Target Defusing Attempt</h3>
+                    <p class="attention-note">Select a number from 1 to 4 to attempt to defuse the bomb:</p>
+                    
+                    <div class="code-buttons">
+                        <button class="code-btn target-code-btn" data-code="1">1</button>
+                        <button class="code-btn target-code-btn" data-code="2">2</button>
+                        <button class="code-btn target-code-btn" data-code="3">3</button>
+                        <button class="code-btn target-code-btn" data-code="4">4</button>
+                    </div>
+                    
+                    <div id="target-defuse-result" class="action-result" style="display:none;"></div>
+                </div>
+
+                <!-- Result Section -->
+                <div id="result-section" class="result-section" style="display:none;">
+                    <h3>Defusing Result</h3>
+                    <div id="result-message"></div>
+                    
+                    <div class="result-image" style="display:none;">
+                        <img id="result-img" src="images/default-avatar.svg" alt="Result">
+                    </div>
+                    <h3 id="result-name" style="display:none;"></h3>
+                    
+                    <div id="code-info" style="margin:15px 0;"></div>
+                </div>
+
+                <div id="game-actions" class="game-actions" style="margin-top:20px;">
+                    <button id="next-phase-btn" class="btn btn-primary" style="width: 100%; margin-bottom: 15px;" disabled>Proceed to Voting</button>
+                    <button id="show-roles-btn" class="btn" style="width: 100%; margin-bottom: 15px;">Show Role Assignments</button>
+                    <button id="reset-btn" class="btn" style="width: 100%;">Back to Home</button>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>&copy; 2025 KRS Consulting Inc.</p>
+        </footer>
+    </div>
+
+    <script>
+        // Global variables
+        let gameState = null;
+        let bombState = {
+            targetId: null,
+            bodyguardId: null,
+            bomberCode: null,
+            bodyguardHelped: false,
+            bodyguardCode: null,
+            targetCode: null,
+            resultDetermined: false,
+            targetSurvived: false,
+            bodyguardDied: false
+        };
+        
+        // Initialize page when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log("Bomb Defuse page loaded");
+            
+            // Load game state from localStorage
+            loadGameState();
+            
+            // Set up event listeners
+            document.getElementById('help-defuse-btn').addEventListener('click', bodyguardHelp);
+            document.getElementById('dont-help-btn').addEventListener('click', bodyguardDecline);
+            document.getElementById('bodyguard-submit-btn').addEventListener('click', submitBodyguardCode);
+            document.getElementById('target-submit-btn').addEventListener('click', submitTargetCode);
+            document.getElementById('next-phase-btn').addEventListener('click', goToNextPhase);
+            document.getElementById('show-roles-btn').addEventListener('click', goToRoleAssignments);
+            document.getElementById('reset-btn').addEventListener('click', resetGame);
+            
+            // Set up bodyguard code buttons
+            setupCodeButtons('bodyguard-code-btn', function(code) {
+                bombState.bodyguardCode = code;
+            });
+            
+            // Set up target code buttons
+            setupCodeButtons('target-code-btn', function(code) {
+                bombState.targetCode = code;
+            });
+        });
+        
+        // Load game state from localStorage
+        function loadGameState() {
+            try {
+                const storedGameState = localStorage.getItem('gameState');
+                if (storedGameState) {
+                    gameState = JSON.parse(storedGameState);
+                    console.log("Game state loaded:", gameState);
+                    
+                    // Check if there's a bomb placed
+                    if (gameState.bomberAction && gameState.bomberAction.targetId && gameState.bomberAction.code) {
+                        bombState.targetId = gameState.bomberAction.targetId;
+                        bombState.bomberCode = gameState.bomberAction.code;
+                        
+                        // Find the target player
+                        const targetPlayer = gameState.players.find(p => p.id === bombState.targetId);
+                        if (targetPlayer) {
+                            document.getElementById('target-name').textContent = targetPlayer.name;
+                            document.getElementById('target-img').src = targetPlayer.photo_url || 'images/default-avatar.svg';
+                            document.getElementById('target-img').onerror = function() {
+                                this.src = 'images/default-avatar.svg';
+                            };
+                            
+                            // Update page subtitle to include target name
+                            document.getElementById('bomb-phase-subtitle').textContent = `Attempt to defuse the bomb in front of ${targetPlayer.name}`;
+                            
+                            // Find if there's a bodyguard in the game
+                            const bodyguardPlayer = getAlivePlayers().find(p => p.role === 'bodyguard');
+                            bombState.bodyguardId = bodyguardPlayer ? bodyguardPlayer.id : null;
+                            
+                            // Check if target is the bodyguard
+                            const targetIsBodyguard = targetPlayer.role === 'bodyguard';
+                            
+                            // If there's a bodyguard and they're not the target
+                            if (bodyguardPlayer && !targetIsBodyguard) {
+                                document.getElementById('bodyguard-name').textContent = bodyguardPlayer.name;
+                                document.getElementById('bodyguard-img').src = bodyguardPlayer.photo_url || 'images/default-avatar.svg';
+                                document.getElementById('bodyguard-img').onerror = function() {
+                                    this.src = 'images/default-avatar.svg';
+                                };
+                                
+                                // Make bodyguard section more prominent
+                                const bodyguardAction = document.getElementById('bodyguard-action');
+                                bodyguardAction.style.display = 'block';
+                                bodyguardAction.classList.add('highlight-section');
+                                
+                                // Add additional instruction text
+                                const phaseInfo = document.getElementById('phase-info');
+                                phaseInfo.innerHTML += `
+                                    <div class="attention-note" style="margin-top: 10px; padding: 10px; background-color: rgba(255, 255, 0, 0.1); border-radius: 5px;">
+                                        <p><strong>Note:</strong> The Bodyguard (${bodyguardPlayer.name}) must decide whether to help with defusing.</p>
+                                    </div>
+                                `;
+                            } 
+                            // No bodyguard help needed, go straight to target defusing
+                            else {
+                                showTargetDefusing(targetIsBodyguard);
+                            }
+                        } else {
+                            showError("Target player not found in game state");
+                        }
+                    } else {
+                        showError("No bomb placement found in game state");
+                    }
+                } else {
+                    showError("No game state found in localStorage");
+                }
+            } catch (error) {
+                showError(`Error loading game state: ${error.message}`);
+            }
+        }
+        
+        // Show error message
+        function showError(message) {
+            document.getElementById('phase-info').innerHTML = `
+                <div class="error-message">
+                    <h3>Error</h3>
+                    <p>${message}</p>
+                </div>
+            `;
+            console.error(message);
+        }
+        
+        // Setup code buttons
+        function setupCodeButtons(buttonClass, callback) {
+            const codeButtons = document.querySelectorAll(`.${buttonClass}`);
+            
+            codeButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const code = this.getAttribute('data-code');
+                    
+                    // Remove selected class from all code buttons of this type
+                    document.querySelectorAll(`.${buttonClass}`).forEach(btn => {
+                        btn.classList.remove('selected');
+                    });
+                    
+                    // Add selected class to clicked button
+                    this.classList.add('selected');
+                    
+                    // Call the callback with the selected code
+                    callback(code);
+                });
+            });
+        }
+        
+        // Bodyguard chooses to help
+        function bodyguardHelp() {
+            bombState.bodyguardHelped = true;
+            
+            // Update phase info to reflect bodyguard's choice
+            const phaseInfo = document.getElementById('phase-info');
+            const existingNote = phaseInfo.querySelector('.attention-note');
+            if (existingNote) {
+                existingNote.innerHTML = `
+                    <p><strong>Bodyguard Decision:</strong> ${document.getElementById('bodyguard-name').textContent} has chosen to help defuse the bomb.</p>
+                `;
+                existingNote.style.backgroundColor = 'rgba(76, 175, 80, 0.1)'; // Light green background
+                existingNote.style.borderLeft = '4px solid #4caf50'; // Green border
+            }
+            
+            document.getElementById('bodyguard-action').style.display = 'none';
+            document.getElementById('bodyguard-defusing').style.display = 'block';
+            
+            // Add highlight to the bodyguard defusing section
+            document.getElementById('bodyguard-defusing').classList.add('highlight-section');
+        }
+        
+        // Bodyguard chooses not to help
+        function bodyguardDecline() {
+            bombState.bodyguardHelped = false;
+            
+            // Update phase info to reflect bodyguard's choice
+            const phaseInfo = document.getElementById('phase-info');
+            const existingNote = phaseInfo.querySelector('.attention-note');
+            if (existingNote) {
+                existingNote.innerHTML = `
+                    <p><strong>Bodyguard Decision:</strong> ${document.getElementById('bodyguard-name').textContent} has chosen not to help with defusing.</p>
+                `;
+                existingNote.style.backgroundColor = 'rgba(244, 67, 54, 0.1)'; // Light red background
+                existingNote.style.borderLeft = '4px solid #f44336'; // Red border
+            }
+            
+            document.getElementById('bodyguard-action').style.display = 'none';
+            showTargetDefusing(false);
+            
+            // Add highlight to the target defusing section
+            document.getElementById('target-defusing').classList.add('highlight-section');
+        }
+        
+        // Show target defusing section
+        function showTargetDefusing(isBodyguard) {
+            const targetDefusingSection = document.getElementById('target-defusing');
+            targetDefusingSection.style.display = 'block';
+            
+            // If the target is the bodyguard, they automatically know the correct code
+            if (isBodyguard) {
+                // Check if hint already exists
+                if (!targetDefusingSection.querySelector('.bodyguard-hint')) {
+                    const hintP = document.createElement('p');
+                    hintP.className = 'bodyguard-hint';
+                    hintP.innerHTML = `<strong style="color:#4caf50;">Hint: As the Bodyguard, you know the correct code is ${bombState.bomberCode}.</strong>`;
+                    targetDefusingSection.insertBefore(hintP, targetDefusingSection.querySelector('.code-buttons'));
+                
+                    // Pre-select the correct code button
+                    setTimeout(() => {
+                        const correctCodeBtn = targetDefusingSection.querySelector(`.target-code-btn[data-code="${bombState.bomberCode}"]`);
+                        if (correctCodeBtn) {
+                            correctCodeBtn.click();
+                        }
+                    }, 500);
+                }
+            }
+        }
+        
+        // Submit bodyguard code
+        function submitBodyguardCode() {
+            if (!bombState.bodyguardCode) {
+                alert('Please select a code first');
+                return;
+            }
+            
+            document.getElementById('bodyguard-defusing').style.display = 'none';
+            
+            // Check if bodyguard correctly defused the bomb
+            const correctGuess = bombState.bodyguardCode === bombState.bomberCode;
+            
+            // Determine the result
+            if (correctGuess) {
+                // Bodyguard successfully defused the bomb
+                bombState.targetSurvived = true;
+                bombState.bodyguardDied = false;
+                showResult({
+                    success: true,
+                    message: "The Bodyguard successfully defused the bomb! Both the Bodyguard and the target survive.",
+                    showImage: false
+                });
+            } else {
+                // Bodyguard failed to defuse and dies in the process
+                bombState.targetSurvived = true;
+                bombState.bodyguardDied = true;
+                
+                // Get the bodyguard player
+                const bodyguardPlayer = gameState.players.find(p => p.id === bombState.bodyguardId);
+                
+                showResult({
+                    success: false,
+                    message: "The Bodyguard failed to defuse the bomb and has been eliminated! The target survives.",
+                    showImage: true,
+                    imageSrc: bodyguardPlayer.photo_url || 'images/default-avatar.svg',
+                    name: bodyguardPlayer.name
+                });
+                
+                // Add bodyguard to eliminated players
+                if (!gameState.eliminatedPlayers) {
+                    gameState.eliminatedPlayers = [];
+                }
+                
+                gameState.eliminatedPlayers.push({
+                    id: bodyguardPlayer.id,
+                    name: bodyguardPlayer.name,
+                    role: bodyguardPlayer.role,
+                    eliminatedInRound: gameState.currentRound,
+                    eliminatedInPhase: 'bomb'
+                });
+            }
+            
+            // Update the code info
+            document.getElementById('code-info').innerHTML = `
+                <p><strong>Bomb code was:</strong> ${bombState.bomberCode}</p>
+                <p><strong>Bodyguard guessed:</strong> ${bombState.bodyguardCode}</p>
+            `;
+            
+            // Save updated game state
+            bombState.resultDetermined = true;
+            saveGameState();
+        }
+        
+        // Submit target code
+        function submitTargetCode() {
+            if (!bombState.targetCode) {
+                alert('Please select a code first');
+                return;
+            }
+            
+            document.getElementById('target-defusing').style.display = 'none';
+            
+            // Check if target correctly defused the bomb
+            const correctGuess = bombState.targetCode === bombState.bomberCode;
+            
+            // Get the target player
+            const targetPlayer = gameState.players.find(p => p.id === bombState.targetId);
+            
+            // Determine the result
+            if (correctGuess) {
+                // Target successfully defused the bomb
+                bombState.targetSurvived = true;
+                
+                showResult({
+                    success: true,
+                    message: "The bomb was successfully defused! The target survives.",
+                    showImage: false
+                });
+            } else {
+                // Target failed to defuse and is eliminated
+                bombState.targetSurvived = false;
+                
+                showResult({
+                    success: false,
+                    message: "The bomb exploded! The target has been eliminated.",
+                    showImage: true,
+                    imageSrc: targetPlayer.photo_url || 'images/default-avatar.svg',
+                    name: targetPlayer.name
+                });
+                
+                // Add target to eliminated players
+                if (!gameState.eliminatedPlayers) {
+                    gameState.eliminatedPlayers = [];
+                }
+                
+                gameState.eliminatedPlayers.push({
+                    id: targetPlayer.id,
+                    name: targetPlayer.name,
+                    role: targetPlayer.role,
+                    eliminatedInRound: gameState.currentRound,
+                    eliminatedInPhase: 'bomb'
+                });
+            }
+            
+            // Update the code info
+            document.getElementById('code-info').innerHTML = `
+                <p><strong>Bomb code was:</strong> ${bombState.bomberCode}</p>
+                <p><strong>Target guessed:</strong> ${bombState.targetCode}</p>
+            `;
+            
+            // Save updated game state
+            bombState.resultDetermined = true;
+            saveGameState();
+        }
+        
+        // Show result
+        function showResult(resultData) {
+            const resultSection = document.getElementById('result-section');
+            const resultMessage = document.getElementById('result-message');
+            
+            if (resultData.success) {
+                resultMessage.className = 'success-message';
+            } else {
+                resultMessage.className = 'failure-message';
+            }
+            
+            resultMessage.textContent = resultData.message;
+            
+            if (resultData.showImage) {
+                document.getElementById('result-img').src = resultData.imageSrc;
+                document.getElementById('result-img').onerror = function() {
+                    this.src = 'images/default-avatar.svg';
+                };
+                document.getElementById('result-name').textContent = resultData.name;
+                document.getElementById('result-img').parentElement.style.display = 'block';
+                document.getElementById('result-name').style.display = 'block';
+            }
+            
+            resultSection.style.display = 'block';
+            
+            // Enable the next phase button
+            document.getElementById('next-phase-btn').disabled = false;
+        }
+        
+        // Save the updated game state
+        function saveGameState() {
+            // Store the defusing result in the game state
+            gameState.bombDefused = {
+                targetId: bombState.targetId,
+                bodyguardHelped: bombState.bodyguardHelped,
+                bodyguardCode: bombState.bodyguardCode,
+                targetCode: bombState.targetCode,
+                bomberCode: bombState.bomberCode,
+                targetSurvived: bombState.targetSurvived,
+                bodyguardDied: bombState.bodyguardDied
+            };
+            
+            // Remove the bomber action since it's been resolved
+            delete gameState.bomberAction;
+            
+            // Check for game ending conditions
+            const gameEndResult = checkGameEndingConditions();
+            
+            if (gameEndResult.gameOver) {
+                // Game has ended, redirect to the game over page
+                gameState.gameOver = true;
+                gameState.winningTeam = gameEndResult.winningTeam;
+                gameState.endReason = gameEndResult.reason;
+                
+                // Save game state
+                localStorage.setItem('gameState', JSON.stringify(gameState));
+                
+                // If it's a Chaos Day (3 players with at least one Mafia/Zodiac), go to Chaos Day page
+                if (gameEndResult.chaosDay) {
+                    gameState.chaosDay = true;
+                    localStorage.setItem('gameState', JSON.stringify(gameState));
+                    window.location.href = 'chaos-day.html';
+                    return;
+                }
+                
+                // Redirect to game over page
+                window.location.href = 'game-over.html';
+            } else {
+                // Save game state
+                localStorage.setItem('gameState', JSON.stringify(gameState));
+            }
+        }
+        
+        // Get alive players (those not in eliminatedPlayers array)
+        function getAlivePlayers() {
+            if (!gameState || !gameState.players) return [];
+            
+            // If eliminatedPlayers doesn't exist, initialize it
+            if (!gameState.eliminatedPlayers) {
+                gameState.eliminatedPlayers = [];
+            }
+            
+            // Return players who are not in the eliminatedPlayers array
+            return gameState.players.filter(player => 
+                !gameState.eliminatedPlayers.some(eliminated => eliminated.id === player.id)
+            );
+        }
+        
+        // Check for game-ending conditions
+        function checkGameEndingConditions() {
+            const alivePlayers = getAlivePlayers();
+            
+            // Count players by team
+            const mafiaCount = alivePlayers.filter(p => 
+                ['godfather', 'magician', 'bomber', 'regular_mafia'].includes(p.role)
+            ).length;
+            
+            const townCount = alivePlayers.filter(p => 
+                !['godfather', 'magician', 'bomber', 'regular_mafia', 'zodiac'].includes(p.role)
+            ).length;
+            
+            const zodiacCount = alivePlayers.filter(p => p.role === 'zodiac').length;
+            
+            // Game end conditions
+            
+            // If only one player left
+            if (alivePlayers.length === 1) {
+                const lastPlayer = alivePlayers[0];
+                if (['godfather', 'magician', 'bomber', 'regular_mafia'].includes(lastPlayer.role)) {
+                    return { gameOver: true, winningTeam: 'mafia', reason: 'Last player standing is Mafia' };
+                } else if (lastPlayer.role === 'zodiac') {
+                    return { gameOver: true, winningTeam: 'zodiac', reason: 'Last player standing is Zodiac' };
+                } else {
+                    return { gameOver: true, winningTeam: 'town', reason: 'Last player standing is Town' };
+                }
+            }
+            
+            // If two players left - Zodiac wins against anyone, Town wins against Mafia
+            if (alivePlayers.length === 2) {
+                if (zodiacCount > 0) {
+                    return { gameOver: true, winningTeam: 'zodiac', reason: 'Only two players remain and one is Zodiac' };
+                }
+                
+                if (mafiaCount === 1 && townCount === 1) {
+                    return { gameOver: true, winningTeam: 'town', reason: 'Only Town and Mafia remain (1v1)' };
+                }
+                
+                if (mafiaCount === 2) {
+                    return { gameOver: true, winningTeam: 'mafia', reason: 'Only Mafia members remain' };
+                }
+                
+                if (townCount === 2) {
+                    return { gameOver: true, winningTeam: 'town', reason: 'Only Town members remain' };
+                }
+            }
+            
+            // If three players left with at least one Mafia/Zodiac
+            if (alivePlayers.length === 3 && (mafiaCount > 0 || zodiacCount > 0)) {
+                return { gameOver: true, chaosDay: true, reason: 'Three players remain - Chaos Day triggered' };
+            }
+            
+            // Mafia parity with Town (when no Zodiac)
+            if (zodiacCount === 0 && mafiaCount >= townCount) {
+                return { gameOver: true, winningTeam: 'mafia', reason: 'Mafia has reached parity with Town' };
+            }
+            
+            // No ending condition met
+            return { gameOver: false };
+        }
+        
+        // Go to the next phase
+        function goToNextPhase() {
+            if (!gameState || !bombState.resultDetermined) return;
+            
+            // Update game state to voting phase
+            gameState.gamePhase = 'voting';
+            localStorage.setItem('gameState', JSON.stringify(gameState));
+            
+            // Redirect to the voting phase page
+            window.location.href = 'voting-phase.html';
+        }
+        
+        // Go to role assignments page
+        function goToRoleAssignments() {
+            window.location.href = 'role-assignments.html';
+        }
+        
+        // Reset the game and return to home
+        function resetGame() {
+            // Clear game state
+            localStorage.removeItem('gameState');
+            
+            // Redirect to home page
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html> 

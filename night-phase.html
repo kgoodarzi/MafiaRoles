@@ -16,8 +16,215 @@
     <script src="roles.js"></script>
     <!-- Connection Status -->
     <script src="connection-status.js"></script>
-    <!-- Night Phase JS -->
-    <script src="night-phase.js"></script>
+    <!-- Configuration Settings -->
+    <script src="config.js"></script>
+    <style>
+        /* Timer specific styles */
+        .timer-display {
+            font-size: 2.5rem;
+            font-weight: bold;
+            text-align: center;
+            margin: 15px 0;
+            transition: color 0.3s ease;
+        }
+        
+        .timer-progress {
+            width: 100%;
+            height: 10px;
+            background-color: var(--border-color);
+            border-radius: 5px;
+            margin-bottom: 15px;
+            overflow: hidden;
+        }
+        
+        .timer-bar {
+            height: 100%;
+            width: 100%;
+            background-color: var(--primary-color);
+            border-radius: 5px;
+            transition: width 1s linear;
+        }
+        
+        .timer-warning .timer-bar {
+            background-color: var(--warning-color, #ff9800);
+        }
+        
+        .timer-danger .timer-bar {
+            background-color: var(--mafia-color, #e53935);
+        }
+        
+        .night-call-section {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        
+        .role-call {
+            margin-bottom: 15px;
+        }
+        
+        
+        .active-role-card {
+            width: 180px;
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+            box-shadow: 0 3px 5px rgba(0,0,0,0.1);
+        }
+        
+        .active-role-card img {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+        
+        .active-role-card.blocked {
+            border: 2px solid var(--warning-color, #ff9800);
+        }
+        
+        .players-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 25px;
+            margin-top: 20px;
+        }
+        
+        .player-card {
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            overflow: visible;
+            box-shadow: 0 3px 5px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            margin: 10px;
+            padding: 8px;
+        }
+        
+        .player-card.selected {
+            border: 2px solid var(--primary-color);
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .player-card.blocked {
+            border: 2px solid var(--warning-color, #ff9800);
+        }
+        
+        .player-card.targeted {
+            border: 2px solid var(--mafia-color, #e53935);
+        }
+        
+        .player-card.protected {
+            border: 2px solid var(--success-color, #4caf50);
+        }
+        
+        .player-card.active-player {
+            background-color: rgba(255, 255, 100, 0.2); /* Light yellow background */
+        }
+        
+        .player-card.team-player {
+            background-color: rgba(150, 150, 150, 0.2); /* Grey background */
+        }
+        
+        .player-card.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+        
+        .player-image {
+            position: relative;
+            width: 150px;
+            height: 150px;
+            overflow: hidden;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .player-image:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .player-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .player-info {
+            padding: 10px 5px;
+            text-align: center;
+        }
+        
+        .position-relative {
+            position: relative;
+        }
+        
+        .code-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            justify-content: center;
+        }
+        
+        .code-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: none;
+            background-color: var(--primary-color);
+            color: white;
+            font-weight: bold;
+            font-size: 18px;
+            cursor: pointer;
+        }
+        
+        .code-btn.selected {
+            background-color: var(--success-color, #4caf50);
+            transform: scale(1.1);
+        }
+        
+        .action-result {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: var(--card-bg-darker, #222);
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .action-result.success {
+            border-left: 4px solid var(--success-color, #4caf50);
+        }
+        
+        .action-result.warning {
+            border-left: 4px solid var(--warning-color, #ff9800);
+        }
+        
+        .action-result.danger {
+            border-left: 4px solid var(--mafia-color, #e53935);
+        }
+        
+        .night-result {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        
+        .night-result-item {
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 8px;
+            background-color: var(--card-bg-darker, #222);
+        }
+    </style>
 </head>
 <body class="dark-theme">
     <div id="connection-status"></div>
@@ -32,31 +239,176 @@
             <section id="night-phase-section">
                 <div id="phase-info" class="phase-info">
                     <h2>Night Phase</h2>
-                    <p>The Mafia and special roles perform their actions at night. Choose targets for elimination and special abilities.</p>
+                    <p>The Moderator calls each role in sequence to perform their night actions.</p>
                 </div>
 
-                <div id="role-actions" class="role-actions" style="margin-top:20px;">
-                    <h3>Special Role Actions</h3>
-                    <div class="role-action-buttons">
-                        <button id="mafia-action-btn" class="btn" style="width: 100%; margin-bottom: 10px; background-color: var(--mafia-color);">Mafia Elimination</button>
-                        <button id="detective-action-btn" class="btn" style="width: 100%; margin-bottom: 10px; background-color: var(--citizen-color);">Detective Investigation</button>
-                        <button id="doctor-action-btn" class="btn" style="width: 100%; margin-bottom: 10px; background-color: var(--citizen-color);">Doctor Protection</button>
-                        <button id="special-action-btn" class="btn" style="width: 100%; margin-bottom: 10px;">Other Special Abilities</button>
+                <!-- Night Call Sequence -->
+                <div id="night-sequence-container">
+                    <!-- 1. Mafia Call -->
+                    <div id="mafia-call" class="night-call-section">
+                        <h3>1. Mafia Team Wake Up</h3>
+                        <p>Call all Mafia members to wake up and perform their actions.</p>
+                        
+                        <!-- Godfather Action -->
+                        <div id="godfather-action" class="role-call">
+                            <h4>Godfather's Action</h4>
+                            <div class="action-description">Select a player to eliminate from the game.</div>
+                            <div id="godfather-players" class="players-grid">
+                            </div>
+                            <div id="godfather-result" class="action-result" style="display:none;"></div>
+                        </div>
+                        
+                        <!-- Magician Action -->
+                        <div id="magician-action" class="role-call">
+                            <h4>Magician's Action</h4>
+                            <p>Choose a player to be blocked:</p>
+                            <div id="magician-players" class="players-grid">
+                                <!-- Player cards will be dynamically added here -->
+                            </div>
+                            <div id="magician-result" class="action-result" style="display:none;"></div>
+                        </div>
+                        
+                        <!-- Bomber Action -->
+                        <div id="bomber-action" class="role-call">
+                            <h4>Bomber's Action</h4>
+                            <p>Choose a player to plant a bomb:</p>
+                            <div id="bomber-bombs-remaining" class="action-result">
+                                <p><strong>Bombs remaining:</strong> <span id="bomber-bombs-count">1</span></p>
+                            </div>
+                            <div id="bomber-players" class="players-grid">
+                                <!-- Player cards will be dynamically added here -->
+                            </div>
+                            <div id="bomber-code" class="code-selection" style="margin-top:15px;">
+                                <p><strong>Select a code for the bomb:</strong></p>
+                                <div class="code-buttons">
+                                    <button class="code-btn bomber-code-btn" data-code="1">1</button>
+                                    <button class="code-btn bomber-code-btn" data-code="2">2</button>
+                                    <button class="code-btn bomber-code-btn" data-code="3">3</button>
+                                    <button class="code-btn bomber-code-btn" data-code="4">4</button>
+                                </div>
+                            </div>
+                            <div id="bomber-result" class="action-result" style="display:none;"></div>
+                        </div>
+                        
+                        <button id="mafia-action-btn" class="btn btn-primary action-btn">Choose Player to Eliminate</button>
                     </div>
-                </div>
-
-                <div id="night-result" class="night-result" style="margin-top:20px;display:none;">
-                    <h3>Night Results</h3>
-                    <div id="night-results-content"></div>
-                </div>
-
-                <div id="game-status-info" class="game-status-info" style="margin-top:20px;padding:15px;border-radius:8px;background-color:var(--card-bg);border:1px solid var(--border-color);">
-                    <!-- Game status will be inserted here -->
+                    
+                    <!-- 2. Detective Call -->
+                    <div id="detective-call" class="night-call-section" style="display:none;">
+                        <h3>2. Detective Wake Up</h3>
+                        <p id="detective-status">Choose a player to investigate:</p>
+                        
+                        <div id="detective-players" class="players-grid">
+                            <!-- Player cards will be dynamically added here -->
+                        </div>
+                        
+                        <div id="detective-result" class="action-result" style="display:none;"></div>
+                        
+                        <button id="detective-done-btn" class="btn btn-primary" style="width:100%;margin-top:15px;">Detective Done</button>
+                    </div>
+                    
+                    <!-- 3. Doctor Call -->
+                    <div id="doctor-call" class="night-call-section" style="display:none;">
+                        <h3>3. Doctor Wake Up</h3>
+                        <p id="doctor-status">Choose a player to protect:</p>
+                        
+                        <div id="doctor-players" class="players-grid">
+                            <!-- Player cards will be dynamically added here -->
+                        </div>
+                        
+                        <div id="doctor-result" class="action-result" style="display:none;"></div>
+                        
+                        <button id="doctor-done-btn" class="btn btn-primary" style="width:100%;margin-top:15px;">Doctor Done</button>
+                    </div>
+                    
+                    <!-- 4. Professional Call -->
+                    <div id="professional-call" class="night-call-section" style="display:none;">
+                        <h3>4. Professional Wake Up</h3>
+                        <p id="professional-status">Choose a player to shoot:</p>
+                        
+                        <div id="professional-players" class="players-grid">
+                            <!-- Player cards will be dynamically added here -->
+                        </div>
+                        
+                        <div id="professional-result" class="action-result" style="display:none;"></div>
+                        
+                        <button id="professional-done-btn" class="btn btn-primary" style="width:100%;margin-top:15px;">Professional Done</button>
+                    </div>
+                    
+                    <!-- 5. Gunman Call -->
+                    <div id="gunman-call" class="night-call-section" style="display:none;">
+                        <h3>5. Gunman Wake Up</h3>
+                        <p id="gunman-status">Choose a player to give your gun and select ammunition type:</p>
+                        
+                        <div id="gunman-players" class="players-grid">
+                            <!-- Player cards will be dynamically added here -->
+                        </div>
+                        
+                        <div style="margin-top:15px;">
+                            <p>Ammunition type:</p>
+                            <div style="display:flex;gap:10px;margin-top:10px;">
+                                <button id="ammo-live" class="btn" style="flex:1;">Live Ammunition</button>
+                                <button id="ammo-blank" class="btn" style="flex:1;">Blank Ammunition</button>
+                            </div>
+                        </div>
+                        
+                        <div id="gunman-result" class="action-result" style="display:none;"></div>
+                        
+                        <button id="gunman-done-btn" class="btn btn-primary" style="width:100%;margin-top:15px;">Gunman Done</button>
+                    </div>
+                    
+                    <!-- 6. Ocean Call -->
+                    <div id="ocean-call" class="night-call-section" style="display:none;">
+                        <h3>6. Ocean Wake Up</h3>
+                        <p id="ocean-status">Choose a player for a private chat:</p>
+                        
+                        <div id="ocean-players" class="players-grid">
+                            <!-- Player cards will be dynamically added here -->
+                        </div>
+                        
+                        <div id="ocean-chat" style="margin-top:15px;display:none;">
+                            <h4>30-Second Private Chat</h4>
+                            <div class="timer-display" id="ocean-timer-display">30</div>
+                            <div class="timer-progress">
+                                <div class="timer-bar" id="ocean-timer-bar"></div>
+                            </div>
+                            <button id="start-chat-btn" class="btn btn-success" style="width:100%;margin-top:10px;">Start Chat</button>
+                        </div>
+                        
+                        <div id="ocean-result" class="action-result" style="display:none;"></div>
+                        
+                        <button id="ocean-done-btn" class="btn btn-primary" style="width:100%;margin-top:15px;">Ocean Done</button>
+                    </div>
+                    
+                    <!-- 7. Zodiac Call -->
+                    <div id="zodiac-call" class="night-call-section" style="display:none;">
+                        <h3>7. Zodiac Wake Up</h3>
+                        <p id="zodiac-status">Choose a player to eliminate:</p>
+                        
+                        <div id="zodiac-players" class="players-grid">
+                            <!-- Player cards will be dynamically added here -->
+                        </div>
+                        
+                        <div id="zodiac-result" class="action-result" style="display:none;"></div>
+                        
+                        <button id="zodiac-done-btn" class="btn btn-primary" style="width:100%;margin-top:15px;">Zodiac Done</button>
+                    </div>
+                    
+                    <!-- Night Results -->
+                    <div id="night-results" class="night-call-section" style="display:none;">
+                        <h3>Night Results</h3>
+                        <p>The night actions have been completed. The results will be announced in the morning.</p>
+                        
+                        <div id="results-summary" class="night-result">
+                            <!-- Results will be dynamically added here -->
+                        </div>
+                        
+                        <button id="next-day-btn" class="btn btn-success" style="width:100%;margin-top:15px;">Proceed to Morning</button>
+                    </div>
                 </div>
                 
                 <div id="game-actions" class="game-actions" style="margin-top:20px;">
-                    <button id="reveal-results-btn" class="btn btn-success" style="width: 100%; margin-bottom: 15px;">Reveal Night Results</button>
-                    <button id="next-phase-btn" class="btn btn-primary" style="width: 100%; margin-bottom: 15px;">Next Day (New Round)</button>
+                    <button id="skip-role-btn" class="btn" style="width: 100%; margin-bottom: 15px;">Skip Current Role</button>
                     <button id="show-roles-btn" class="btn" style="width: 100%; margin-bottom: 15px;">Show Role Assignments</button>
                     <button id="reset-btn" class="btn" style="width: 100%;">Back to Home</button>
                 </div>
@@ -67,5 +419,1637 @@
             <p>&copy; 2025 KRS Consulting Inc.</p>
         </footer>
     </div>
+
+    <script>
+        // Global variables and state will be added in the next edit
+    </script>
+
+    <script>
+        // Global variables
+        let gameState = null;
+        let nightState = {
+            currentPhase: 'mafia',
+            blocked: [],
+            actions: {
+                mafia: {
+                    godfather: { target: null },
+                    magician: { target: null },
+                    bomber: { target: null, code: null }
+                },
+                detective: { target: null, result: null },
+                doctor: { target: null },
+                professional: { target: null },
+                gunman: { target: null, ammoType: null },
+                ocean: { target: null, chatCompleted: false },
+                zodiac: { target: null }
+            },
+            results: {
+                deaths: [],
+                saved: [],
+                revealed: []
+            }
+        };
+        
+        let oceanTimerInterval = null;
+        let oceanSecondsRemaining = 30;
+        
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log("Night Phase page loaded");
+            
+            // Load game state
+            loadGameState();
+            
+            // Set up event listeners
+            setupEventListeners();
+        });
+        
+        // Load game state from localStorage
+        function loadGameState() {
+            try {
+                const storedGameState = localStorage.getItem('gameState');
+                if (storedGameState) {
+                    gameState = JSON.parse(storedGameState);
+                    console.log("Game state loaded:", gameState);
+                    
+                    // Initialize Professional's bullets if not set
+                    if (gameState.players.some(p => p.role === 'professional') && gameState.professionalBullets === undefined) {
+                        gameState.professionalBullets = 2;
+                    }
+                    
+                    // Initialize Zodiac night counter if not set
+                    if (gameState.players.some(p => p.role === 'zodiac') && gameState.zodiacNightCounter === undefined) {
+                        gameState.zodiacNightCounter = 0;
+                    }
+                    
+                    // Initialize bomber bombs remaining if not set
+                    if (gameState.players.some(p => p.role === 'bomber') && gameState.bomberBombsRemaining === undefined) {
+                        // Check if bomb has already been used
+                        const bombHasBeenUsed = Boolean(gameState.bomberAction && gameState.bomberAction.targetId);
+                        gameState.bomberBombsRemaining = bombHasBeenUsed ? 0 : 1;
+                    }
+                    
+                    // Initialize doctor self-saves if not set
+                    if (gameState.players.some(p => p.role === 'doctor') && gameState.doctorSelfSavesRemaining === undefined) {
+                        gameState.doctorSelfSavesRemaining = 2; // Doctor can save themselves twice
+                    }
+                    
+                    // Update page subtitle
+                    document.getElementById('night-phase-subtitle').textContent = `Night Phase - Round ${gameState.currentRound || 1}`;
+                    
+                    // Initialize player selections for each role
+                    initializePlayerSelections();
+                    
+                    // Show/hide role sections based on game setup
+                    updateMafiaRoleSections();
+                    updateNonMafiaRoleSections();
+                } else {
+                    console.warn("No game state found in localStorage");
+                    document.getElementById('phase-info').innerHTML = `
+                        <div class="error-message">
+                            <h3>Error: No game in progress</h3>
+                            <p>Please start a game first.</p>
+                        </div>
+                    `;
+                    
+                    // Disable buttons
+                    disableAllButtons();
+                }
+            } catch (error) {
+                console.error("Error loading game state:", error);
+                document.getElementById('phase-info').innerHTML = `
+                    <div class="error-message">
+                        <h3>Error loading game data</h3>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+        
+        // Initialize player selections for each role's actions
+        function initializePlayerSelections() {
+            const rolePlayerSections = [
+                { roleId: 'godfather', containerId: 'godfather-players', excludeRoles: [] },
+                { roleId: 'magician', containerId: 'magician-players', excludeRoles: [] },
+                { roleId: 'bomber', containerId: 'bomber-players', excludeRoles: [] },
+                { roleId: 'detective', containerId: 'detective-players', excludeRoles: [] },
+                { roleId: 'doctor', containerId: 'doctor-players', excludeRoles: [] },
+                { roleId: 'professional', containerId: 'professional-players', excludeRoles: [] },
+                { roleId: 'gunman', containerId: 'gunman-players', excludeRoles: [] },
+                { roleId: 'ocean', containerId: 'ocean-players', excludeRoles: [] },
+                { roleId: 'zodiac', containerId: 'zodiac-players', excludeRoles: [] }
+            ];
+            
+            rolePlayerSections.forEach(section => {
+                populatePlayerSelection(section.containerId, section.roleId, section.excludeRoles);
+            });
+            
+            // Set up bomber code buttons
+            setupBomberCodeButtons();
+            
+            // Set up gunman ammo type buttons
+            setupGunmanAmmoButtons();
+            
+            // Check if bomber is inactive (dead or bomb already used)
+            updateBomberSection();
+        }
+        
+        // Populate player selection for a role's action
+        function populatePlayerSelection(containerId, roleId, excludeRoles = []) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            
+            const alivePlayers = getAlivePlayers();
+            let playersHtml = '';
+            
+            // Get mafia team members
+            const mafiaPlayers = gameState.players.filter(p => 
+                ['godfather', 'magician', 'bomber', 'regular_mafia'].includes(p.role)
+            );
+            
+            // Get active role based on inheritance
+            let activeRole = roleId;
+            let activeRolePlayer = null;
+            
+            // Special handling for Mafia inheritance
+            if (roleId === 'godfather') {
+                // Find the active godfather role - it might be inherited
+                activeRolePlayer = getActiveGodfather();
+                if (activeRolePlayer) {
+                    activeRole = activeRolePlayer.role;
+                }
+            } else if (roleId === 'magician') {
+                // Find if magician is alive
+                activeRolePlayer = getAlivePlayers().find(p => p.role === 'magician');
+            } else if (roleId === 'bomber') {
+                // Find if bomber is alive
+                activeRolePlayer = getAlivePlayers().find(p => p.role === 'bomber');
+            } else {
+                // For other roles, just find the player with that role
+                activeRolePlayer = getAlivePlayers().find(p => p.role === roleId);
+            }
+            
+            alivePlayers.forEach(player => {
+                // Skip if player has excluded role
+                if (excludeRoles.includes(player.role)) return;
+                
+                // Handle special cases
+                let isDisabled = false;
+                
+                // Gunman can't give the gun to themselves
+                if (roleId === 'gunman' && player.role === 'gunman') {
+                    isDisabled = true;
+                }
+                
+                // Ocean can't select themselves for chat
+                if (roleId === 'ocean' && player.role === 'ocean') {
+                    isDisabled = true;
+                }
+                
+                // Magician can't block other Mafia members
+                if (roleId === 'magician' && ['godfather', 'magician', 'bomber', 'regular_mafia'].includes(player.role)) {
+                    isDisabled = true;
+                }
+                
+                // If role section is inactive due to role death or absence
+                if ((roleId === 'magician' || roleId === 'bomber') && !activeRolePlayer) {
+                    isDisabled = true;
+                }
+                
+                // If non-Mafia role is dead, disable all player selection
+                if (['detective', 'doctor', 'professional', 'gunman', 'ocean', 'zodiac'].includes(roleId) && !activeRolePlayer) {
+                    isDisabled = true;
+                }
+                
+                // Doctor can't save themselves if they've used both self-saves
+                if (roleId === 'doctor' && player.role === 'doctor' && 
+                    gameState.doctorSelfSavesRemaining !== undefined && 
+                    gameState.doctorSelfSavesRemaining <= 0) {
+                    isDisabled = true;
+                }
+                
+                const defaultImage = 'images/default-avatar.svg';
+                const imageUrl = player.photo_url || defaultImage;
+                
+                // Determine class for highlighting
+                let extraClasses = '';
+                
+                // For Mafia actions, highlight all Mafia members in grey by default
+                if (['godfather', 'magician', 'bomber'].includes(roleId) && 
+                     ['godfather', 'magician', 'bomber', 'regular_mafia'].includes(player.role)) {
+                     extraClasses += ' team-player';
+                }
+                
+                // Active player highlight (light yellow) overrides team highlight
+                // For godfather action, highlight the active godfather
+                if (roleId === 'godfather' && activeRolePlayer && player.id === activeRolePlayer.id) {
+                    extraClasses = ' active-player'; // Remove team-player class if it was added
+                }
+                // For other roles, highlight the active role player
+                else if (roleId !== 'godfather' && player.role === roleId) {
+                    extraClasses = ' active-player'; // Remove team-player class if it was added
+                }
+                
+                if (isDisabled) {
+                    extraClasses += ' disabled';
+                }
+                
+                playersHtml += `
+                    <div class="player-card position-relative${extraClasses}" data-player-id="${player.id}" data-role="${roleId}-target">
+                        <div class="player-image" onclick="selectPlayer('${player.id}', '${roleId}')">
+                            <img src="${imageUrl}" 
+                                 alt="${player.name}" 
+                                 onerror="this.onerror=null; this.src='${defaultImage}';">
+                        </div>
+                        <div class="player-info">
+                            <h4>${player.name}</h4>
+                            ${player.sequence !== undefined ? `<small>#${player.sequence}</small>` : ''}
+                            ${activeRolePlayer && player.id === activeRolePlayer.id ? `<small>(You)</small>` : ''}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = playersHtml;
+            
+            // If Doctor has used both self-saves, add visual indicator to their card
+            if (roleId === 'doctor' && 
+                gameState.doctorSelfSavesRemaining !== undefined && 
+                gameState.doctorSelfSavesRemaining <= 0) {
+                disableDoctorSelfSelection();
+            }
+        }
+        
+        // Get the active godfather based on inheritance rules
+        function getActiveGodfather() {
+            const alivePlayers = getAlivePlayers();
+            
+            // Check if Godfather is alive
+            const godfather = alivePlayers.find(p => p.role === 'godfather');
+            if (godfather) return godfather;
+            
+            // If Godfather is dead, check if Magician is alive
+            const magician = alivePlayers.find(p => p.role === 'magician');
+            if (magician) return magician;
+            
+            // If both are dead, check if Bomber is alive
+            const bomber = alivePlayers.find(p => p.role === 'bomber');
+            if (bomber) return bomber;
+            
+            // If all special Mafia are dead, check for regular Mafia
+            const regularMafia = alivePlayers.find(p => p.role === 'regular_mafia');
+            if (regularMafia) return regularMafia;
+            
+            // No Mafia left
+            return null;
+        }
+        
+        // Setup event listeners
+        function setupEventListeners() {
+            // Role action completion buttons
+            document.getElementById('mafia-action-btn').addEventListener('click', function() {
+                completeRoleAction('mafia');
+                showNextRole('detective');
+            });
+            
+            document.getElementById('detective-done-btn').addEventListener('click', function() {
+                completeRoleAction('detective');
+                showNextRole('doctor');
+            });
+            
+            document.getElementById('doctor-done-btn').addEventListener('click', function() {
+                completeRoleAction('doctor');
+                showNextRole('professional');
+            });
+            
+            document.getElementById('professional-done-btn').addEventListener('click', function() {
+                // Check if a target was selected - only count this as using a bullet if a target was selected
+                if (nightState.actions.professional.target) {
+                    // Add a warning if this is the last bullet
+                    if (gameState.professionalBullets === 1) {
+                        const resultElement = document.getElementById('professional-result');
+                        if (resultElement) {
+                            resultElement.innerHTML += `<p><strong>Warning: This was your last bullet!</strong></p>`;
+                            resultElement.className = 'action-result warning';
+                            resultElement.style.display = 'block';
+                        }
+                    }
+                }
+                
+                completeRoleAction('professional');
+                showNextRole('gunman');
+            });
+            
+            document.getElementById('gunman-done-btn').addEventListener('click', function() {
+                completeRoleAction('gunman');
+                showNextRole('ocean');
+            });
+            
+            document.getElementById('ocean-done-btn').addEventListener('click', function() {
+                completeRoleAction('ocean');
+                showNextRole('zodiac');
+            });
+            
+            document.getElementById('zodiac-done-btn').addEventListener('click', function() {
+                completeRoleAction('zodiac');
+                showNightResults();
+            });
+            
+            // Skip role button
+            document.getElementById('skip-role-btn').addEventListener('click', skipCurrentRole);
+            
+            // Ocean chat timer button
+            document.getElementById('start-chat-btn').addEventListener('click', startOceanChat);
+            
+            // Next day button
+            document.getElementById('next-day-btn').addEventListener('click', proceedToMorning);
+            
+            // Show roles and reset game buttons
+            document.getElementById('show-roles-btn').addEventListener('click', showRoleAssignments);
+            document.getElementById('reset-btn').addEventListener('click', resetGame);
+        }
+        
+        // Set up bomber code buttons
+        function setupBomberCodeButtons() {
+            const codeButtons = document.querySelectorAll('.code-btn');
+            
+            codeButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const code = this.getAttribute('data-code');
+                    
+                    // Remove selected class from all code buttons
+                    codeButtons.forEach(btn => btn.classList.remove('selected'));
+                    
+                    // Add selected class to clicked button
+                    this.classList.add('selected');
+                    
+                    // Set bomber code
+                    nightState.actions.mafia.bomber.code = code;
+                    console.log(`Bomber code set to: ${code}`);
+                    
+                    // Check if we should enable the Mafia Done button
+                    validateBomberSelections();
+                });
+            });
+            
+            // Initial validation of bomber selections
+            validateBomberSelections();
+        }
+        
+        // Validate bomber target and code selections
+        function validateBomberSelections() {
+            const mafiaDoneBtn = document.getElementById('mafia-action-btn');
+            const bomberTarget = nightState.actions.mafia.bomber.target;
+            const bomberCode = nightState.actions.mafia.bomber.code;
+            
+            // Get bomber alive status
+            const alivePlayers = getAlivePlayers();
+            const bomberAlive = alivePlayers.some(p => p.role === 'bomber');
+            const bombHasBeenUsed = Boolean(gameState.bomberAction && gameState.bomberAction.targetId);
+            const hasBombsRemaining = (gameState.bomberBombsRemaining || 0) > 0;
+            
+            // If bomber is not alive, has used bomb, or has no bombs left, don't enforce validation
+            if (!bomberAlive || bombHasBeenUsed || !hasBombsRemaining) {
+                mafiaDoneBtn.disabled = false;
+                return;
+            }
+            
+            // If a target is selected, require a code to be selected too
+            if (bomberTarget && !bomberCode) {
+                mafiaDoneBtn.disabled = true; 
+                
+                // Add a visual indicator or hint
+                if (!document.getElementById('bomber-code-warning')) {
+                    const bomberCodeSection = document.getElementById('bomber-code');
+                    const warningElement = document.createElement('p');
+                    warningElement.id = 'bomber-code-warning';
+                    warningElement.style.color = 'var(--warning-color, #ff9800)';
+                    warningElement.innerHTML = '<strong>Please select a code to continue</strong>';
+                    bomberCodeSection.appendChild(warningElement);
+                }
+            } else {
+                mafiaDoneBtn.disabled = false;
+                
+                // Remove the warning if it exists
+                const warningElement = document.getElementById('bomber-code-warning');
+                if (warningElement) {
+                    warningElement.remove();
+                }
+            }
+        }
+        
+        // Set up gunman ammo type buttons
+        function setupGunmanAmmoButtons() {
+            document.getElementById('ammo-live').addEventListener('click', function() {
+                this.classList.add('selected');
+                document.getElementById('ammo-blank').classList.remove('selected');
+                nightState.actions.gunman.ammoType = 'live';
+                console.log('Gunman selected live ammunition');
+            });
+            
+            document.getElementById('ammo-blank').addEventListener('click', function() {
+                this.classList.add('selected');
+                document.getElementById('ammo-live').classList.remove('selected');
+                nightState.actions.gunman.ammoType = 'blank';
+                console.log('Gunman selected blank ammunition');
+            });
+        }
+        
+        // Select a player for a role's action
+        function selectPlayer(playerId, roleId) {
+            console.log(`${roleId} selected player: ${playerId}`);
+            
+            // Get all player cards for this role
+            const playerCards = document.querySelectorAll(`[data-role="${roleId}-target"]`);
+            
+            // Remove selected class from all cards
+            playerCards.forEach(card => card.classList.remove('selected'));
+            
+            // If the user clicked on the already selected card, deselect it
+            const isDeselecting = nightState.actions[roleId === 'godfather' || roleId === 'magician' || roleId === 'bomber' ? 'mafia' : roleId][roleId === 'godfather' || roleId === 'magician' || roleId === 'bomber' ? roleId : 'target'] === playerId;
+            
+            // Add selected class to the chosen player's card (unless deselecting)
+            if (!isDeselecting) {
+                const selectedCard = document.querySelector(`[data-player-id="${playerId}"][data-role="${roleId}-target"]`);
+                if (selectedCard) {
+                    selectedCard.classList.add('selected');
+                }
+            }
+            
+            // Update night state based on role
+            switch(roleId) {
+                case 'godfather':
+                    nightState.actions.mafia.godfather.target = isDeselecting ? null : playerId;
+                    break;
+                case 'magician':
+                    nightState.actions.mafia.magician.target = isDeselecting ? null : playerId;
+                    break;
+                case 'bomber':
+                    nightState.actions.mafia.bomber.target = isDeselecting ? null : playerId;
+                    // Validate bomber selections whenever target changes
+                    validateBomberSelections();
+                    break;
+                case 'detective':
+                    nightState.actions.detective.target = isDeselecting ? null : playerId;
+                    if (!isDeselecting) checkDetectiveResult(playerId);
+                    break;
+                case 'doctor':
+                    nightState.actions.doctor.target = isDeselecting ? null : playerId;
+                    break;
+                case 'professional':
+                    nightState.actions.professional.target = isDeselecting ? null : playerId;
+                    break;
+                case 'gunman':
+                    nightState.actions.gunman.target = isDeselecting ? null : playerId;
+                    break;
+                case 'ocean':
+                    nightState.actions.ocean.target = isDeselecting ? null : playerId;
+                    // Show Ocean chat timer if a player is selected
+                    document.getElementById('ocean-chat').style.display = isDeselecting ? 'none' : 'block';
+                    break;
+                case 'zodiac':
+                    nightState.actions.zodiac.target = isDeselecting ? null : playerId;
+                    break;
+            }
+        }
+        
+        // Check detective investigation result
+        function checkDetectiveResult(playerId) {
+            const targetPlayer = gameState.players.find(p => p.id === playerId);
+            
+            if (targetPlayer) {
+                // Check if target is detectable Mafia (Magician, Bomber, or regular Mafia)
+                // Godfather (godfather) and Zodiac cannot be detected by the Detective
+                const isDetectableMafia = ['magician', 'bomber', 'regular_mafia'].includes(targetPlayer.role);
+                
+                // Store result
+                nightState.actions.detective.result = isDetectableMafia;
+                
+                // Show result
+                const resultElement = document.getElementById('detective-result');
+                resultElement.innerHTML = `
+                    <p>Investigation result for ${targetPlayer.name}:</p>
+                    <p><strong>${isDetectableMafia ? 'This player is Mafia!' : 'This player is not Mafia.'}</strong></p>
+                `;
+                
+                resultElement.className = 'action-result ' + (isDetectableMafia ? 'danger' : 'success');
+                resultElement.style.display = 'block';
+            }
+        }
+        
+        // Start Ocean chat timer
+        function startOceanChat() {
+            const chatButton = document.getElementById('start-chat-btn');
+            
+            if (chatButton.textContent === 'Start Chat') {
+                // First click: Start the chat
+                chatButton.textContent = 'Done Chatting';
+                
+                // Reset timer
+                oceanSecondsRemaining = 30;
+                updateOceanTimer();
+                
+                // Start countdown
+                oceanTimerInterval = setInterval(function() {
+                    oceanSecondsRemaining--;
+                    updateOceanTimer();
+                    
+                    if (oceanSecondsRemaining <= 0) {
+                        clearInterval(oceanTimerInterval);
+                        finishOceanChat();
+                    }
+                }, 1000);
+            } else if (chatButton.textContent === 'Done Chatting') {
+                // Second click: End the chat early
+                clearInterval(oceanTimerInterval);
+                finishOceanChat();
+            }
+        }
+        
+        // Update Ocean timer display
+        function updateOceanTimer() {
+            const timerDisplay = document.getElementById('ocean-timer-display');
+            const timerBar = document.getElementById('ocean-timer-bar');
+            
+            // Update timer text
+            timerDisplay.textContent = oceanSecondsRemaining;
+            
+            // Calculate progress percentage
+            const progressPercentage = (oceanSecondsRemaining / 30) * 100;
+            timerBar.style.width = `${progressPercentage}%`;
+            
+            // Update timer appearance based on time remaining
+            if (oceanSecondsRemaining <= 5) {
+                timerDisplay.style.color = 'var(--mafia-color, #e53935)';
+            } else if (oceanSecondsRemaining <= 10) {
+                timerDisplay.style.color = 'var(--warning-color, #ff9800)';
+            } else {
+                timerDisplay.style.color = '';
+            }
+        }
+        
+        // Finish Ocean chat
+        function finishOceanChat() {
+            const chatButton = document.getElementById('start-chat-btn');
+            
+            // Set timer to 0
+            oceanSecondsRemaining = 0;
+            updateOceanTimer();
+            
+            // Update button
+            chatButton.textContent = 'Chat Completed';
+            chatButton.disabled = true;
+            
+            // Mark chat as completed
+            nightState.actions.ocean.chatCompleted = true;
+            
+            alert("Chat time is up!");
+        }
+        
+        // Complete a role's action and proceed to the next role
+        function completeRoleAction(roleId) {
+            console.log(`${roleId} action completed`);
+            
+            // For Mafia phase, all three roles act together
+            if (roleId === 'mafia') {
+                // Check for blocked players based on Magician's action
+                if (nightState.actions.mafia.magician.target) {
+                    nightState.blocked.push(nightState.actions.mafia.magician.target);
+                    console.log(`Player ${nightState.actions.mafia.magician.target} has been blocked by Magician`);
+                }
+            }
+            
+            nightState.currentPhase = roleId;
+        }
+        
+        // Show the next role's actions
+        function showNextRole(nextRoleId) {
+            // Hide all role sections
+            document.querySelectorAll('.night-call-section').forEach(section => {
+                section.style.display = 'none';
+            });
+            
+            // Show the next role section
+            const nextSection = document.getElementById(`${nextRoleId}-call`);
+            if (nextSection) {
+                // Check if this role exists in the game
+                const allPlayers = gameState.players || [];
+                const roleExists = allPlayers.some(p => p.role === nextRoleId);
+                
+                // If role doesn't exist, skip to the next role
+                if (!roleExists) {
+                    skipRoleBasedOnId(nextRoleId);
+                    return;
+                }
+                
+                nextSection.style.display = 'block';
+                
+                // Check if role is blocked or dead
+                if (isRoleBlocked(nextRoleId) || !isRoleAlive(nextRoleId)) {
+                    // Disable player selection for blocked/dead roles
+                    disablePlayerSelection(nextRoleId);
+                    
+                    let statusMessage = '';
+                    if (isRoleBlocked(nextRoleId)) {
+                        statusMessage = `${capitalizeFirstLetter(nextRoleId)} has been blocked and cannot perform any actions.`;
+                    } else {
+                        statusMessage = `${capitalizeFirstLetter(nextRoleId)} is no longer alive. This is just for show.`;
+                    }
+                    
+                    // Update status message
+                    const statusElement = document.getElementById(`${nextRoleId}-status`);
+                    if (statusElement) {
+                        statusElement.textContent = statusMessage;
+                    }
+                    
+                    // Show blocked/dead message
+                    const resultElement = document.getElementById(`${nextRoleId}-result`);
+                    if (resultElement) {
+                        resultElement.innerHTML = `<p><strong>${isRoleBlocked(nextRoleId) ? 
+                            `${capitalizeFirstLetter(nextRoleId)} is blocked tonight!` : 
+                            `${capitalizeFirstLetter(nextRoleId)} is no longer alive!`}</strong></p>`;
+                        resultElement.className = 'action-result ' + (isRoleBlocked(nextRoleId) ? 'warning' : 'danger');
+                        resultElement.style.display = 'block';
+                    }
+                }
+            }
+            
+            // Update current phase
+            nightState.currentPhase = nextRoleId;
+        }
+        
+        // Check if a role is alive
+        function isRoleAlive(roleId) {
+            return getAlivePlayers().some(p => p.role === roleId);
+        }
+        
+        // Skip to next role based on current role ID
+        function skipRoleBasedOnId(currentRoleId) {
+            switch(currentRoleId) {
+                case 'detective':
+                    showNextRole('doctor');
+                    break;
+                case 'doctor':
+                    showNextRole('professional');
+                    break;
+                case 'professional':
+                    showNextRole('gunman');
+                    break;
+                case 'gunman':
+                    showNextRole('ocean');
+                    break;
+                case 'ocean':
+                    showNextRole('zodiac');
+                    break;
+                case 'zodiac':
+                    showNightResults();
+                    break;
+                default:
+                    showNightResults();
+            }
+        }
+        
+        // Check if a role is blocked based on player ID
+        function isRoleBlocked(roleId) {
+            // Find player with the role
+            const player = gameState.players.find(p => p.role === roleId);
+            
+            if (player) {
+                // Check if player is in the blocked list
+                return nightState.blocked.includes(player.id);
+            }
+            
+            return false;
+        }
+        
+        // Disable player selection for a blocked role
+        function disablePlayerSelection(roleId) {
+            const container = document.getElementById(`${roleId}-players`);
+            if (container) {
+                container.classList.add('disabled');
+                container.style.opacity = '0.5';
+                container.style.pointerEvents = 'none';
+            }
+        }
+        
+        // Skip the current role
+        function skipCurrentRole() {
+            switch(nightState.currentPhase) {
+                case 'mafia':
+                    showNextRole('detective');
+                    break;
+                case 'detective':
+                    showNextRole('doctor');
+                    break;
+                case 'doctor':
+                    showNextRole('professional');
+                    break;
+                case 'professional':
+                    showNextRole('gunman');
+                    break;
+                case 'gunman':
+                    showNextRole('ocean');
+                    break;
+                case 'ocean':
+                    showNextRole('zodiac');
+                    break;
+                case 'zodiac':
+                    showNightResults();
+                    break;
+            }
+        }
+        
+        // Show night results
+        function showNightResults() {
+            // Hide all role sections
+            document.querySelectorAll('.night-call-section').forEach(section => {
+                section.style.display = 'none';
+            });
+            
+            // Calculate night results
+            calculateNightResults();
+            
+            // Process Ocean's action (but don't announce it in results)
+            if (nightState.actions.ocean.target && !isRoleBlocked('ocean')) {
+                const target = gameState.players.find(p => p.id === nightState.actions.ocean.target);
+                if (target) {
+                    const isMafiaOrZodiac = ['godfather', 'magician', 'bomber', 'zodiac'].includes(target.role);
+                    if (isMafiaOrZodiac) {
+                        // Add Ocean to deaths if they visited Mafia or Zodiac
+                        const oceanPlayer = gameState.players.find(p => p.role === 'ocean');
+                        if (oceanPlayer && !nightState.results.deaths.some(d => d.id === oceanPlayer.id)) {
+                            nightState.results.deaths.push({
+                                id: oceanPlayer.id,
+                                name: oceanPlayer.name,
+                                role: oceanPlayer.role,
+                                saved: false
+                            });
+                        }
+                    }
+                }
+            }
+            
+            // Prepare results summary
+            let resultsHtml = `<h4>Night ${gameState.currentRound} Summary</h4>`;
+            
+            // This is just a preview for the moderator, actual results will be announced in the morning
+            resultsHtml += `<p>The following results will be announced in the morning:</p>`;
+            resultsHtml += `<ul style="margin-left:20px;">`;
+            
+            // Deaths - without revealing the reason for elimination
+            if (nightState.results.deaths.length > 0) {
+                nightState.results.deaths.forEach(death => {
+                    resultsHtml += `<li>${death.name} ${death.saved ? 'was targeted but saved by the Doctor' : 'will be eliminated'}</li>`;
+                });
+            } else {
+                resultsHtml += `<li>No players will be eliminated tonight</li>`;
+            }
+            
+            // Bomber's bomb placement
+            if (nightState.actions.mafia.bomber.target && 
+                nightState.actions.mafia.bomber.code && 
+                !isRoleBlocked('bomber')) {
+                
+                const bomberAlive = getAlivePlayers().some(p => p.role === 'bomber');
+                const bombHasBeenUsed = Boolean(gameState.bomberAction && gameState.bomberAction.targetId);
+                
+                // Only proceed if bomber is alive and hasn't used their bomb yet
+                if (bomberAlive && !bombHasBeenUsed) {
+                    const target = gameState.players.find(p => p.id === nightState.actions.mafia.bomber.target);
+                    if (target) {
+                        resultsHtml += `<li>The bomb is in front of ${target.name} with code ${nightState.actions.mafia.bomber.code}</li>`;
+                        
+                        // Store the bomber action in game state for use in day phase
+                        gameState.bomberAction = {
+                            targetId: nightState.actions.mafia.bomber.target,
+                            code: nightState.actions.mafia.bomber.code,
+                            targetName: target.name,
+                            targetRole: target.role // Include role to handle bodyguard check during defusing
+                        };
+                        
+                        // Set bomber bombs remaining to 0
+                        gameState.bomberBombsRemaining = 0;
+                        
+                        // Immediately mark that the bomber has used their bomb
+                        // This prevents the bomber from using the bomb again in any circumstance
+                        document.getElementById('bomber-players').classList.add('disabled');
+                        document.getElementById('bomber-players').style.opacity = '0.5';
+                        document.getElementById('bomber-players').style.pointerEvents = 'none';
+                        
+                        document.getElementById('bomber-code').classList.add('disabled');
+                        document.getElementById('bomber-code').style.opacity = '0.5';
+                        document.getElementById('bomber-code').style.pointerEvents = 'none';
+                        
+                        // Add a clear indicator that the bomb has been used
+                        const bomberAction = document.getElementById('bomber-action');
+                        if (bomberAction && !bomberAction.querySelector('.bomb-used-indicator')) {
+                            const bombUsedIndicator = document.createElement('div');
+                            bombUsedIndicator.className = 'action-result warning bomb-used-indicator';
+                            bombUsedIndicator.innerHTML = '<p><strong>Bomb has been placed. No more bombs available.</strong></p>';
+                            bomberAction.appendChild(bombUsedIndicator);
+                        }
+                        
+                        // Update bomber section header
+                        updateBomberSection();
+                    }
+                }
+            }
+            
+            resultsHtml += `</ul>`;
+            
+            // Display results
+            const resultsContainer = document.getElementById('results-summary');
+            resultsContainer.innerHTML = resultsHtml;
+            
+            // Show results section
+            document.getElementById('night-results').style.display = 'block';
+        }
+        
+        // Calculate the results of all night actions
+        function calculateNightResults() {
+            // Process Godfather's kill
+            if (nightState.actions.mafia.godfather.target) {
+                const targetId = nightState.actions.mafia.godfather.target;
+                const target = gameState.players.find(p => p.id === targetId);
+                
+                if (target) {
+                    // Check if target is Zodiac (immune to Mafia)
+                    if (target.role === 'zodiac') {
+                        // Zodiac is safe from Mafia
+                        console.log('Zodiac is immune to Mafia kills');
+                    } else {
+                        // Check if target was protected by Doctor
+                        const isSaved = nightState.actions.doctor.target === targetId && !isRoleBlocked('doctor');
+                        
+                        // Add to deaths list
+                        nightState.results.deaths.push({
+                            id: target.id,
+                            name: target.name,
+                            role: target.role,
+                            saved: isSaved
+                        });
+                        
+                        if (isSaved) {
+                            // Add to saved list
+                            nightState.results.saved.push({
+                                id: target.id,
+                                name: target.name,
+                                role: target.role
+                            });
+                        }
+                    }
+                }
+            }
+            
+            // Process Professional's kill
+            if (nightState.actions.professional.target && !isRoleBlocked('professional')) {
+                const targetId = nightState.actions.professional.target;
+                const target = gameState.players.find(p => p.id === targetId);
+                
+                if (target) {
+                    // Make sure Professional has bullets left
+                    if (gameState.professionalBullets && gameState.professionalBullets > 0) {
+                        // Reduce bullet count
+                        gameState.professionalBullets--;
+                        
+                        // Check if target is Zodiac (both survive)
+                        if (target.role === 'zodiac') {
+                            console.log('Professional shot Zodiac - neither dies');
+                        } 
+                        // Check if target is Mafia
+                        else if (['godfather', 'magician', 'bomber'].includes(target.role)) {
+                            // Target dies
+                            nightState.results.deaths.push({
+                                id: target.id,
+                                name: target.name,
+                                role: target.role,
+                                saved: false
+                            });
+                        } 
+                        // Target is town - Professional dies
+                        else {
+                            const professional = gameState.players.find(p => p.role === 'professional');
+                            if (professional) {
+                                nightState.results.deaths.push({
+                                    id: professional.id,
+                                    name: professional.name,
+                                    role: professional.role,
+                                    saved: false
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // Process Zodiac's kill if it's an active Zodiac night
+            if (shouldZodiacActTonight() && nightState.actions.zodiac.target && !isRoleBlocked('zodiac')) {
+                const targetId = nightState.actions.zodiac.target;
+                const target = gameState.players.find(p => p.id === targetId);
+                
+                if (target) {
+                    // Check if target is Bodyguard
+                    if (target.role === 'bodyguard') {
+                        // Zodiac dies instead of the Bodyguard
+                        const zodiac = gameState.players.find(p => p.role === 'zodiac');
+                        if (zodiac) {
+                            nightState.results.deaths.push({
+                                id: zodiac.id,
+                                name: zodiac.name,
+                                role: zodiac.role,
+                                saved: false,
+                                reason: 'Shot the Bodyguard'
+                            });
+                        }
+                    } else {
+                        // Check if target was protected by Doctor
+                        const isSaved = nightState.actions.doctor.target === targetId && !isRoleBlocked('doctor');
+                        
+                        // Add to deaths list
+                        nightState.results.deaths.push({
+                            id: target.id,
+                            name: target.name,
+                            role: target.role,
+                            saved: isSaved,
+                            reason: 'Shot by Zodiac'
+                        });
+                        
+                        if (isSaved) {
+                            // Add to saved list
+                            nightState.results.saved.push({
+                                id: target.id,
+                                name: target.name,
+                                role: target.role
+                            });
+                        }
+                    }
+                }
+            }
+            
+            // Remove any deaths that were saved by the Doctor
+            nightState.results.deaths = nightState.results.deaths.filter(death => !death.saved);
+        }
+        
+        // Proceed to morning phase
+        function proceedToMorning() {
+            console.log('Proceeding to morning phase');
+            
+            // Update game state with night results
+            gameState.nightResults = nightState.results;
+            
+            // Make sure Professional's bullet count is saved in the game state
+            // (it might have been updated during the night)
+            
+            // Update Zodiac's night counter
+            if (!gameState.zodiacNightCounter) {
+                gameState.zodiacNightCounter = 0;
+            }
+            gameState.zodiacNightCounter++;
+            
+            // Initialize bomberBombsRemaining if it doesn't exist yet
+            if (gameState.bomberBombsRemaining === undefined) {
+                // Check if bomber exists in the game
+                const bomberExists = gameState.players.some(p => p.role === 'bomber');
+                gameState.bomberBombsRemaining = bomberExists ? 1 : 0;
+            }
+            
+            // If a bomb was placed this night, decrement the bomb counter
+            if (gameState.bomberAction && gameState.bomberAction.targetId && gameState.bomberAction.code) {
+                // Ensure the counter doesn't go below 0
+                gameState.bomberBombsRemaining = 0;
+            }
+            
+            // Update doctor's self-save counter if doctor saved themselves
+            if (nightState.actions.doctor.target) {
+                const doctorPlayer = gameState.players.find(p => p.role === 'doctor');
+                if (doctorPlayer && doctorPlayer.id === nightState.actions.doctor.target) {
+                    // Initialize self-saves counter if not set
+                    if (gameState.doctorSelfSavesRemaining === undefined) {
+                        gameState.doctorSelfSavesRemaining = 2;
+                    }
+                    
+                    // Decrement counter (ensuring it doesn't go below 0)
+                    gameState.doctorSelfSavesRemaining = Math.max(0, gameState.doctorSelfSavesRemaining - 1);
+                    console.log(`Doctor used a self-save. Remaining: ${gameState.doctorSelfSavesRemaining}`);
+                }
+            }
+            
+            // Increment round if needed
+            if (!gameState.currentRound) {
+                gameState.currentRound = 1;
+            } else {
+                gameState.currentRound++;
+            }
+            
+            // Update game phase
+            gameState.gamePhase = 'day';
+            
+            // Add any eliminated players to the game state
+            if (!gameState.eliminatedPlayers) {
+                gameState.eliminatedPlayers = [];
+            }
+            
+            nightState.results.deaths.forEach(death => {
+                gameState.eliminatedPlayers.push({
+                    id: death.id,
+                    name: death.name,
+                    role: death.role,
+                    eliminatedInRound: gameState.currentRound - 1,
+                    eliminatedInPhase: 'night'
+                });
+            });
+            
+            // Store gunman's action (not announced, but processed)
+            if (nightState.actions.gunman.target && !isRoleBlocked('gunman')) {
+                gameState.gunmanAction = {
+                    targetId: nightState.actions.gunman.target,
+                    ammoType: nightState.actions.gunman.ammoType
+                };
+            }
+            
+            // Store bomber's action (only bomb placement is announced)
+            if (nightState.actions.mafia.bomber.target && 
+                nightState.actions.mafia.bomber.code && 
+                !isRoleBlocked('bomber')) {
+                
+                const bomberAlive = getAlivePlayers().some(p => p.role === 'bomber');
+                const bombHasBeenUsed = Boolean(gameState.bomberAction && gameState.bomberAction.targetId);
+                
+                // Only save bomber action if bomber is alive and hasn't used their bomb yet
+                if (bomberAlive && !bombHasBeenUsed) {
+                    gameState.bomberAction = {
+                        targetId: nightState.actions.mafia.bomber.target,
+                        code: nightState.actions.mafia.bomber.code
+                    };
+                }
+            }
+            
+            // Check for game-ending conditions
+            const gameEndResult = checkGameEndingConditions();
+            
+            if (gameEndResult.gameOver) {
+                // Game has ended, redirect to the game over page or show end game dialog
+                gameState.gameOver = true;
+                gameState.winningTeam = gameEndResult.winningTeam;
+                gameState.endReason = gameEndResult.reason;
+                
+                // Save game state
+                localStorage.setItem('gameState', JSON.stringify(gameState));
+                
+                // If it's a Chaos Day (3 players with at least one Mafia/Zodiac), go to Chaos Day page
+                if (gameEndResult.chaosDay) {
+                    gameState.chaosDay = true;
+                    localStorage.setItem('gameState', JSON.stringify(gameState));
+                    window.location.href = 'chaos-day.html';
+                    return;
+                }
+                
+                // Otherwise, go to game over page
+                window.location.href = 'game-over.html';
+                return;
+            }
+            
+            // Save game state
+            localStorage.setItem('gameState', JSON.stringify(gameState));
+            
+            // Redirect to day phase
+            window.location.href = 'day-phase.html';
+        }
+        
+        // Check for game-ending conditions
+        function checkGameEndingConditions() {
+            const alivePlayers = getAlivePlayers();
+            
+            // Get counts of each team
+            const mafiaCount = alivePlayers.filter(p => 
+                ['godfather', 'magician', 'bomber', 'regular_mafia'].includes(p.role)
+            ).length;
+            
+            const townCount = alivePlayers.filter(p => 
+                !['godfather', 'magician', 'bomber', 'regular_mafia', 'zodiac'].includes(p.role)
+            ).length;
+            
+            const zodiacAlive = alivePlayers.some(p => p.role === 'zodiac');
+            
+            // Check if zodiac exists in the game at all
+            const zodiacExists = gameState.players.some(p => p.role === 'zodiac');
+
+            // 0. No Mafia or Zodiac players are left - Town wins
+            if (mafiaCount === 0 && !zodiacAlive) {
+                return {
+                    gameOver: true,
+                    winningTeam: 'town',
+                    reason: 'All Mafia and Zodiac players have been eliminated - Town wins!',
+                    chaosDay: false
+                };
+            }
+            
+            // 1. Only one player left
+            if (alivePlayers.length === 1) {
+                const lastPlayer = alivePlayers[0];
+                let winningTeam = 'town'; // Default
+                
+                // Determine winning team based on last player
+                if (['godfather', 'magician', 'bomber', 'regular_mafia'].includes(lastPlayer.role)) {
+                    winningTeam = 'mafia';
+                } else if (lastPlayer.role === 'zodiac') {
+                    winningTeam = 'zodiac';
+                }
+                
+                return {
+                    gameOver: true,
+                    winningTeam: winningTeam,
+                    reason: `Only ${lastPlayer.name} (${capitalizeFirstLetter(lastPlayer.role)}) remains alive.`,
+                    chaosDay: false
+                };
+            }
+            
+            // 2. Two players left
+            if (alivePlayers.length === 2) {
+                // If Zodiac is one of them, Zodiac wins
+                if (zodiacAlive) {
+                    return {
+                        gameOver: true,
+                        winningTeam: 'zodiac',
+                        reason: 'Zodiac has reached final 2 players and wins!',
+                        chaosDay: false
+                    };
+                }
+                
+                // If both are town, town wins
+                if (mafiaCount === 0) {
+                    return {
+                        gameOver: true,
+                        winningTeam: 'town',
+                        reason: 'Only townsfolk remain - Town wins!',
+                        chaosDay: false
+                    };
+                }
+                
+                // If at least one is Mafia, Mafia wins
+                if (mafiaCount > 0) {
+                    return {
+                        gameOver: true,
+                        winningTeam: 'mafia',
+                        reason: 'Mafia has reached parity with Town - Mafia wins!',
+                        chaosDay: false
+                    };
+                }
+            }
+            
+            // 3. Mafia equals or outnumbers town (and no Zodiac)
+            if (mafiaCount >= townCount && !zodiacAlive && alivePlayers.length > 2) {
+                return {
+                    gameOver: true,
+                    winningTeam: 'mafia',
+                    reason: 'Mafia has reached parity with or outnumbers Town - Mafia wins!',
+                    chaosDay: false
+                };
+            }
+            
+            // 4. Chaos Day - exactly 3 players with at least one Mafia or Zodiac
+            if (alivePlayers.length === 3 && (mafiaCount > 0 || zodiacAlive)) {
+                return {
+                    gameOver: true,
+                    winningTeam: 'undecided', // To be determined in Chaos Day
+                    reason: 'Three players remain with at least one Mafia or Zodiac - Chaos Day!',
+                    chaosDay: true
+                };
+            }
+            
+            // Game continues
+            return {
+                gameOver: false
+            };
+        }
+        
+        // Show role assignments
+        function showRoleAssignments() {
+            window.location.href = 'role-assignments.html';
+        }
+        
+        // Reset the game and return to home
+        function resetGame() {
+            // Clear game state
+            localStorage.removeItem('gameState');
+            localStorage.removeItem('defenseState');
+            
+            // Redirect to home page
+            window.location.href = 'index.html';
+        }
+        
+        // Helper function to get alive players
+        function getAlivePlayers() {
+            if (!gameState || !gameState.players) return [];
+            
+            // If eliminatedPlayers doesn't exist, initialize it
+            if (!gameState.eliminatedPlayers) {
+                gameState.eliminatedPlayers = [];
+            }
+            
+            // Return players who are not in the eliminatedPlayers array
+            return gameState.players.filter(player => 
+                !gameState.eliminatedPlayers.some(eliminated => eliminated.id === player.id)
+            );
+        }
+        
+        // Helper function to disable all buttons
+        function disableAllButtons() {
+            const buttons = document.querySelectorAll('button');
+            buttons.forEach(button => {
+                button.disabled = true;
+            });
+        }
+        
+        // Helper function to capitalize first letter
+        function capitalizeFirstLetter(string) {
+            return string.charAt(0).toUpperCase() + string.slice(1);
+        }
+        
+        
+        // Create a role card for the active role display
+        function createRoleCard(player) {
+            const roleCard = document.createElement('div');
+            roleCard.className = 'active-role-card';
+            
+            const defaultImage = 'images/default-avatar.svg';
+            const imageUrl = player.photo_url || defaultImage;
+            
+            roleCard.innerHTML = `
+                <img src="${imageUrl}" 
+                     alt="${player.name}" 
+                     onerror="this.onerror=null; this.src='${defaultImage}';">
+                <h4>${player.name}</h4>
+                <p class="role-name">${capitalizeFirstLetter(player.role)}</p>
+            `;
+            
+            return roleCard;
+        }
+        
+        // Show/hide Mafia role sections based on game setup
+        function updateMafiaRoleSections() {
+            const allPlayers = gameState.players || [];
+            const alivePlayers = getAlivePlayers();
+            
+            // Check if magician was in the original game setup
+            const magicianExists = allPlayers.some(p => p.role === 'magician');
+            const magicianAlive = alivePlayers.some(p => p.role === 'magician');
+            
+            // Check if bomber was in the original game setup
+            const bomberExists = allPlayers.some(p => p.role === 'bomber');
+            const bomberAlive = alivePlayers.some(p => p.role === 'bomber');
+            
+            // Magician section
+            const magicianAction = document.getElementById('magician-action');
+            if (magicianAction) {
+                if (!magicianExists) {
+                    // If magician was never in the game, hide the section
+                    magicianAction.style.display = 'none';
+                } else if (!magicianAlive) {
+                    // If magician is dead, show section but disable player selection
+                    magicianAction.classList.add('inactive-role');
+                    const magicianStatus = document.createElement('div');
+                    magicianStatus.className = 'action-result warning';
+                    magicianStatus.innerHTML = '<p>Magician is no longer alive. This action cannot be performed.</p>';
+                    magicianAction.appendChild(magicianStatus);
+                }
+            }
+            
+            // Bomber section - moved most of the logic to updateBomberSection()
+            updateBomberSection();
+            
+            // Update Godfather section title based on inheritance
+            const activeGodfather = getActiveGodfather();
+            const godfatherAction = document.getElementById('godfather-action');
+            
+            if (godfatherAction && activeGodfather) {
+                const godfatherHeader = godfatherAction.querySelector('h4');
+                if (godfatherHeader) {
+                    if (activeGodfather.role === 'godfather') {
+                        godfatherHeader.textContent = "Godfather's Action";
+                    } else if (activeGodfather.role === 'magician') {
+                        godfatherHeader.textContent = "Magician's Action (as Godfather)";
+                    } else if (activeGodfather.role === 'bomber') {
+                        godfatherHeader.textContent = "Bomber's Action (as Godfather)";
+                    } else {
+                        godfatherHeader.textContent = "Mafia's Action (as Godfather)";
+                    }
+                }
+            }
+        }
+        
+        // Update Bomber section to mark it inactive if bomb is used or bomber is dead
+        function updateBomberSection() {
+            const allPlayers = gameState.players || [];
+            const alivePlayers = getAlivePlayers();
+            
+            // Check if bomber was in the original game setup
+            const bomberExists = allPlayers.some(p => p.role === 'bomber');
+            const bomberAlive = alivePlayers.some(p => p.role === 'bomber');
+            const bombHasBeenUsed = Boolean(gameState.bomberAction && gameState.bomberAction.targetId);
+            
+            // Initialize bomberBombsRemaining if it doesn't exist yet
+            if (gameState.bomberBombsRemaining === undefined) {
+                gameState.bomberBombsRemaining = bomberExists && bomberAlive && !bombHasBeenUsed ? 1 : 0;
+            }
+            
+            // Bomber section
+            const bomberAction = document.getElementById('bomber-action');
+            if (bomberAction) {
+                // Update title to show bombs remaining
+                const bomberHeader = bomberAction.querySelector('h4');
+                if (bomberHeader) {
+                    bomberHeader.textContent = `Bomber's Action (${gameState.bomberBombsRemaining} bomb${gameState.bomberBombsRemaining !== 1 ? 's' : ''} left)`;
+                }
+                
+                if (!bomberExists) {
+                    // If bomber was never in the game, hide the section
+                    bomberAction.style.display = 'none';
+                } else if (!bomberAlive || bombHasBeenUsed || gameState.bomberBombsRemaining === 0) {
+                    // Mark the bomber section as inactive if bomber is dead, bomb used, or no bombs left
+                    bomberAction.classList.add('inactive-role');
+                    
+                    // Add warning message if not already present
+                    if (!bomberAction.querySelector('.bomb-used-indicator')) {
+                        const bomberStatus = document.createElement('div');
+                        bomberStatus.className = 'action-result warning bomb-used-indicator';
+                        
+                        if (!bomberAlive) {
+                            bomberStatus.innerHTML = '<p><strong>Bomber is no longer alive. This action cannot be performed.</strong></p>';
+                        } else if (bombHasBeenUsed || gameState.bomberBombsRemaining === 0) {
+                            bomberStatus.innerHTML = '<p><strong>Bomb has already been placed. No more bombs available.</strong></p>';
+                        }
+                        
+                        bomberAction.appendChild(bomberStatus);
+                    }
+                    
+                    // Disable bomber player selection
+                    const bomberPlayers = document.getElementById('bomber-players');
+                    if (bomberPlayers) {
+                        bomberPlayers.classList.add('disabled');
+                        bomberPlayers.style.opacity = '0.5';
+                        bomberPlayers.style.pointerEvents = 'none';
+                    }
+                    
+                    // Disable bomber code buttons
+                    const bomberCode = document.getElementById('bomber-code');
+                    if (bomberCode) {
+                        bomberCode.classList.add('disabled');
+                        bomberCode.style.opacity = '0.5';
+                        bomberCode.style.pointerEvents = 'none';
+                    }
+                }
+            }
+        }
+        
+        // Update non-Mafia role sections based on game setup
+        function updateNonMafiaRoleSections() {
+            const allPlayers = gameState.players || [];
+            const alivePlayers = getAlivePlayers();
+            
+            // List of roles to check
+            const rolesToCheck = [
+                { id: 'detective', elementId: 'detective-call' },
+                { id: 'doctor', elementId: 'doctor-call' },
+                { id: 'professional', elementId: 'professional-call' },
+                { id: 'gunman', elementId: 'gunman-call' },
+                { id: 'ocean', elementId: 'ocean-call' },
+                { id: 'zodiac', elementId: 'zodiac-call' }
+            ];
+            
+            rolesToCheck.forEach(role => {
+                // Check if role exists in game setup
+                const roleExists = allPlayers.some(p => p.role === role.id);
+                const roleAlive = alivePlayers.some(p => p.role === role.id);
+                
+                const roleSection = document.getElementById(role.elementId);
+                if (roleSection) {
+                    // Special case for Professional - check if bullets are used up
+                    if (role.id === 'professional') {
+                        // Initialize bullets count if it doesn't exist
+                        if (!gameState.professionalBullets) {
+                            gameState.professionalBullets = 2;
+                        }
+                        
+                        // If professional has used both bullets, disable the section
+                        if (gameState.professionalBullets <= 0) {
+                            roleSection.classList.add('inactive-role');
+                            if (!roleSection.querySelector('.action-result.warning')) {
+                                const statusElement = document.createElement('div');
+                                statusElement.className = 'action-result warning';
+                                statusElement.innerHTML = `<p>Professional has used all bullets. No more shots available.</p>`;
+                                roleSection.appendChild(statusElement);
+                            }
+                            // Disable player selection
+                            disablePlayerSelection('professional');
+                            return;
+                        }
+                    }
+                    
+                    // Special case for Doctor - update self-save counter
+                    if (role.id === 'doctor') {
+                        // Make sure self-saves counter is initialized
+                        if (gameState.doctorSelfSavesRemaining === undefined) {
+                            gameState.doctorSelfSavesRemaining = 2;
+                        }
+                        
+                        // Update doctor section header with self-saves counter
+                        const heading = roleSection.querySelector('h3');
+                        if (heading) {
+                            heading.textContent = `3. Doctor Wake Up (${gameState.doctorSelfSavesRemaining} self-save${gameState.doctorSelfSavesRemaining !== 1 ? 's' : ''} left)`;
+                        }
+                        
+                        // Add warning if no self-saves left
+                        if (gameState.doctorSelfSavesRemaining <= 0) {
+                            if (!roleSection.querySelector('.self-save-warning')) {
+                                const warningElement = document.createElement('div');
+                                warningElement.className = 'action-result warning self-save-warning';
+                                warningElement.innerHTML = `<p><strong>Warning:</strong> You have used all your self-saves. You can no longer protect yourself.</p>`;
+                                
+                                // Insert after the status paragraph
+                                const statusElement = document.getElementById('doctor-status');
+                                if (statusElement && statusElement.nextSibling) {
+                                    roleSection.insertBefore(warningElement, statusElement.nextSibling);
+                                } else {
+                                    roleSection.appendChild(warningElement);
+                                }
+                            }
+                            
+                            // Disable self-selection for doctor
+                            disableDoctorSelfSelection();
+                        }
+                    }
+                    
+                    // Special case for Zodiac - check if this is an active Zodiac night
+                    if (role.id === 'zodiac') {
+                        if (!shouldZodiacActTonight()) {
+                            roleSection.classList.add('inactive-role');
+                            if (!roleSection.querySelector('.action-result.warning')) {
+                                const statusElement = document.createElement('div');
+                                statusElement.className = 'action-result warning';
+                                statusElement.innerHTML = `<p>Zodiac does not act tonight. Zodiac acts on Night 1 and then every other night.</p>`;
+                                roleSection.appendChild(statusElement);
+                            }
+                            // Disable player selection
+                            disablePlayerSelection('zodiac');
+                            return;
+                        }
+                    }
+                    
+                    // If there's a bodyguard in the game
+                    const bodyguardPlayer = getAlivePlayers().find(p => p.role === 'bodyguard');
+                    
+                    // Special case for Zodiac
+                    if (role.id === 'zodiac') {
+                        const zodiacPlayer = getAlivePlayers().find(p => p.role === 'zodiac');
+                        
+                        // If Zodiac doesn't act tonight or is dead, disable section
+                        if (!shouldZodiacActTonight() || !zodiacPlayer) {
+                            const reasonText = !shouldZodiacActTonight() 
+                                ? `Zodiac does not act tonight. Zodiac acts on Night 1 and then every other night.`
+                                : `Zodiac is no longer alive. This action cannot be performed.`;
+                            
+                            roleSection.classList.add('inactive-role');
+                            if (!roleSection.querySelector('.action-result.warning')) {
+                                const statusElement = document.createElement('div');
+                                statusElement.className = 'action-result warning';
+                                statusElement.innerHTML = `<p>${reasonText}</p>`;
+                                roleSection.appendChild(statusElement);
+                            }
+                            // Disable player selection
+                            disablePlayerSelection('zodiac');
+                            return;
+                        }
+                        
+                        // Add warning about shooting the bodyguard
+                        if (bodyguardPlayer && !roleSection.querySelector('.bodyguard-warning')) {
+                            const warningElement = document.createElement('div');
+                            warningElement.className = 'action-result warning bodyguard-warning';
+                            warningElement.innerHTML = `<p><strong>Warning:</strong> If you target the Bodyguard, YOU will be eliminated instead!</p>`;
+                            roleSection.insertBefore(warningElement, roleSection.querySelector('.players-grid'));
+                        }
+                    }
+                    
+                    if (!roleExists) {
+                        // If role was never in the game, hide the section
+                        roleSection.style.display = 'none';
+                    } else if (!roleAlive) {
+                        // If role is dead, show section but display inactive status
+                        roleSection.classList.add('inactive-role');
+                        
+                        // Check if warning already added
+                        if (!roleSection.querySelector('.action-result.warning')) {
+                            const statusElement = document.createElement('div');
+                            statusElement.className = 'action-result warning';
+                            statusElement.innerHTML = `<p>${capitalizeFirstLetter(role.id)} is no longer alive. This action cannot be performed but will be shown for consistency.</p>`;
+                            roleSection.appendChild(statusElement);
+                        }
+                    }
+                }
+            });
+            
+            // Add bullet count to the Professional section title if professional exists and is alive
+            const professionalExists = allPlayers.some(p => p.role === 'professional');
+            const professionalAlive = alivePlayers.some(p => p.role === 'professional');
+            
+            if (professionalExists && professionalAlive && gameState.professionalBullets > 0) {
+                const professionalSection = document.getElementById('professional-call');
+                if (professionalSection) {
+                    const heading = professionalSection.querySelector('h3');
+                    if (heading) {
+                        heading.textContent = `4. Professional Wake Up (${gameState.professionalBullets} bullet${gameState.professionalBullets !== 1 ? 's' : ''} left)`;
+                    }
+                    
+                    // Add pass button
+                    if (!document.getElementById('professional-pass-btn')) {
+                        const professionalDoneBtn = document.getElementById('professional-done-btn');
+                        if (professionalDoneBtn) {
+                            const passBtn = document.createElement('button');
+                            passBtn.id = 'professional-pass-btn';
+                            passBtn.className = 'btn';
+                            passBtn.style.width = '100%';
+                            passBtn.style.marginTop = '15px';
+                            passBtn.style.marginBottom = '15px';
+                            passBtn.textContent = 'Pass (Save Bullet)';
+                            
+                            passBtn.addEventListener('click', function() {
+                                // Clear any selected target
+                                nightState.actions.professional.target = null;
+                                
+                                // Display message
+                                const resultElement = document.getElementById('professional-result');
+                                if (resultElement) {
+                                    resultElement.innerHTML = `<p><strong>Professional chose to pass and save the bullet.</strong></p>`;
+                                    resultElement.className = 'action-result success';
+                                    resultElement.style.display = 'block';
+                                }
+                                
+                                // Proceed to next role
+                                setTimeout(() => {
+                                    completeRoleAction('professional');
+                                    showNextRole('gunman');
+                                }, 1500);
+                            });
+                            
+                            professionalSection.insertBefore(passBtn, professionalDoneBtn);
+                        }
+                    }
+                }
+            }
+        }
+
+        // Check if Zodiac should act tonight
+        function shouldZodiacActTonight() {
+            // Zodiac acts on Night 1 and then every other night
+            // Night 0: Initial setup (counter 0)
+            // Night 1: First night (counter 1) - Zodiac acts
+            // Night 2: Second night (counter 2) - Zodiac doesn't act
+            // Night 3: Third night (counter 3) - Zodiac acts
+            // Night 4: Fourth night (counter 4) - Zodiac doesn't act
+            // etc.
+            
+            if (!gameState.zodiacNightCounter) {
+                gameState.zodiacNightCounter = 0;
+            }
+            
+            // Check if night counter is odd (1, 3, 5, etc.)
+            return gameState.zodiacNightCounter > 0 && gameState.zodiacNightCounter % 2 === 1;
+        }
+        
+        // Disable doctor's ability to select themselves
+        function disableDoctorSelfSelection() {
+            const doctorPlayer = getAlivePlayers().find(p => p.role === 'doctor');
+            if (!doctorPlayer) return;
+            
+            const doctorId = doctorPlayer.id;
+            const doctorCard = document.querySelector(`[data-player-id="${doctorId}"][data-role="doctor-target"]`);
+            
+            if (doctorCard) {
+                doctorCard.classList.add('disabled');
+                doctorCard.style.opacity = '0.5';
+                doctorCard.style.pointerEvents = 'none';
+                
+                // Add an indicator that self-selection is disabled
+                if (!doctorCard.querySelector('.no-self-save')) {
+                    const selfSaveIndicator = document.createElement('div');
+                    selfSaveIndicator.className = 'no-self-save';
+                    selfSaveIndicator.style.position = 'absolute';
+                    selfSaveIndicator.style.top = '5px';
+                    selfSaveIndicator.style.right = '5px';
+                    selfSaveIndicator.style.background = 'rgba(244, 67, 54, 0.8)';
+                    selfSaveIndicator.style.color = 'white';
+                    selfSaveIndicator.style.borderRadius = '50%';
+                    selfSaveIndicator.style.width = '25px';
+                    selfSaveIndicator.style.height = '25px';
+                    selfSaveIndicator.style.display = 'flex';
+                    selfSaveIndicator.style.alignItems = 'center';
+                    selfSaveIndicator.style.justifyContent = 'center';
+                    selfSaveIndicator.innerHTML = '✗';
+                    
+                    doctorCard.appendChild(selfSaveIndicator);
+                }
+            }
+        }
+    </script>
 </body>
 </html> 
