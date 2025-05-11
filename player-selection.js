@@ -460,7 +460,7 @@ function setupEventListeners() {
     // Continue button
     const continueBtn = document.getElementById('continue-btn');
     if (continueBtn) {
-        continueBtn.addEventListener('click', function() {
+        continueBtn.addEventListener('click', async function() {
             const selectedPlayers = window.dbManager.getSelectedPlayers();
             console.log('DEBUG: Continue button clicked, selected players:', selectedPlayers);
             
@@ -468,6 +468,11 @@ function setupEventListeners() {
                 alert('Please select at least 4 players to continue');
                 return;
             }
+            
+            // Disable button and show loading state
+            this.disabled = true;
+            const originalBtnText = this.textContent;
+            this.textContent = 'Updating Players...';
             
             // Get the current order of player cards in the UI
             const playersContainer = document.getElementById('players-container');
@@ -514,9 +519,16 @@ function setupEventListeners() {
             // Save selected players with updated sequence and redirect
             console.log('DEBUG: Saving selected players with sequence before navigating to role-selection.html');
             
-            try {
-                // Force an update to the database for the selected players
-                if (window.supabase) {
+            // Create a function to update players in Supabase
+            const updatePlayersInSupabase = async (retryCount = 0) => {
+                if (!window.supabase) {
+                    console.log('Supabase not available, using localStorage only');
+                    // Save to localStorage and redirect
+                    window.dbManager.saveSelectedPlayers();
+                    return true; // Success without Supabase
+                }
+                
+                try {
                     // Update each player's previously_selected flag
                     const updatePromises = selectedPlayers.map(player => {
                         return window.supabase
@@ -529,29 +541,118 @@ function setupEventListeners() {
                     });
                     
                     // Wait for all updates to complete
-                    Promise.all(updatePromises)
-                        .then(() => {
-                            console.log('All player updates complete, continuing to role selection');
-                            // Save to localStorage and redirect
+                    await Promise.all(updatePromises);
+                    console.log('All player updates complete, continuing to role selection');
+                    return true; // Success
+                } catch (error) {
+                    console.error(`Error updating players (attempt ${retryCount + 1}):`, error);
+                    return false; // Failed
+                }
+            };
+            
+            // Create a dialog to ask user what to do on failure
+            const createConfirmationDialog = () => {
+                // Create dialog container
+                const dialog = document.createElement('div');
+                dialog.className = 'confirmation-dialog';
+                dialog.style.position = 'fixed';
+                dialog.style.top = '0';
+                dialog.style.left = '0';
+                dialog.style.width = '100%';
+                dialog.style.height = '100%';
+                dialog.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+                dialog.style.display = 'flex';
+                dialog.style.justifyContent = 'center';
+                dialog.style.alignItems = 'center';
+                dialog.style.zIndex = '1000';
+                
+                // Create dialog content
+                const content = document.createElement('div');
+                content.style.backgroundColor = '#1e1e1e';
+                content.style.borderRadius = '8px';
+                content.style.padding = '20px';
+                content.style.maxWidth = '500px';
+                content.style.width = '80%';
+                content.style.color = 'white';
+                content.style.textAlign = 'center';
+                
+                // Set dialog content
+                content.innerHTML = `
+                    <h2 style="color: #ff5555; margin-top: 0;">Connection Problem</h2>
+                    <p>Failed to update player data in the database after multiple attempts.</p>
+                    <p>You can proceed with only the local data (no syncing between devices), or cancel and try again later.</p>
+                    <div style="display: flex; justify-content: space-around; margin-top: 20px;">
+                        <button id="continue-local" class="btn" style="background-color: #555; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer;">Proceed Locally</button>
+                        <button id="cancel-continue" class="btn btn-primary" style="padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer;">Cancel</button>
+                    </div>
+                `;
+                
+                dialog.appendChild(content);
+                document.body.appendChild(dialog);
+                
+                return new Promise((resolve) => {
+                    // Add event listeners to buttons
+                    document.getElementById('continue-local').addEventListener('click', () => {
+                        dialog.remove();
+                        resolve(true); // Proceed with localStorage only
+                    });
+                    
+                    document.getElementById('cancel-continue').addEventListener('click', () => {
+                        dialog.remove();
+                        resolve(false); // Cancel
+                    });
+                });
+            };
+            
+            // Try to update players in Supabase with retries
+            let success = await updatePlayersInSupabase(0);
+            
+            // If first attempt fails, retry
+            if (!success) {
+                this.textContent = 'Retrying... (1/2)';
+                // Wait a moment before retrying
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                success = await updatePlayersInSupabase(1);
+                
+                // If second attempt fails, retry one more time
+                if (!success) {
+                    this.textContent = 'Retrying... (2/2)';
+                    // Wait a moment before retrying
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    success = await updatePlayersInSupabase(2);
+                    
+                    // If all attempts fail, show dialog
+                    if (!success) {
+                        this.textContent = originalBtnText;
+                        this.disabled = false;
+                        
+                        // Ask user what to do
+                        const shouldProceed = await createConfirmationDialog();
+                        
+                        if (shouldProceed) {
+                            // User chose to proceed with localStorage only
+                            console.log('Proceeding with localStorage only');
                             window.dbManager.saveSelectedPlayers();
-                            window.location.href = 'role-selection.html';
-                        })
-                        .catch(error => {
-                            console.error('Error updating players:', error);
-                            // Try direct localStorage save and redirect anyway
                             localStorage.setItem('selectedPlayers', JSON.stringify(selectedPlayers));
                             window.location.href = 'role-selection.html';
-                        });
+                        } else {
+                            // User chose to cancel
+                            console.log('User cancelled after database errors');
+                            return;
+                        }
+                    } else {
+                        // Third attempt succeeded
+                        window.dbManager.saveSelectedPlayers();
+                        window.location.href = 'role-selection.html';
+                    }
                 } else {
-                    // No Supabase, just save to localStorage and redirect
+                    // Second attempt succeeded
                     window.dbManager.saveSelectedPlayers();
                     window.location.href = 'role-selection.html';
                 }
-            } catch (error) {
-                console.error('Error saving selected players:', error);
-                
-                // Try to save to localStorage directly as fallback
-                localStorage.setItem('selectedPlayers', JSON.stringify(selectedPlayers));
+            } else {
+                // First attempt succeeded
+                window.dbManager.saveSelectedPlayers();
                 window.location.href = 'role-selection.html';
             }
         });
