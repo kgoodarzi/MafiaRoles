@@ -2,6 +2,7 @@
 let gameState = null;
 let currentPlayerIndex = 0;
 let allRolesViewed = false;
+let roleIsVisible = false;
 
 // Initialize page when DOM is loaded
 document.addEventListener('DOMContentLoaded', async function() {
@@ -23,8 +24,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     loadGameState();
     
     // Set up event listeners
-    document.getElementById('view-role-btn').addEventListener('click', viewRole);
-    document.getElementById('hide-role-btn').addEventListener('click', hideRole);
+    document.getElementById('toggle-role-btn').addEventListener('click', toggleRole);
     document.getElementById('next-player-btn').addEventListener('click', nextPlayer);
     document.getElementById('start-game-btn').addEventListener('click', proceedToGame);
     document.getElementById('view-assignments-btn').addEventListener('click', goToRoleAssignments);
@@ -85,6 +85,7 @@ function initializeRoleReveal() {
     // Reset index and view status
     currentPlayerIndex = 0;
     allRolesViewed = false;
+    roleIsVisible = false;
     
     // Show the first player
     showCurrentPlayer();
@@ -122,22 +123,35 @@ function showCurrentPlayer() {
         </div>
     `;
     
-    // Show appropriate buttons
-    document.getElementById('view-role-btn').style.display = 'block';
-    document.getElementById('hide-role-btn').style.display = 'none';
-    document.getElementById('next-player-btn').style.display = 'none';
-    document.getElementById('start-game-btn').style.display = 'none';
-    document.getElementById('view-assignments-btn').style.display = 'none';
-    document.getElementById('back-home-btn').style.display = 'none';
+    // Reset toggle state
+    roleIsVisible = false;
+    
+    // Update button states
+    updateButtonStates();
 }
 
-// View the current player's role
-function viewRole() {
+// Toggle the role visibility
+function toggleRole() {
     if (!gameState || !gameState.players || currentPlayerIndex >= gameState.players.length) {
         console.error("Invalid game state or player index");
         return;
     }
     
+    // Toggle the visibility state
+    roleIsVisible = !roleIsVisible;
+    
+    if (roleIsVisible) {
+        showRole();
+    } else {
+        hideRole();
+    }
+    
+    // Update button states
+    updateButtonStates();
+}
+
+// Show the current player's role
+function showRole() {
     const player = gameState.players[currentPlayerIndex];
     const roleDisplay = document.getElementById('role-display');
     
@@ -187,11 +201,6 @@ function viewRole() {
             <p class="role-description">${roleInfo.description}</p>
         </div>
     `;
-    
-    // Update buttons
-    document.getElementById('view-role-btn').style.display = 'none';
-    document.getElementById('hide-role-btn').style.display = 'block';
-    document.getElementById('next-player-btn').style.display = 'block';
 }
 
 // Hide the current player's role
@@ -202,16 +211,35 @@ function hideRole() {
             <p>Role is now hidden</p>
         </div>
     `;
+}
+
+// Update all button states based on current status
+function updateButtonStates() {
+    const toggleBtn = document.getElementById('toggle-role-btn');
+    const nextBtn = document.getElementById('next-player-btn');
+    const startBtn = document.getElementById('start-game-btn');
+    const viewAssignmentsBtn = document.getElementById('view-assignments-btn');
     
-    // Update buttons
-    document.getElementById('view-role-btn').style.display = 'block';
-    document.getElementById('hide-role-btn').style.display = 'none';
-    document.getElementById('next-player-btn').style.display = 'block';
+    // Toggle button text based on role visibility
+    toggleBtn.textContent = roleIsVisible ? 'Hide Role' : 'View Your Role';
+    
+    // Next player button should only be enabled when role has been viewed
+    nextBtn.disabled = !roleIsVisible;
+    
+    // Start Game and View Role Assignments should only be enabled after all roles have been viewed
+    startBtn.disabled = !allRolesViewed;
+    viewAssignmentsBtn.disabled = !allRolesViewed;
 }
 
 // Move to the next player
 function nextPlayer() {
+    if (!roleIsVisible) {
+        // Don't allow next player if role hasn't been viewed
+        return;
+    }
+    
     currentPlayerIndex++;
+    
     // Check if all players have seen their roles
     if (currentPlayerIndex >= gameState.players.length) {
         allRolesViewed = true;
@@ -225,14 +253,15 @@ function nextPlayer() {
         `;
         document.getElementById('role-display').innerHTML = '';
         
-        // Update buttons
-        document.getElementById('view-role-btn').style.display = 'none';
-        document.getElementById('hide-role-btn').style.display = 'none';
+        // Hide role toggle button, since no more roles to show
+        document.getElementById('toggle-role-btn').style.display = 'none';
         document.getElementById('next-player-btn').style.display = 'none';
-        document.getElementById('start-game-btn').style.display = 'block';
-        document.getElementById('view-assignments-btn').style.display = 'block';
-        document.getElementById('back-home-btn').style.display = 'block';
+        
+        // Update button states
+        updateButtonStates();
     } else {
+        // Reset role visibility for new player
+        roleIsVisible = false;
         // Show the next player
         showCurrentPlayer();
     }
