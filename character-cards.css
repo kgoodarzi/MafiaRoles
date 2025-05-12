@@ -61,7 +61,7 @@ body[data-page="roles"] main {
     /* Reset any centering */
     align-items: initial !important;
     justify-content: initial !important;
-    text-align: left !important;
+    text-align: center !important;
 }
 
 /* Team section containers - super specific selectors to override anything */

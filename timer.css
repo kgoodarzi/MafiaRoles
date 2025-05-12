@@ -54,7 +54,7 @@
 .timer-controls {
     display: flex;
     justify-content: center;
-    gap: 15px;
+    gap: 7.5px;
     margin: 25px auto;
     max-width: 400px;
 }

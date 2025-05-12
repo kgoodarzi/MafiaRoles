@@ -60,6 +60,11 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('next-player-btn').addEventListener('click', nextPlayer);
         document.getElementById('back-to-game-btn').addEventListener('click', backToGame);
         
+        // Ensure Next Player button has btn-success class
+        const nextPlayerBtn = document.getElementById('next-player-btn');
+        nextPlayerBtn.classList.remove('btn-primary', 'btn-warning');
+        nextPlayerBtn.classList.add('btn-success');
+        
         // Initialize audio context
         try {
             // AudioContext must be initialized after user interaction
@@ -166,6 +171,11 @@ function showCurrentPlayerTimer() {
     startPauseBtn.textContent = 'Start';
     startPauseBtn.classList.remove('btn-warning');
     startPauseBtn.classList.add('btn-primary');
+    
+    // Ensure Next Player button maintains its green styling
+    const nextPlayerBtn = document.getElementById('next-player-btn');
+    nextPlayerBtn.classList.remove('btn-primary', 'btn-warning');
+    nextPlayerBtn.classList.add('btn-success');
 }
 
 // Update the timer display
@@ -308,9 +318,9 @@ function resetTimer() {
     startPauseBtn.classList.add('btn-primary');
 }
 
-// Move to the next player
+// Update nextPlayer function to handle the completion of timer for all players
 function nextPlayer() {
-    // Clear any existing intervals
+    // Clear timer if it's running
     if (timerInterval) {
         clearInterval(timerInterval);
         timerInterval = null;
@@ -322,33 +332,43 @@ function nextPlayer() {
         buzzerTimeout = null;
     }
     
-    // Move to next player
+    // Make sure the Next Player button maintains its green styling
+    const nextPlayerBtn = document.getElementById('next-player-btn');
+    nextPlayerBtn.classList.remove('btn-primary', 'btn-warning');
+    nextPlayerBtn.classList.add('btn-success');
+    
     currentPlayerIndex++;
     
-    // Check if all players have had their turn
+    // Check if we've gone through all players
     if (currentPlayerIndex >= gameStateForTimer.players.length) {
-        // All players done, go back to game
-        backToGame();
+        // All players have gone through their time
+        currentPlayerIndex = 0; // Reset to first player
+        
+        // Show alert
+        alert("All players have completed their turns. Returning to the game.");
+        
+        // Return to the appropriate page with timerComplete flag
+        if (returnToPage.includes('day-phase')) {
+            window.location.href = `${returnToPage}?timerComplete=true`;
+        } else {
+            window.location.href = returnToPage;
+        }
     } else {
         // Show next player
         showCurrentPlayerTimer();
     }
 }
 
-// Return to the game page
+// Update backToGame function to check if all players have gone through the timer
 function backToGame() {
-    // Clear any existing intervals
-    if (timerInterval) {
-        clearInterval(timerInterval);
-        timerInterval = null;
-    }
+    // Determine if all players have gone through the timer
+    const allPlayersComplete = currentPlayerIndex >= gameStateForTimer.players.length - 1;
     
-    // Clear any buzzer timeouts
-    if (buzzerTimeout) {
-        clearTimeout(buzzerTimeout);
-        buzzerTimeout = null;
+    if (allPlayersComplete && returnToPage.includes('day-phase')) {
+        // If all players have had their turn and we're returning to day phase
+        window.location.href = `${returnToPage}?timerComplete=true`;
+    } else {
+        // Otherwise just return to the original page
+        window.location.href = returnToPage;
     }
-    
-    // Navigate back to the appropriate page
-    window.location.href = returnToPage;
 } 

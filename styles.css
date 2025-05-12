@@ -1478,4 +1478,74 @@ section.selected-players .players-grid {
 
 #hide-roles-btn:hover {
     background-color: #45a049;
+}
+
+/* Back to Home button styling */
+.btn-home,
+#reset-btn, 
+button[id="reset-btn"],
+a.btn[href="index.html"],
+#back-home-btn,
+#home-btn,
+button:last-child.btn,
+.button-container > *:last-child,
+.game-actions > *:last-child,
+.actions > *:last-child {
+    /*background-color: #ff8c00 !important;  Orange background */
+    color: white !important; 
+    margin-top: 10px !important; /* Consistent top margin */
+    border-color: #e67e00 !important;
+}
+
+.btn-home:hover,
+#reset-btn:hover, 
+button[id="reset-btn"]:hover,
+a.btn[href="index.html"]:hover,
+#back-home-btn:hover,
+#home-btn:hover,
+button:last-child.btn:hover,
+.button-container > *:last-child:hover,
+.game-actions > *:last-child:hover,
+.actions > *:last-child:hover {
+    background-color: #e67e00 !important; /* Darker orange on hover */
+    border-color: #cc7000 !important;
+}
+
+/* Apply bottom margin to elements that might come before the Back to Home button */
+.button-container > *:not(:last-child),
+.game-actions > *:not(:last-child),
+.actions > *:not(:last-child) {
+    margin-bottom: 10px;
+}
+
+/* Add specificity to ensure Back to Home styling takes precedence */
+button#reset-btn.btn {
+    background-color: #ff8c00 !important;
+    color: white !important;
+    margin-top: 10px !important;
+}
+
+/* Button container and action container spacing */
+.button-container,
+.game-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* Ensure all buttons within button containers have consistent spacing */
+.button-container > button,
+.button-container > a.btn,
+.game-actions > button,
+.game-actions > a.btn {
+    margin-bottom: 10px;
+}
+
+/* Ensure the last button has proper spacing */
+.button-container > button:last-child,
+.button-container > a.btn:last-child,
+.game-actions > button:last-child,
+.game-actions > a.btn:last-child {
+    margin-bottom: 0;
+    margin-top: 10px;
 } 

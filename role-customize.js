@@ -160,8 +160,15 @@ function setupEventListeners() {
     });
     
     // Cancel button
-    document.getElementById('cancel-btn').addEventListener('click', function() {
-        window.location.href = 'role-selection.html';
+    document.getElementById('cancel-btn').addEventListener('click', function(e) {
+        // If there are unsaved changes, ask for confirmation
+        if (selectedRoles.length > 0) {
+            if (!confirm('Any unsaved changes will be lost. Continue?')) {
+                e.preventDefault();
+                return false;
+            }
+        }
+        // No need to set window.location as we're using an anchor element now
     });
 }
 

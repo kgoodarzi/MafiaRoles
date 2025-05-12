@@ -261,9 +261,8 @@
                         <div class="timer-bar" id="timer-bar"></div>
                     </div>
                     <div class="timer-controls" style="display:flex;justify-content:space-between;margin-top:10px;">
-                        <button id="start-timer-btn" class="btn btn-primary" onclick="startTimer()">Start Defense</button>
-                        <button id="pause-timer-btn" class="btn" onclick="pauseTimer()" disabled>Pause</button>
-                        <button id="next-defendant-btn" class="btn btn-success" onclick="nextDefendant()">Next Defendant</button>
+                        <button id="start-timer-btn" class="btn btn-primary" onclick="toggleTimer()" style="flex: 1; margin-right: 10px; height: 60px; white-space: normal; line-height: 1.2;">Start<br>Defense</button>
+                        <button id="next-defendant-btn" class="btn btn-success" onclick="nextDefendant()" style="flex: 1; height: 60px;">Next Defendant</button>
                     </div>
                 </div>
 
@@ -570,7 +569,33 @@
             }
             
             if (!playerWithMaxVotes || maxVotes === 0) {
-                alert('No votes cast. Please vote to eliminate a player.');
+                // No votes cast - proceed with no elimination
+                const finalResultsSection = document.getElementById('final-results-section');
+                const finalResultsContent = document.getElementById('final-results-content');
+                
+                // Prepare vote summary (empty in this case)
+                let voteSummary = '<div class="vote-summary" style="margin-top:15px;padding:10px;background-color:var(--card-bg-darker, #2a2a2a);border-radius:8px;">';
+                voteSummary += '<h4>Vote Results:</h4><p>No votes were cast.</p></div>';
+                
+                finalResultsContent.innerHTML = `
+                    <div class="alert alert-info" style="padding: 20px; background-color: var(--card-bg-darker); border-radius: 8px; margin-top: 15px;">
+                        <h3 style="color: var(--primary-color);">No Elimination</h3>
+                        <p>No votes were cast. The town has decided not to eliminate anyone.</p>
+                        <p>The town will proceed to Night Phase.</p>
+                        ${voteSummary}
+                    </div>
+                `;
+                
+                finalResultsSection.style.display = 'block';
+                document.getElementById('final-vote-section').style.display = 'none';
+                
+                // Mark voting as complete
+                defenseState.finalVotingComplete = true;
+                localStorage.setItem('defenseState', JSON.stringify(defenseState));
+                
+                // Enable next phase button
+                document.getElementById('next-phase-btn').disabled = false;
+                
                 return;
             }
             
@@ -578,6 +603,49 @@
             const player = gameState.players.find(p => p.id === playerWithMaxVotes);
             if (!player) {
                 alert('Selected player not found.');
+                return;
+            }
+            
+            // Check if player is Bodyguard
+            if (player.role === 'bodyguard') {
+                // Show message that Bodyguard cannot be eliminated by voting
+                const finalResultsSection = document.getElementById('final-results-section');
+                const finalResultsContent = document.getElementById('final-results-content');
+                
+                // Prepare vote summary
+                let voteSummary = '<div class="vote-summary" style="margin-top:15px;padding:10px;background-color:var(--card-bg-darker, #2a2a2a);border-radius:8px;">';
+                voteSummary += '<h4>Vote Results:</h4><ul style="padding-left:20px;">';
+                
+                for (const playerId in finalPlayerVotes) {
+                    if (finalPlayerVotes[playerId] > 0) {
+                        const votedPlayer = gameState.players.find(p => p.id === playerId);
+                        if (votedPlayer) {
+                            voteSummary += `<li><strong>${votedPlayer.name}</strong>: ${finalPlayerVotes[playerId]} votes</li>`;
+                        }
+                    }
+                }
+                
+                voteSummary += '</ul></div>';
+                
+                finalResultsContent.innerHTML = `
+                    <div class="alert alert-info" style="padding: 20px; background-color: var(--card-bg-darker); border-radius: 8px; margin-top: 15px;">
+                        <h3 style="color: var(--primary-color);">Bodyguard Protected</h3>
+                        <p>${player.name} has been revealed as the Bodyguard and cannot be eliminated by voting.</p>
+                        <p>The town will proceed to Night Phase.</p>
+                        ${voteSummary}
+                    </div>
+                `;
+                
+                finalResultsSection.style.display = 'block';
+                document.getElementById('final-vote-section').style.display = 'none';
+                
+                // Mark voting as complete
+                defenseState.finalVotingComplete = true;
+                localStorage.setItem('defenseState', JSON.stringify(defenseState));
+                
+                // Enable next phase button
+                document.getElementById('next-phase-btn').disabled = false;
+                
                 return;
             }
             
@@ -734,8 +802,10 @@
             }
             
             isTimerRunning = true;
-            document.getElementById('start-timer-btn').disabled = true;
-            document.getElementById('pause-timer-btn').disabled = false;
+            const startButton = document.getElementById('start-timer-btn');
+            startButton.textContent = 'Pause';
+            startButton.classList.remove('btn-primary');
+            startButton.classList.add('btn-warning');
             
             timerInterval = setInterval(function() {
                 secondsRemaining--;
@@ -744,13 +814,24 @@
                 if (secondsRemaining <= 0) {
                     clearInterval(timerInterval);
                     isTimerRunning = false;
-                    document.getElementById('start-timer-btn').disabled = true;
-                    document.getElementById('pause-timer-btn').disabled = true;
-                    // Next Defendant button is always enabled
+                    const startButton = document.getElementById('start-timer-btn');
+                    startButton.disabled = true;
+                    startButton.innerHTML = 'Start<br>Defense';
+                    startButton.classList.remove('btn-warning');
+                    startButton.classList.add('btn-primary');
                     
                     alert("Time's up! The defense period has ended.");
                 }
             }, 1000);
+        }
+        
+        // Toggle timer
+        function toggleTimer() {
+            if (isTimerRunning) {
+                pauseTimer();
+            } else {
+                startTimer();
+            }
         }
         
         // Pause timer
@@ -759,8 +840,11 @@
             
             clearInterval(timerInterval);
             isTimerRunning = false;
-            document.getElementById('start-timer-btn').disabled = false;
-            document.getElementById('pause-timer-btn').disabled = true;
+            const startButton = document.getElementById('start-timer-btn');
+            startButton.disabled = false;
+            startButton.innerHTML = 'Start<br>Defense';
+            startButton.classList.remove('btn-warning');
+            startButton.classList.add('btn-primary');
         }
         
         // Reset timer
@@ -775,9 +859,12 @@
             secondsRemaining = initialTimerValue;
             updateTimerDisplay();
             
-            // Reset timer control buttons - Next Defendant stays enabled
-            document.getElementById('start-timer-btn').disabled = false;
-            document.getElementById('pause-timer-btn').disabled = true;
+            // Reset timer control buttons
+            const startButton = document.getElementById('start-timer-btn');
+            startButton.disabled = false;
+            startButton.innerHTML = 'Start<br>Defense';
+            startButton.classList.remove('btn-warning');
+            startButton.classList.add('btn-primary');
         }
         
         // Helper function to get role by ID

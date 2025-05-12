@@ -40,7 +40,7 @@
                 <div class="current-roles-section">
                     <div class="section-header" style="display: flex; justify-content: space-between; align-items: center;">
                         <h3>Roles to be assigned</h3>
-                        <button id="edit-roles-btn" class="btn btn-secondary" style="font-size: 0.9rem; padding: 5px 10px;">Edit Roles</button>
+                        <button id="edit-roles-btn" class="btn" style="font-size: 0.9rem; padding: 5px 10px; margin-left: 80px;">Edit Roles</button>
                     </div>
                     <div id="current-roles-list" class="roles-list roles-grid"></div>
                 </div>
@@ -57,9 +57,10 @@
             </section>
 
             <section class="game-actions">
-                <div id="game-controls">
-                    <a href="player-selection.html" class="btn">Back to Player Selection</a>
+                <div id="game-controls" style="display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 300px; margin: 0 auto; background-color: transparent;">
                     <button id="assign-roles-btn" class="btn btn-primary">Assign Roles</button>
+                    <a href="player-selection.html" class="btn">Back to Player Selection</a>
+                    <a href="index.html" class="btn btn-home" style="margin-top: 10px; background-color: #ff8c00 !important; color: white !important;">Back to Home</a>
                 </div>
             </section>
         </main>

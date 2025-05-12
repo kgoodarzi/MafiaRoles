@@ -1,5 +1,6 @@
 // Global variables
 let gameState = null;
+let allPlayersTimerComplete = false;  // New flag to track if all players have gone through the timer
 
 // Initialize page when DOM is loaded
 document.addEventListener('DOMContentLoaded', async function() {
@@ -9,6 +10,13 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (typeof waitForDatabaseInit === 'function') {
         console.log("Waiting for database initialization...");
         await waitForDatabaseInit();
+    }
+    
+    // Check if we're returning from the timer page
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('timerComplete') && urlParams.get('timerComplete') === 'true') {
+        allPlayersTimerComplete = true;
+        console.log("All players have completed the timer");
     }
     
     // Load game state from localStorage
@@ -91,13 +99,9 @@ function loadGameState() {
             // Display alive players
             displayAlivePlayers();
             
-            // Update Next Phase button text if there's a bomb
-            if (gameState.bomberAction && gameState.bomberAction.targetId && gameState.bomberAction.code) {
-                const nextPhaseBtn = document.getElementById('next-phase-btn');
-                if (nextPhaseBtn) {
-                    nextPhaseBtn.textContent = 'Proceed to Bomb Defusing';
-                }
-            }
+            // Handle button visibility based on game state
+            updateButtonVisibility();
+            
         } else {
             console.warn("No game state found in localStorage");
             document.getElementById('phase-info').innerHTML = `
@@ -120,6 +124,42 @@ function loadGameState() {
                 <p>${error.message}</p>
             </div>
         `;
+    }
+}
+
+// Update button visibility based on game state
+function updateButtonVisibility() {
+    const nextPhaseBtn = document.getElementById('next-phase-btn');
+    const discussionTimerBtn = document.getElementById('discussion-timer-btn');
+    
+    // Show Next Phase button if all players have completed the timer
+    if (allPlayersTimerComplete) {
+        // Show Next Phase button
+        if (nextPhaseBtn) {
+            nextPhaseBtn.style.display = 'block';
+            
+            // Update button text if there's a bomb
+            if (gameState.bomberAction && gameState.bomberAction.targetId && gameState.bomberAction.code) {
+                nextPhaseBtn.textContent = 'Proceed to Bomb Defusing';
+            } else {
+                nextPhaseBtn.textContent = 'Next Phase (Voting)';
+            }
+        }
+        
+        // Hide discussion timer button
+        if (discussionTimerBtn) {
+            discussionTimerBtn.style.display = 'none';
+        }
+    } 
+    else {
+        // When timers are not complete, hide Next Phase button and show Discussion Timer
+        if (nextPhaseBtn) {
+            nextPhaseBtn.style.display = 'none';
+        }
+        
+        if (discussionTimerBtn) {
+            discussionTimerBtn.style.display = 'block';
+        }
     }
 }
 
@@ -345,10 +385,22 @@ function checkGameEndingConditions() {
 function goToNextPhase() {
     if (!gameState) return;
     
+    console.log("Going to next phase. allPlayersTimerComplete:", allPlayersTimerComplete);
+    console.log("Current game state:", gameState.gamePhase, "Round:", gameState.currentRound, "isIntroductionDay:", gameState.isIntroductionDay);
+    
     // Check if there's a bomb to defuse first
     if (gameState.bomberAction && gameState.bomberAction.targetId && gameState.bomberAction.code) {
         console.log("Bomb detected, redirecting to bomb defuse page before voting...");
         window.location.href = 'bomb-defuse.html';
+        return;
+    }
+    
+    // If all players have gone through timer, go to voting regardless of day
+    if (allPlayersTimerComplete) {
+        console.log("All players have completed timer, going to voting phase");
+        gameState.gamePhase = 'voting';
+        localStorage.setItem('gameState', JSON.stringify(gameState));
+        window.location.href = 'voting-phase.html';
         return;
     }
     
@@ -366,6 +418,7 @@ function goToNextPhase() {
         localStorage.setItem('gameState', JSON.stringify(gameState));
         
         // Go to night phase with no actions
+        console.log("Going to night phase after introduction day");
         window.location.href = 'night-phase.html';
         return;
     }
@@ -374,7 +427,8 @@ function goToNextPhase() {
     gameState.gamePhase = 'voting';
     localStorage.setItem('gameState', JSON.stringify(gameState));
     
-    // Redirect to the next phase page
+    // Redirect to the voting phase page
+    console.log("Redirecting to voting phase");
     window.location.href = 'voting-phase.html';
 }
 

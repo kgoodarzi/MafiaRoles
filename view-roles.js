@@ -22,13 +22,6 @@ document.addEventListener('DOMContentLoaded', async function() {
     
     // Load game state from localStorage
     loadGameState();
-    
-    // Set up event listeners
-    document.getElementById('toggle-role-btn').addEventListener('click', toggleRole);
-    document.getElementById('next-player-btn').addEventListener('click', nextPlayer);
-    document.getElementById('start-game-btn').addEventListener('click', proceedToGame);
-    document.getElementById('view-assignments-btn').addEventListener('click', goToRoleAssignments);
-    document.getElementById('back-home-btn').addEventListener('click', goToHomePage);
 });
 
 // Wait for database initialization
@@ -117,13 +110,11 @@ function showCurrentPlayer() {
     // Get necessary DOM elements
     const playerElement = document.getElementById('current-player');
     const roleDisplay = document.getElementById('role-display');
-    const toggleBtn = document.getElementById('toggle-role-btn');
-    const nextBtn = document.getElementById('next-player-btn');
-    const startBtn = document.getElementById('start-game-btn');
-    const viewAssignmentsBtn = document.getElementById('view-assignments-btn');
+    const viewControls = document.getElementById('view-controls');
+    const backHomeBtn = document.getElementById('back-home-btn');
     
     // Make sure DOM elements exist
-    if (!playerElement || !roleDisplay) {
+    if (!playerElement || !roleDisplay || !viewControls) {
         console.error("Required DOM elements not found in showCurrentPlayer");
         return;
     }
@@ -155,24 +146,28 @@ function showCurrentPlayer() {
     // Reset toggle state
     roleIsVisible = false;
     
-    // Ensure the correct buttons are visible for this stage
-    if (toggleBtn) {
-        toggleBtn.style.display = 'block';
-        toggleBtn.textContent = 'View Your Role';
-    }
+    // Remove any existing buttons except the Back to Home button
+    removeAllButtons();
     
-    if (nextBtn) {
-        nextBtn.style.display = 'block';
-        nextBtn.disabled = true;  // Disabled until role is viewed
-    }
+    // Create and add View Role button
+    const toggleBtn = document.createElement('button');
+    toggleBtn.id = 'toggle-role-btn';
+    toggleBtn.className = 'btn btn-primary';
+    toggleBtn.textContent = 'View Your Role';
+    toggleBtn.addEventListener('click', toggleRole);
     
-    // Hide game progression buttons during role viewing
-    if (startBtn) {
-        startBtn.style.display = 'none';
-    }
+    // Insert the toggle button before the Back to Home button
+    viewControls.insertBefore(toggleBtn, backHomeBtn);
+}
+
+// Remove all buttons except the Back to Home button
+function removeAllButtons() {
+    const viewControls = document.getElementById('view-controls');
+    const backHomeBtn = document.getElementById('back-home-btn');
     
-    if (viewAssignmentsBtn) {
-        viewAssignmentsBtn.style.display = 'none';
+    // Keep removing the first child until only Back to Home button remains
+    while (viewControls.firstChild !== backHomeBtn) {
+        viewControls.removeChild(viewControls.firstChild);
     }
 }
 
@@ -186,31 +181,37 @@ function toggleRole() {
     // Toggle the visibility state
     roleIsVisible = !roleIsVisible;
     
-    // Get necessary DOM elements
-    const toggleBtn = document.getElementById('toggle-role-btn');
-    const nextBtn = document.getElementById('next-player-btn');
+    // Get the view controls container
+    const viewControls = document.getElementById('view-controls');
+    const backHomeBtn = document.getElementById('back-home-btn');
+    
+    // Remove all existing buttons except Back to Home
+    removeAllButtons();
     
     if (roleIsVisible) {
         showRole();
         
-        // Update button states and text
-        if (toggleBtn) {
-            toggleBtn.textContent = 'Hide Role';
-        }
+        // Create Next Player button
+        const nextBtn = document.createElement('button');
+        nextBtn.id = 'next-player-btn';
+        nextBtn.className = 'btn btn-success';
+        nextBtn.textContent = 'Next Player';
+        nextBtn.addEventListener('click', nextPlayer);
         
-        if (nextBtn) {
-            nextBtn.disabled = false;  // Enable next button after role is viewed
-        }
+        // Insert the Next Player button before the Back to Home button
+        viewControls.insertBefore(nextBtn, backHomeBtn);
     } else {
         hideRole();
         
-        // Update button states and text
-        if (toggleBtn) {
-            toggleBtn.textContent = 'View Your Role';
-        }
+        // Recreate View Role button
+        const toggleBtn = document.createElement('button');
+        toggleBtn.id = 'toggle-role-btn';
+        toggleBtn.className = 'btn btn-primary';
+        toggleBtn.textContent = 'View Your Role';
+        toggleBtn.addEventListener('click', toggleRole);
         
-        // Keep next button enabled even when role is hidden
-        // This allows progressing if they've already seen the role
+        // Insert the View Role button before the Back to Home button
+        viewControls.insertBefore(toggleBtn, backHomeBtn);
     }
 }
 
@@ -295,17 +296,13 @@ function hideRole() {
 
 // Move to the next player
 function nextPlayer() {
-    if (!roleIsVisible) {
-        // Don't allow next player if role hasn't been viewed
-        return;
-    }
-    
     currentPlayerIndex++;
     
     // Check if all players have seen their roles
     if (currentPlayerIndex >= gameState.players.length) {
         allRolesViewed = true;
-        // Show proceed button
+        
+        // Show proceed message
         document.getElementById('game-status').textContent = "All roles have been viewed";
         document.getElementById('current-player').innerHTML = `
             <div class="all-assigned">
@@ -315,29 +312,31 @@ function nextPlayer() {
         `;
         document.getElementById('role-display').innerHTML = '';
         
-        // Get button elements
-        const toggleBtn = document.getElementById('toggle-role-btn');
-        const nextBtn = document.getElementById('next-player-btn');
-        const startBtn = document.getElementById('start-game-btn');
-        const viewAssignmentsBtn = document.getElementById('view-assignments-btn');
+        // Get the view controls container and Back to Home button
+        const viewControls = document.getElementById('view-controls');
+        const backHomeBtn = document.getElementById('back-home-btn');
         
-        // Hide role toggle and next player buttons, since all roles are viewed
-        if (toggleBtn) toggleBtn.style.display = 'none';
-        if (nextBtn) nextBtn.style.display = 'none';
+        // Remove all existing buttons except Back to Home
+        removeAllButtons();
         
-        // Make sure start game and view assignments buttons are visible and enabled
-        if (startBtn) {
-            startBtn.style.display = 'block';
-            startBtn.disabled = false;
-        }
+        // Create and add Start Game button
+        const startBtn = document.createElement('button');
+        startBtn.id = 'start-game-btn';
+        startBtn.className = 'btn btn-primary';
+        startBtn.textContent = 'Start Game';
+        startBtn.addEventListener('click', proceedToGame);
         
-        if (viewAssignmentsBtn) {
-            viewAssignmentsBtn.style.display = 'block';
-            viewAssignmentsBtn.disabled = false;
-        }
+        // Create and add View Role Assignments button
+        const viewAssignmentsBtn = document.createElement('button');
+        viewAssignmentsBtn.id = 'view-assignments-btn';
+        viewAssignmentsBtn.className = 'btn btn-primary';
+        viewAssignmentsBtn.textContent = 'View Role Assignments';
+        viewAssignmentsBtn.addEventListener('click', goToRoleAssignments);
+        
+        // Insert the new buttons before the Back to Home button
+        viewControls.insertBefore(startBtn, backHomeBtn);
+        viewControls.insertBefore(viewAssignmentsBtn, backHomeBtn);
     } else {
-        // Reset role visibility for new player
-        roleIsVisible = false;
         // Show the next player
         showCurrentPlayer();
     }
