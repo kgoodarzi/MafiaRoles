@@ -527,7 +527,7 @@ section.selected-players .players-grid {
 }
 
 .about-image {
-    max-width: 100%;
+    max-width: 50%;
     height: auto;
     border-radius: 8px;
     margin: 1rem 0;
