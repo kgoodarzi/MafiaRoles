@@ -58,17 +58,33 @@ function loadGameState() {
             gameState = JSON.parse(storedGameState);
             console.log("Game state loaded:", gameState);
             
+            // Make sure necessary DOM elements exist before proceeding
+            const gameStatusEl = document.getElementById('game-status');
+            const currentPlayerEl = document.getElementById('current-player');
+            const roleDisplayEl = document.getElementById('role-display');
+            
+            if (!gameStatusEl || !currentPlayerEl || !roleDisplayEl) {
+                console.error("Required DOM elements not found. Waiting for DOM to fully load.");
+                // Try again in a short moment
+                setTimeout(loadGameState, 100);
+                return;
+            }
+            
             // Initialize the role reveal process
             initializeRoleReveal();
         } else {
             console.warn("No game state found in localStorage");
-            document.getElementById('game-status').textContent = 
-                "Error: No game data found. Please start a new game.";
+            const gameStatusEl = document.getElementById('game-status');
+            if (gameStatusEl) {
+                gameStatusEl.textContent = "Error: No game data found. Please start a new game.";
+            }
         }
     } catch (error) {
         console.error("Error loading game state:", error);
-        document.getElementById('game-status').textContent = 
-            "Error loading game data. Please start a new game.";
+        const gameStatusEl = document.getElementById('game-status');
+        if (gameStatusEl) {
+            gameStatusEl.textContent = "Error loading game data. Please start a new game.";
+        }
     }
 }
 
@@ -98,8 +114,17 @@ function showCurrentPlayer() {
         return;
     }
     
-    const player = gameState.players[currentPlayerIndex];
+    // Get necessary DOM elements
     const playerElement = document.getElementById('current-player');
+    const roleDisplay = document.getElementById('role-display');
+    
+    // Make sure DOM elements exist
+    if (!playerElement || !roleDisplay) {
+        console.error("Required DOM elements not found in showCurrentPlayer");
+        return;
+    }
+    
+    const player = gameState.players[currentPlayerIndex];
     
     // Display player info
     playerElement.innerHTML = `
@@ -117,7 +142,7 @@ function showCurrentPlayer() {
     `;
     
     // Reset role display
-    document.getElementById('role-display').innerHTML = `
+    roleDisplay.innerHTML = `
         <div class="role-hidden">
             <p>Click "View Your Role" to see your assigned role</p>
         </div>
@@ -152,8 +177,18 @@ function toggleRole() {
 
 // Show the current player's role
 function showRole() {
-    const player = gameState.players[currentPlayerIndex];
+    if (!gameState || !gameState.players || currentPlayerIndex >= gameState.players.length) {
+        console.error("Invalid game state or player index in showRole");
+        return;
+    }
+    
     const roleDisplay = document.getElementById('role-display');
+    if (!roleDisplay) {
+        console.error("Role display element not found");
+        return;
+    }
+    
+    const player = gameState.players[currentPlayerIndex];
     
     // Get role information - handle special case for 'mafia' role
     let roleId = player.role;
@@ -205,8 +240,14 @@ function showRole() {
 
 // Hide the current player's role
 function hideRole() {
+    const roleDisplay = document.getElementById('role-display');
+    if (!roleDisplay) {
+        console.error("Role display element not found in hideRole");
+        return;
+    }
+    
     // Reset role display
-    document.getElementById('role-display').innerHTML = `
+    roleDisplay.innerHTML = `
         <div class="role-hidden">
             <p>Role is now hidden</p>
         </div>
@@ -220,15 +261,25 @@ function updateButtonStates() {
     const startBtn = document.getElementById('start-game-btn');
     const viewAssignmentsBtn = document.getElementById('view-assignments-btn');
     
-    // Toggle button text based on role visibility
-    toggleBtn.textContent = roleIsVisible ? 'Hide Role' : 'View Your Role';
+    // Check if each element exists before trying to modify it
+    if (toggleBtn) {
+        // Toggle button text based on role visibility
+        toggleBtn.textContent = roleIsVisible ? 'Hide Role' : 'View Your Role';
+    }
     
     // Next player button should only be enabled when role has been viewed
-    nextBtn.disabled = !roleIsVisible;
+    if (nextBtn) {
+        nextBtn.disabled = !roleIsVisible;
+    }
     
     // Start Game and View Role Assignments should only be enabled after all roles have been viewed
-    startBtn.disabled = !allRolesViewed;
-    viewAssignmentsBtn.disabled = !allRolesViewed;
+    if (startBtn) {
+        startBtn.disabled = !allRolesViewed;
+    }
+    
+    if (viewAssignmentsBtn) {
+        viewAssignmentsBtn.disabled = !allRolesViewed;
+    }
 }
 
 // Move to the next player
@@ -254,8 +305,10 @@ function nextPlayer() {
         document.getElementById('role-display').innerHTML = '';
         
         // Hide role toggle button, since no more roles to show
-        document.getElementById('toggle-role-btn').style.display = 'none';
-        document.getElementById('next-player-btn').style.display = 'none';
+        const toggleBtn = document.getElementById('toggle-role-btn');
+        const nextBtn = document.getElementById('next-player-btn');
+        if (toggleBtn) toggleBtn.style.display = 'none';
+        if (nextBtn) nextBtn.style.display = 'none';
         
         // Update button states
         updateButtonStates();
