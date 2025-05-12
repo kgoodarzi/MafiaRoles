@@ -13,6 +13,23 @@
     <!-- Connection status -->
     <script src="connection-status.js"></script>
     
+    <style>
+        .todo-list {
+            list-style-type: disc;
+            padding-left: 2rem;
+            margin: 1rem 0;
+        }
+        
+        .todo-list li {
+            margin-bottom: 0.5rem;
+            line-height: 1.4;
+            color: var(--text-color);
+        }
+        
+        .about-section {
+            margin-bottom: 2rem;
+        }
+    </style>
 </head>
 <body class="dark-theme">
     <div id="connection-status"></div>
@@ -64,6 +81,24 @@
                 </ul>
             </section>
 
+            <section class="about-section">
+                <h2>Development To-Do List</h2>
+                <p>Here are the features and improvements we're currently working on:</p>
+                <ul class="todo-list">
+                    <li>Inactive buttons' backgrounds across the game</li>
+                    <li>Ocean's 2nd teammate</li>
+                    <li>Gun action in the day</li>
+                    <li>Gunman's three bullets</li>
+                    <li>Disciplinary eliminations</li>
+                    <li>Testing endings</li>
+                    <li>Connecting from other devices</li>
+                    <li>Adding noises and music</li>
+                    <li>Game types (Zodiac, Godfather, Donna, ...)</li>
+                    <li>Recording games</li>
+                    <li>Player stats</li>
+                </ul>
+            </section>
+
             <div class="actions">
                 <a href="index.html" class="btn">Back to Home</a>
             </div>
@@ -71,7 +106,8 @@
 
         <footer>
             <p>&copy; 2025 KRS Consulting Inc.</p>
-                <p>Version 1.0.0</p></footer>
+            <p>Version 1.0.1</p>
+        </footer>
     </div>
 </body>
 </html> 
