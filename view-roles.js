@@ -117,6 +117,10 @@ function showCurrentPlayer() {
     // Get necessary DOM elements
     const playerElement = document.getElementById('current-player');
     const roleDisplay = document.getElementById('role-display');
+    const toggleBtn = document.getElementById('toggle-role-btn');
+    const nextBtn = document.getElementById('next-player-btn');
+    const startBtn = document.getElementById('start-game-btn');
+    const viewAssignmentsBtn = document.getElementById('view-assignments-btn');
     
     // Make sure DOM elements exist
     if (!playerElement || !roleDisplay) {
@@ -151,8 +155,25 @@ function showCurrentPlayer() {
     // Reset toggle state
     roleIsVisible = false;
     
-    // Update button states
-    updateButtonStates();
+    // Ensure the correct buttons are visible for this stage
+    if (toggleBtn) {
+        toggleBtn.style.display = 'block';
+        toggleBtn.textContent = 'View Your Role';
+    }
+    
+    if (nextBtn) {
+        nextBtn.style.display = 'block';
+        nextBtn.disabled = true;  // Disabled until role is viewed
+    }
+    
+    // Hide game progression buttons during role viewing
+    if (startBtn) {
+        startBtn.style.display = 'none';
+    }
+    
+    if (viewAssignmentsBtn) {
+        viewAssignmentsBtn.style.display = 'none';
+    }
 }
 
 // Toggle the role visibility
@@ -165,14 +186,32 @@ function toggleRole() {
     // Toggle the visibility state
     roleIsVisible = !roleIsVisible;
     
+    // Get necessary DOM elements
+    const toggleBtn = document.getElementById('toggle-role-btn');
+    const nextBtn = document.getElementById('next-player-btn');
+    
     if (roleIsVisible) {
         showRole();
+        
+        // Update button states and text
+        if (toggleBtn) {
+            toggleBtn.textContent = 'Hide Role';
+        }
+        
+        if (nextBtn) {
+            nextBtn.disabled = false;  // Enable next button after role is viewed
+        }
     } else {
         hideRole();
+        
+        // Update button states and text
+        if (toggleBtn) {
+            toggleBtn.textContent = 'View Your Role';
+        }
+        
+        // Keep next button enabled even when role is hidden
+        // This allows progressing if they've already seen the role
     }
-    
-    // Update button states
-    updateButtonStates();
 }
 
 // Show the current player's role
@@ -254,34 +293,6 @@ function hideRole() {
     `;
 }
 
-// Update all button states based on current status
-function updateButtonStates() {
-    const toggleBtn = document.getElementById('toggle-role-btn');
-    const nextBtn = document.getElementById('next-player-btn');
-    const startBtn = document.getElementById('start-game-btn');
-    const viewAssignmentsBtn = document.getElementById('view-assignments-btn');
-    
-    // Check if each element exists before trying to modify it
-    if (toggleBtn) {
-        // Toggle button text based on role visibility
-        toggleBtn.textContent = roleIsVisible ? 'Hide Role' : 'View Your Role';
-    }
-    
-    // Next player button should only be enabled when role has been viewed
-    if (nextBtn) {
-        nextBtn.disabled = !roleIsVisible;
-    }
-    
-    // Start Game and View Role Assignments should only be enabled after all roles have been viewed
-    if (startBtn) {
-        startBtn.disabled = !allRolesViewed;
-    }
-    
-    if (viewAssignmentsBtn) {
-        viewAssignmentsBtn.disabled = !allRolesViewed;
-    }
-}
-
 // Move to the next player
 function nextPlayer() {
     if (!roleIsVisible) {
@@ -304,14 +315,26 @@ function nextPlayer() {
         `;
         document.getElementById('role-display').innerHTML = '';
         
-        // Hide role toggle button, since no more roles to show
+        // Get button elements
         const toggleBtn = document.getElementById('toggle-role-btn');
         const nextBtn = document.getElementById('next-player-btn');
+        const startBtn = document.getElementById('start-game-btn');
+        const viewAssignmentsBtn = document.getElementById('view-assignments-btn');
+        
+        // Hide role toggle and next player buttons, since all roles are viewed
         if (toggleBtn) toggleBtn.style.display = 'none';
         if (nextBtn) nextBtn.style.display = 'none';
         
-        // Update button states
-        updateButtonStates();
+        // Make sure start game and view assignments buttons are visible and enabled
+        if (startBtn) {
+            startBtn.style.display = 'block';
+            startBtn.disabled = false;
+        }
+        
+        if (viewAssignmentsBtn) {
+            viewAssignmentsBtn.style.display = 'block';
+            viewAssignmentsBtn.disabled = false;
+        }
     } else {
         // Reset role visibility for new player
         roleIsVisible = false;
