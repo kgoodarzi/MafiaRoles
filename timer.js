@@ -373,7 +373,7 @@ function nextPlayer() {
         currentPlayerIndex = 0; // Reset to first player
         
         // Show alert
-        alert("All players have completed their turns. Returning to the game.");
+        //alert("All players have completed their turns. Returning to the game.");
         
         // Return to the appropriate page with timerComplete flag
         if (returnToPage.includes('day-phase')) {
