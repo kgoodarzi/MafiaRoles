@@ -235,7 +235,7 @@ body[data-page="roles"] .mafia-character-card,
 .mafia-character-card .character-title {
     font-size: 1.1rem !important;
     position: absolute !important;
-    bottom: 50px !important;
+    bottom: 90px !important;
     left: 0 !important;
     right: 0 !important;
     text-align: center !important;
@@ -267,15 +267,20 @@ body[data-page="roles"] .mafia-character-card,
     margin-top: 0 !important;
     width: 100% !important;
     position: absolute !important;
-    bottom: 10px !important;
+    bottom: 20px !important;
     left: 0 !important;
     right: 0 !important;
     padding: 0 5px !important;
-    max-height: 30px !important;
+    max-height: 90px !important;
     overflow-y: auto !important;
     text-align: center !important;
     color: rgba(255, 255, 255, 0.85) !important;
     font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    line-clamp: 3;
 }
 
 /* Mobile adjustments */
@@ -556,6 +561,7 @@ hr {
     display: -webkit-box;
     -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
+    line-clamp: 3;
 }
 
 /* Team specific title colors to make them more vibrant */
