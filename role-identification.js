@@ -89,11 +89,12 @@ function loadGameState() {
                 localStorage.setItem('gameState', JSON.stringify(gameState));
             }
             
+            // We don't need to reset the current round - it should be at 0 coming from intro-day
+            // and we'll increment it when going to day phase
+            
             // Update game status display
             updateGameStatus();
-            
-            // Check if specific Mafia roles exist and show/hide buttons accordingly
-            updateMafiaRoleButtons();
+            setupMafiaRoleButtons();
         } else {
             console.warn("No game state found in localStorage");
             document.getElementById('phase-info').innerHTML = `
@@ -103,13 +104,17 @@ function loadGameState() {
                 </div>
             `;
             
-            // Disable buttons
+            // Disable role buttons
+            document.getElementById('show-mafia-btn').disabled = true;
+            document.getElementById('show-godfather-btn').disabled = true;
+            document.getElementById('show-bomber-btn').disabled = true;
+            document.getElementById('show-magician-btn').disabled = true;
+            document.getElementById('show-framer-btn').disabled = true;
+            document.getElementById('show-consort-btn').disabled = true;
+            
+            // Also disable navigation buttons
             document.getElementById('next-phase-btn').disabled = true;
             document.getElementById('show-roles-btn').disabled = true;
-            document.getElementById('call-mafia-btn').disabled = true;
-            document.getElementById('start-timer-btn').disabled = true;
-            document.getElementById('pause-timer-btn').disabled = true;
-            document.getElementById('reset-timer-btn').disabled = true;
         }
     } catch (error) {
         console.error("Error loading game state:", error);
@@ -127,18 +132,10 @@ function updateGameStatus() {
     if (!gameState) return;
     
     const gameStatusInfo = document.getElementById('game-status-info');
-    
-    // Count mafia players
-    const mafiaPlayers = gameState.players.filter(player => {
-        const role = getRoleById(player.role);
-        return role && role.team === 'mafia';
-    });
-    
     gameStatusInfo.innerHTML = `
-        <div><strong>Current Phase:</strong> First Night - Role Identification</div>
+        <div><strong>Current Phase:</strong> First Identification Night</div>
         <div><strong>Round:</strong> ${gameState.currentRound}</div>
-        <div><strong>Total Players:</strong> ${gameState.players.length}</div>
-        <div><strong>Mafia Players:</strong> ${mafiaPlayers.length}</div>
+        <div><strong>Players:</strong> ${gameState.players.length}</div>
     `;
 }
 
@@ -348,12 +345,22 @@ function goToNextPhase() {
     console.log("Current game phase:", gameState.gamePhase);
     
     try {
-        // Update game state to next phase
+        // Update game state to next phase (day phase)
         gameState.gamePhase = 'day';
-        localStorage.setItem('gameState', JSON.stringify(gameState));
-        console.log("Game state updated to day phase");
         
-        // Redirect to the next phase page
+        // Increment round to 1 for the Second Day Phase
+        gameState.currentRound = 1;
+        
+        // Set a flag that we've gone through the first identification night
+        gameState.hadFirstIdenticationNight = true;
+        
+        // Make sure isIntroductionDay is set to false
+        gameState.isIntroductionDay = false;
+        
+        localStorage.setItem('gameState', JSON.stringify(gameState));
+        console.log("Game state updated to day phase, round set to 1");
+        
+        // Redirect to the day phase page for Round 1
         console.log("Redirecting to day-phase.html");
         window.location.href = 'day-phase.html';
     } catch (error) {

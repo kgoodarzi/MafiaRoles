@@ -657,6 +657,8 @@
                 </div>
                 
                 <div id="game-actions" class="game-actions" style="margin-top:20px;">
+                    <button id="reveal-results-btn" class="btn btn-primary" style="width: 100%; margin-bottom: 15px;">Reveal Night Results</button>
+                    <button id="next-phase-btn" class="btn btn-success" style="width: 100%; margin-bottom: 15px;" disabled>Next Phase (Day)</button>
                     <button id="skip-role-btn" class="btn" style="width: 100%; margin-bottom: 15px;">Skip Current Role</button>
                     <button id="show-roles-btn" class="btn" style="width: 100%; margin-bottom: 15px;">Show Role Assignments</button>
                     <button id="reset-btn" class="btn btn-home" style="width: 100%;">Back to Home</button>
@@ -666,7 +668,7 @@
 
         <footer>
             <p>&copy; 2025 KRS Consulting Inc.</p>
-            <p>Version 1.0.1</p>
+            <p>Version 1.0.2</p>
         </footer>
     </div>
 
@@ -832,6 +834,22 @@
         // Setup event listeners
         function setupEventListeners() {
             console.log("Setting up event listeners");
+            
+            // Reveal Results button
+            const revealResultsBtn = document.getElementById('reveal-results-btn');
+            if (revealResultsBtn) {
+                revealResultsBtn.addEventListener('click', function() {
+                    revealNightResults();
+                });
+            }
+            
+            // Next Phase button
+            const nextPhaseBtn = document.getElementById('next-phase-btn');
+            if (nextPhaseBtn) {
+                nextPhaseBtn.addEventListener('click', function() {
+                    goToNextPhase();
+                });
+            }
             
             // Skip role button
             const skipRoleBtn = document.getElementById('skip-role-btn');
@@ -1161,7 +1179,7 @@
         function checkDetectiveResult(playerId) {
             const selectedPlayer = gameState.players.find(p => p.id === playerId);
             if (selectedPlayer) {
-                const isMafia = ['godfather', 'magician', 'bomber'].includes(selectedPlayer.role);
+                const isMafia = ['magician', 'bomber', 'regular_mafia'].includes(selectedPlayer.role);
                 nightState.actions.detective.result = isMafia ? 'mafia' : 'citizen';
                 
                 const resultElement = document.getElementById('detective-result');
@@ -1634,7 +1652,7 @@
                 
                 if (targetPlayer) {
                     // Check if they are Mafia
-                    const isMafia = ['godfather', 'magician', 'bomber'].includes(targetPlayer.role);
+                    const isMafia = ['godfather', 'magician', 'bomber', 'regular_mafia', 'zodiac'].includes(targetPlayer.role);
                     
                     // If Professional shoots incorrectly (non-Mafia), they die
                     if (!isMafia) {

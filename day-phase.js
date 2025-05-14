@@ -63,7 +63,26 @@ function loadGameState() {
             }
             
             // Update page subtitle
-            document.getElementById('day-phase-subtitle').textContent = `Day Phase - Round ${gameState.currentRound}`;
+            const currentRound = gameState.currentRound || 0;
+            const dayTitle = document.getElementById('day-phase-subtitle');
+            
+            // Set appropriate title based on round
+            if (currentRound === 0) {
+                dayTitle.textContent = "Introduction Day (Round 0)";
+                gameState.isIntroductionDay = true;
+            } else if (currentRound === 1) {
+                // We've already had the first identification night
+                if (gameState.hadFirstIdenticationNight) {
+                    dayTitle.textContent = "Second Day Phase (Round 1)";
+                    // Make sure isIntroductionDay is set to false
+                    gameState.isIntroductionDay = false;
+                    // Don't modify the round number here
+                } else {
+                    dayTitle.textContent = "Second Day Phase (Round 1)";
+                }
+            } else {
+                dayTitle.textContent = `Day Phase - Round ${currentRound}`;
+            }
             
             // Check for game-ending conditions
             const gameEndResult = checkGameEndingConditions();
@@ -93,15 +112,33 @@ function loadGameState() {
             // Update game status display
             updateGameStatus();
             
-            // Display night events summary
-            displayNightEvents();
+            // Display night events summary if there are any
+            if (gameState.nightResults) {
+                displayNightEvents();
+            }
             
             // Display alive players
             displayAlivePlayers();
             
-            // Handle button visibility based on game state
-            updateButtonVisibility();
+            // Initialize player timer tracking if needed
+            if (!gameState.playerTimers) {
+                gameState.playerTimers = [];
+            }
             
+            // If this is the introduction day and we haven't gone through all player timers
+            if (gameState.isIntroductionDay && 
+                !allPlayersTimerComplete &&
+                (!gameState.playerTimers || gameState.playerTimers.length < gameState.players.length)) {
+                
+                // Show timer section
+                document.getElementById('day-timer-section').style.display = 'block';
+                
+                // Display players for timer
+                displayPlayersForTimer();
+            }
+            
+            // Update button visibility based on the current state
+            updateButtonVisibility();
         } else {
             console.warn("No game state found in localStorage");
             document.getElementById('phase-info').innerHTML = `
@@ -138,10 +175,17 @@ function updateButtonVisibility() {
         if (nextPhaseBtn) {
             nextPhaseBtn.style.display = 'block';
             
-            // Update button text if there's a bomb
+            // Update button text based on current phase
             if (gameState.bomberAction && gameState.bomberAction.targetId && gameState.bomberAction.code) {
                 nextPhaseBtn.textContent = 'Proceed to Bomb Defusing';
+            } else if (gameState.isIntroductionDay || gameState.currentRound === 0) {
+                // After intro day, we go to the role identification page
+                nextPhaseBtn.textContent = 'Next Phase (Role Identification Night)';
+            } else if (gameState.currentRound === 1 && !gameState.hadFirstIdenticationNight) {
+                // If we haven't had the first identification night yet
+                nextPhaseBtn.textContent = 'Next Phase (First Identification Night)';
             } else {
+                // Regular voting phase - this should apply to any day phase after identification night
                 nextPhaseBtn.textContent = 'Next Phase (Voting)';
             }
         }
@@ -230,6 +274,9 @@ function displayAlivePlayers() {
     
     playersHtml += `</div>`;
     playersStatusElement.innerHTML = playersHtml;
+    
+    // After displaying alive players, update the game status display to show the correct round
+    updateGameStatus();
 }
 
 // Display summary of night events
@@ -242,14 +289,43 @@ function displayNightEvents() {
     // Skip displaying night events during introduction day (round 0)
     if (gameState.isIntroductionDay || gameState.currentRound === 0) {
         nightEventsElement.innerHTML = `
-            <h3>Introduction Day</h3>
+            <h3>Introduction Day (Round 0)</h3>
             <p>This is the introduction day. Players should introduce themselves and get to know each other.</p>
             <p>No night actions have occurred yet.</p>
         `;
         return;
     }
     
-    let eventsHtml = `<h3>Night Events</h3>`;
+    // Display appropriate message based on the round
+    if (gameState.currentRound === 1) {
+        // Second Day Phase - Could be after First Identification Night or Mafia Planning Night
+        if (gameState.hadFirstIdenticationNight && !gameState.hadSecondIntroNight) {
+            // Coming from First Identification Night - still need to have the second intro night
+            nightEventsElement.innerHTML = `
+                <h3>Second Day Phase (Round 1)</h3>
+                <p>Following the Mafia identification night, players can continue discussion and share information.</p>
+                <p>This day will conclude with the first voting phase.</p>
+            `;
+        } else if (gameState.hadSecondIntroNight) {
+            // Coming from Mafia Planning Night - ready for action
+            nightEventsElement.innerHTML = `
+                <h3>Day Phase After Mafia Planning (Round 1)</h3>
+                <p>Following the Mafia planning night, players can continue discussion and share information.</p>
+                <p>This day will conclude with the first voting phase and followed by the first action night.</p>
+            `;
+        } else {
+            // Generic Round 1 message if we're not sure which path we're on
+            nightEventsElement.innerHTML = `
+                <h3>Second Day Phase (Round 1)</h3>
+                <p>Players can continue discussion and share information.</p>
+                <p>This day will conclude with the voting phase.</p>
+            `;
+        }
+        return;
+    }
+    
+    // For Round 2+, show regular night event summaries
+    let eventsHtml = `<h3>Night Events - Round ${gameState.currentRound - 1}</h3>`;
     
     // Show deaths
     if (gameState.nightResults.deaths && gameState.nightResults.deaths.length > 0) {
@@ -395,19 +471,10 @@ function goToNextPhase() {
         return;
     }
     
-    // If all players have gone through timer, go to voting regardless of day
-    if (allPlayersTimerComplete) {
-        console.log("All players have completed timer, going to voting phase");
-        gameState.gamePhase = 'voting';
-        localStorage.setItem('gameState', JSON.stringify(gameState));
-        window.location.href = 'voting-phase.html';
-        return;
-    }
-    
-    // Handle introduction day transition
+    // Handle introduction day transition (round 0)
     if (gameState.isIntroductionDay || gameState.currentRound === 0) {
-        // After introduction day, proceed to night with no actions
-        gameState.gamePhase = 'night';
+        // After introduction day, proceed to role identification page instead of night phase
+        gameState.gamePhase = 'role-identification';
         gameState.isIntroductionDay = false;
         
         // Initialize empty night results if not present
@@ -417,18 +484,17 @@ function goToNextPhase() {
         
         localStorage.setItem('gameState', JSON.stringify(gameState));
         
-        // Go to night phase with no actions
-        console.log("Going to night phase after introduction day");
-        window.location.href = 'night-phase.html';
+        // Go to role identification page
+        console.log("Going to role identification page after introduction day");
+        window.location.href = 'role-identification.html';
         return;
     }
     
-    // If no bomb and not introduction day, go directly to voting phase
+    // For all other days, including Second Day Phase (Round 1),
+    // proceed to voting phase
+    console.log("Going to voting phase");
     gameState.gamePhase = 'voting';
     localStorage.setItem('gameState', JSON.stringify(gameState));
-    
-    // Redirect to the voting phase page
-    console.log("Redirecting to voting phase");
     window.location.href = 'voting-phase.html';
 }
 

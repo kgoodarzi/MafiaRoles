@@ -18,6 +18,8 @@
     <script src="connection-status.js"></script>
     <!-- Configuration Settings -->
     <script src="config.js"></script>
+    <!-- Role Identification JS -->
+    <script src="role-identification.js"></script>
     <!-- All functionality is now inline and we've removed external JS references -->
     <style>
         /* Timer specific styles */
@@ -71,8 +73,8 @@
     
     <div class="container">
         <header>
-            <h1>Role Identification Night</h1>
-            <p>Mafia team members meet each other</p>
+            <h1>First Identification Night</h1>
+            <p>Mafia team members meet each other (Round 0)</p>
         </header>
 
         <main>
@@ -84,41 +86,41 @@
 
                 <!-- Timer Section -->
                 <div id="timer-section" class="timer-section" style="margin-top:20px;padding:15px;border-radius:8px;background-color:var(--card-bg);border:1px solid var(--border-color);">
-                    <h3>Timer</h3>
+                    <h3>Mafia Discussion Timer</h3>
                     <div class="timer-display" id="timer-display">30</div>
                     <div class="timer-progress">
                         <div class="timer-bar" id="timer-bar"></div>
                     </div>
                     <div class="timer-controls" style="display:flex;justify-content:space-between;margin-top:10px;">
-                        <button id="start-timer-btn" class="btn btn-primary" onclick="startTimer()">Start</button>
-                        <button id="pause-timer-btn" class="btn" onclick="pauseTimer()" disabled>Pause</button>
-                        <button id="reset-timer-btn" class="btn" onclick="resetTimer()">Reset</button>
+                        <button id="start-timer-btn" class="btn btn-primary">Start</button>
+                        <button id="pause-timer-btn" class="btn" disabled>Pause</button>
+                        <button id="reset-timer-btn" class="btn">Reset</button>
                     </div>
                 </div>
 
                 <div id="role-group-actions" class="role-group-actions" style="margin-top:20px;">
                     <h3>Call Mafia Team</h3>
-                    <button id="call-mafia-btn" class="btn" style="width: 100%; margin-bottom: 10px; background-color: var(--mafia-color);" onclick="showMafiaTeam()">Call Mafia Team</button>
+                    <button id="call-mafia-btn" class="btn" style="width: 100%; margin-bottom: 10px; background-color: var(--mafia-color);">Call Mafia Team</button>
                     <div id="mafia-actions" class="role-actions" style="margin-top:15px;display:none;">
                         <h3>Mafia Role Actions</h3>
-                        <button id="godfather-action-btn" class="btn" style="width: 100%; margin-bottom: 10px;" onclick="showRoleAlert('godfather')">Ask Godfather to Show Like</button>
-                        <button id="mafioso-action-btn" class="btn" style="width: 100%; margin-bottom: 10px;" onclick="showRoleAlert('mafioso')">Ask Mafioso to Show Like</button>
-                        <button id="framer-action-btn" class="btn" style="width: 100%; margin-bottom: 10px;" onclick="showRoleAlert('framer')">Ask Framer to Show Like</button>
-                        <button id="consort-action-btn" class="btn" style="width: 100%; margin-bottom: 10px;" onclick="showRoleAlert('consort')">Ask Consort to Show Like</button>
+                        <button id="godfather-action-btn" class="btn" style="width: 100%; margin-bottom: 10px;">Ask Godfather to Show Like</button>
+                        <button id="mafioso-action-btn" class="btn" style="width: 100%; margin-bottom: 10px;">Ask Mafioso to Show Like</button>
+                        <button id="framer-action-btn" class="btn" style="width: 100%; margin-bottom: 10px;">Ask Framer to Show Like</button>
+                        <button id="consort-action-btn" class="btn" style="width: 100%; margin-bottom: 10px;">Ask Consort to Show Like</button>
                     </div>
                 </div>
                 
                 <div id="game-actions" class="game-actions" style="margin-top:20px;">
-                    <button id="next-phase-btn" class="btn btn-primary" style="width: 100%; margin-bottom: 15px;" onclick="goToNextPage('day-phase.html')">Next Phase</button>
-                    <button id="show-roles-btn" class="btn" style="width: 100%; margin-bottom: 15px;" onclick="goToNextPage('role-assignments.html')">Show Role Assignments</button>
-                    <button id="reset-btn" class="btn" style="width: 100%;" onclick="goToNextPage('index.html')">Back to Home</button>
+                    <button id="next-phase-btn" class="btn btn-primary" style="width: 100%; margin-bottom: 15px;">Next Phase (Day Phase Round 1)</button>
+                    <button id="show-roles-btn" class="btn" style="width: 100%; margin-bottom: 15px;">Show Role Assignments</button>
+                    <button id="reset-btn" class="btn" style="width: 100%;">Back to Home</button>
                 </div>
             </section>
         </main>
 
         <footer>
             <p>&copy; 2025 KRS Consulting Inc.</p>
-                <p>Version 1.0.0</p></footer>
+                <p>Version 1.0.1</p></footer>
     </div>
 
     <script>
@@ -133,6 +135,56 @@
         let secondsRemaining = 30;
         let isTimerRunning = false;
         let initialTimerValue = 30;
+        
+        // Go to the next phase
+        function goToNextPhase() {
+            console.log("goToNextPhase function called");
+            
+            // Get game state from localStorage
+            let gameState = null;
+            try {
+                const storedGameState = localStorage.getItem('gameState');
+                if (storedGameState) {
+                    gameState = JSON.parse(storedGameState);
+                    
+                    // Update game state to day phase
+                    gameState.gamePhase = 'day';
+                    
+                    // Increment round number to 1 for the Second Day Phase
+                    gameState.currentRound = 1;
+                    
+                    // Set a flag that we've already had the first identification night
+                    gameState.hadFirstIdenticationNight = true;
+                    
+                    localStorage.setItem('gameState', JSON.stringify(gameState));
+                    console.log("Game state updated to day phase, round incremented to 1");
+                    
+                    // Redirect to the day phase page for Round 1
+                    console.log("Redirecting to day-phase.html");
+                    window.location.href = 'day-phase.html';
+                } else {
+                    console.error("No game state available");
+                    alert("Error: No game state found");
+                }
+            } catch (error) {
+                console.error("Error navigating to next phase:", error);
+                alert("Error navigating to next phase: " + error.message);
+            }
+        }
+        
+        // Go to role assignments page
+        function goToRoleAssignments() {
+            window.location.href = 'role-assignments.html';
+        }
+        
+        // Reset the game and return to home
+        function resetGame() {
+            // Clear game state
+            localStorage.removeItem('gameState');
+            
+            // Redirect to home page
+            window.location.href = 'index.html';
+        }
         
         // Update timer display
         function updateTimerDisplay() {
@@ -229,8 +281,65 @@
         
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
+            console.log("Role Identification page loaded");
+            
             // Initialize timer display
             updateTimerDisplay();
+            
+            // Set up event listeners for navigation buttons
+            document.getElementById('next-phase-btn').addEventListener('click', function() {
+                console.log("Next phase button clicked");
+                goToNextPhase();
+            });
+            
+            document.getElementById('show-roles-btn').addEventListener('click', function() {
+                console.log("Show roles button clicked");
+                goToRoleAssignments();
+            });
+            
+            document.getElementById('reset-btn').addEventListener('click', function() {
+                console.log("Reset button clicked");
+                resetGame();
+            });
+            
+            // Timer button event listeners
+            document.getElementById('start-timer-btn').addEventListener('click', function() {
+                console.log("Start timer button clicked");
+                startTimer();
+            });
+            
+            document.getElementById('pause-timer-btn').addEventListener('click', function() {
+                console.log("Pause timer button clicked");
+                pauseTimer();
+            });
+            
+            document.getElementById('reset-timer-btn').addEventListener('click', function() {
+                console.log("Reset timer button clicked");
+                resetTimer();
+            });
+            
+            // Call Mafia button
+            document.getElementById('call-mafia-btn').addEventListener('click', function() {
+                console.log("Call mafia button clicked");
+                showMafiaTeam();
+            });
+            
+            // Set up Mafia role buttons
+            document.getElementById('godfather-action-btn').addEventListener('click', function() {
+                showRoleAlert('godfather');
+            });
+            
+            document.getElementById('mafioso-action-btn').addEventListener('click', function() {
+                showRoleAlert('mafioso');
+            });
+            
+            document.getElementById('framer-action-btn').addEventListener('click', function() {
+                showRoleAlert('framer');
+            });
+            
+            document.getElementById('consort-action-btn').addEventListener('click', function() {
+                showRoleAlert('consort');
+            });
         });
     </script>
 </body>
