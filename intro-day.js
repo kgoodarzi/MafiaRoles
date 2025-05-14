@@ -52,6 +52,13 @@ function loadGameState() {
                 localStorage.setItem('gameState', JSON.stringify(gameState));
             }
             
+            // Make sure round is set to 0 for introduction day
+            if (gameState.currentRound !== 0) {
+                gameState.currentRound = 0;
+                gameState.isIntroductionDay = true;
+                localStorage.setItem('gameState', JSON.stringify(gameState));
+            }
+            
             // Update game status display
             updateGameStatus();
         } else {

@@ -8,6 +8,8 @@ let buzzerTimeout = null;
 let audioContext = null;
 let gameStateForTimer = null;
 let returnToPage = 'game.html'; // Default return page
+let timerType = 'player'; // Default timer type: 'player', 'mafia', etc.
+let timerDuration = 60; // Default timer duration in seconds
 
 // Initialize the timer page
 document.addEventListener('DOMContentLoaded', function() {
@@ -36,6 +38,22 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
+    // Check if a specific timer type is set
+    if (urlParams.has('timerType')) {
+        timerType = urlParams.get('timerType');
+        console.log("Timer type set to:", timerType);
+    }
+    
+    // Check if a specific duration is set
+    if (urlParams.has('duration')) {
+        timerDuration = parseInt(urlParams.get('duration'), 10);
+        if (isNaN(timerDuration) || timerDuration <= 0) {
+            timerDuration = 60; // Fallback to default if invalid
+        }
+        secondsRemaining = timerDuration;
+        console.log("Timer duration set to:", timerDuration);
+    }
+
     // Check if we have game state in localStorage
     const storedGameState = localStorage.getItem('gameState');
     if (storedGameState) {
@@ -51,19 +69,29 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log("Players sorted by sequence order");
         }
         
-        // Set up initial player
-        showCurrentPlayerTimer();
+        // Set up display based on timer type
+        if (timerType === 'mafia') {
+            setupMafiaTimer();
+        } else {
+            // Default player timer setup
+            showCurrentPlayerTimer();
+        }
         
         // Set up button event listeners
         document.getElementById('start-pause-btn').addEventListener('click', toggleTimer);
         document.getElementById('reset-btn').addEventListener('click', resetTimer);
-        document.getElementById('next-player-btn').addEventListener('click', nextPlayer);
-        document.getElementById('back-to-game-btn').addEventListener('click', backToGame);
         
-        // Ensure Next Player button has btn-success class
-        const nextPlayerBtn = document.getElementById('next-player-btn');
-        nextPlayerBtn.classList.remove('btn-primary', 'btn-warning');
-        nextPlayerBtn.classList.add('btn-success');
+        // For player timers, add next player functionality
+        if (timerType === 'player') {
+            document.getElementById('next-player-btn').addEventListener('click', nextPlayer);
+            
+            // Ensure Next Player button has btn-success class
+            const nextPlayerBtn = document.getElementById('next-player-btn');
+            nextPlayerBtn.classList.remove('btn-primary', 'btn-warning');
+            nextPlayerBtn.classList.add('btn-success');
+        }
+        
+        document.getElementById('back-to-game-btn').addEventListener('click', backToGame);
         
         // Initialize audio context
         try {
@@ -371,4 +399,106 @@ function backToGame() {
         // Otherwise just return to the original page
         window.location.href = returnToPage;
     }
+}
+
+// Setup the mafia timer display
+function setupMafiaTimer() {
+    // Reset timer values
+    secondsRemaining = timerDuration;
+    isCountingDown = true;
+    overtimeSeconds = 0;
+    
+    // Clear any existing intervals
+    if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+    }
+    
+    // Clear any buzzer timeouts
+    if (buzzerTimeout) {
+        clearTimeout(buzzerTimeout);
+        buzzerTimeout = null;
+    }
+    
+    // Get mafia players
+    const mafiaPlayers = getMafiaPlayers();
+    
+    // Update player display with mafia info
+    const playerDisplay = document.getElementById('player-display');
+    
+    // Update the display based on mafia players
+    if (mafiaPlayers.length > 0) {
+        let mafiaHtml = `
+            <div class="mafia-timer-info">
+                <h3>Mafia Discussion Time</h3>
+                <p>Mafia members can discuss strategy for ${timerDuration} seconds</p>
+            </div>
+            <div class="mafia-members">
+                <h4>Mafia Members:</h4>
+                <div class="players-grid" style="display:grid;grid-template-columns:repeat(auto-fill, minmax(120px, 1fr));gap:10px;margin:20px 0;">
+        `;
+        
+        // Add each mafia player
+        mafiaPlayers.forEach(player => {
+            mafiaHtml += `
+                <div class="player-card small">
+                    <div class="player-image">
+                        <img src="${player.photo_url || 'images/default-avatar.svg'}" 
+                             alt="${player.name}" 
+                             onerror="this.src='images/default-avatar.svg'">
+                    </div>
+                    <div class="player-info">
+                        <h4>${player.name}</h4>
+                        ${player.sequence !== undefined ? `<small>${player.sequence}</small>` : ''}
+                    </div>
+                </div>
+            `;
+        });
+        
+        mafiaHtml += `</div></div>`;
+        playerDisplay.innerHTML = mafiaHtml;
+    } else {
+        playerDisplay.innerHTML = `
+            <div class="mafia-timer-info">
+                <h3>Mafia Discussion Time</h3>
+                <p>Mafia members can discuss strategy for ${timerDuration} seconds</p>
+                <p><em>No Mafia members found in game state.</em></p>
+            </div>
+        `;
+    }
+    
+    // Update timer display
+    updateTimerDisplay();
+    
+    // Reset button state
+    const startPauseBtn = document.getElementById('start-pause-btn');
+    startPauseBtn.textContent = 'Start';
+    startPauseBtn.classList.remove('btn-warning');
+    startPauseBtn.classList.add('btn-primary');
+    
+    // Hide the next player button if we're not in player timer mode
+    const nextPlayerBtn = document.getElementById('next-player-btn');
+    if (nextPlayerBtn) {
+        nextPlayerBtn.style.display = 'none';
+    }
+}
+
+// Get mafia players from game state
+function getMafiaPlayers() {
+    if (!gameStateForTimer || !gameStateForTimer.players) return [];
+    
+    // Return all mafia-team players who are alive
+    return gameStateForTimer.players.filter(player => {
+        // Check if player is eliminated
+        const isEliminated = gameStateForTimer.eliminatedPlayers && 
+                            gameStateForTimer.eliminatedPlayers.some(p => p.id === player.id);
+        
+        // Check if player is on mafia team
+        const isMafia = player.role === 'regular_mafia' || 
+                        player.role === 'godfather' || 
+                        player.role === 'bomber' || 
+                        player.role === 'magician';
+        
+        return isMafia && !isEliminated;
+    });
 } 

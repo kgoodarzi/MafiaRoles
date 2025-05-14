@@ -293,7 +293,7 @@
                 </div>
                 
                 <div id="game-actions" class="game-actions" style="margin-top:20px;">
-                    <button id="next-phase-btn" class="btn btn-primary" style="width: 100%; margin-bottom: 15px;" onclick="goToNextPhase()" disabled>Next Phase (Night)</button>
+                    <button id="next-phase-btn" class="btn btn-primary" style="width: 100%; margin-bottom: 15px;" onclick="goToNextPhase()" disabled>Next Phase (Night Round ${gameState.currentRound})</button>
                     <button id="show-roles-btn" class="btn" style="width: 100%; margin-bottom: 15px;" onclick="goToRoleAssignments()">Show Role Assignments</button>
                     <button id="reset-btn" class="btn" style="width: 100%;" onclick="resetGame()">Back to Home</button>
                 </div>
@@ -338,6 +338,9 @@
                 if (storedGameState) {
                     gameState = JSON.parse(storedGameState);
                     console.log("Game state loaded:", gameState);
+                    
+                    // Update the Next Phase button text with current round
+                    document.getElementById('next-phase-btn').textContent = `Next Phase (Night Round ${gameState.currentRound})`;
                     
                     const storedDefenseState = localStorage.getItem('defenseState');
                     if (storedDefenseState) {

@@ -234,11 +234,26 @@ function getAlivePlayers() {
 function goToNextPhase() {
     if (!gameState) return;
     
-    // Update game state to next phase
+    // Increment round counter for night phase - needed here to ensure proper round numbering
+    if (gameState.currentRound === 0) {
+        // Going from Round 0 to Round 1
+        gameState.currentRound = 1;
+    }
+    
+    // Update game phase
     gameState.gamePhase = 'night';
+    
+    // Determine if this will be the second introductory night
+    // This happens after the first voting phase in Round 1
+    // and we haven't had a second intro night yet
+    if (gameState.currentRound === 1 && !gameState.hadSecondIntroNight) {
+        // Set up for second introductory night with Mafia timer
+        gameState.isSecondIntroNight = true;
+    }
+    
     localStorage.setItem('gameState', JSON.stringify(gameState));
     
-    // Redirect to the next phase page
+    // Redirect to the night phase
     window.location.href = 'night-phase.html';
 }
 

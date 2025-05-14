@@ -357,7 +357,7 @@ function startGame() {
     }
     // Update game phase to start with introduction day
     gameState.gamePhase = 'intro-day';
-    gameState.currentRound = 1;
+    gameState.currentRound = 0;
     // Save updated game state
     localStorage.setItem('gameState', JSON.stringify(gameState));
     // Display game info
@@ -375,12 +375,12 @@ function renderGamePhase() {
     
     switch(phase) {
         case 'intro-day':
-            phaseTitle = `Introduction Day Phase`;
+            phaseTitle = `Introduction Day Phase (Round ${round})`;
             phaseDesc = 'Players introduce themselves and get to know each other. No actions are taken during this phase.';
             break;
         case 'role-identification':
-            phaseTitle = `Night Phase - Role Identification`;
-            phaseDesc = 'The Moderator asks each role to identify themselves with a like. Mafia members learn who their teammates are.';
+            phaseTitle = `First Identification Night (Round ${round})`;
+            phaseDesc = 'The Mafia members open their eyes to see each other and have time to talk quietly.';
             break;
         case 'day':
             phaseTitle = `Day Phase - Round ${round}`;

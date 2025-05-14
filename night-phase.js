@@ -88,22 +88,34 @@ function loadGameState() {
             
             // Check if this is the first night after introduction day (round 0)
             const isFirstNight = gameState.currentRound === 0;
+            
+            // Check if this is the second introductory night with Mafia timer
+            // This happens at round 1 if we haven't completed this special night yet
+            const isSecondIntroNight = gameState.currentRound === 1 && !gameState.hadSecondIntroNight;
+            
             if (isFirstNight) {
                 // This is the first night after introduction day, display message
                 document.getElementById('phase-info').innerHTML = `
                     <div class="night-info">
-                        <h3>First Night - No Actions</h3>
+                        <h3>First Identification Night (Round 0)</h3>
                         <p>This is the first night of the game. Players should be asleep. The Mafia members open their eyes to see each other, but no eliminations occur tonight.</p>
-                        <p>Click the "Reveal Results" button to continue to the first day.</p>
+                        <p>Click the "Reveal Results" button to continue to the next day.</p>
                     </div>
                 `;
                 
-                // Disable all role action buttons
+                // Disable all role action buttons (including the mafia action button)
                 document.getElementById('mafia-action-btn').disabled = true;
                 document.getElementById('detective-action-btn').disabled = true;
                 document.getElementById('doctor-action-btn').disabled = true;
                 document.getElementById('special-action-btn').disabled = true;
                 document.getElementById('zodiac-action-btn').disabled = true;
+                
+                // Hide all role action buttons completely to avoid confusion
+                document.getElementById('mafia-action-btn').style.display = 'none';
+                document.getElementById('detective-action-btn').style.display = 'none';
+                document.getElementById('doctor-action-btn').style.display = 'none';
+                document.getElementById('special-action-btn').style.display = 'none';
+                document.getElementById('zodiac-action-btn').style.display = 'none';
                 
                 // Hide all role call sections
                 document.querySelectorAll('.night-call-section').forEach(section => {
@@ -122,6 +134,99 @@ function loadGameState() {
                 mafiaActionElements.forEach(element => {
                     element.style.display = 'none';
                 });
+                
+                // Make the reveal results button more prominent
+                const revealResultsBtn = document.getElementById('reveal-results-btn');
+                if (revealResultsBtn) {
+                    revealResultsBtn.style.marginTop = '20px';
+                    revealResultsBtn.style.display = 'block';
+                    revealResultsBtn.textContent = 'Complete Mafia Identification';
+                    revealResultsBtn.classList.add('btn-success');
+                }
+                
+                // Add a button for Mafia timer
+                const mafiaTimerButton = document.createElement('button');
+                mafiaTimerButton.id = 'mafia-timer-btn';
+                mafiaTimerButton.className = 'btn btn-primary';
+                mafiaTimerButton.textContent = 'Start 30-Second Mafia Chat';
+                mafiaTimerButton.style.marginTop = '20px';
+                
+                // Add event listener for the timer button
+                mafiaTimerButton.addEventListener('click', function() {
+                    window.location.href = 'timer.html?returnTo=night-phase.html&duration=30&timerType=mafia';
+                });
+                
+                // Append the button to the Mafia call section
+                document.getElementById('mafia-call').appendChild(mafiaTimerButton);
+            } else if (isSecondIntroNight) {
+                // Set a flag to indicate this is the second intro night
+                gameState.isSecondIntroNight = true;
+                localStorage.setItem('gameState', JSON.stringify(gameState));
+                
+                // This is the second intro night with Mafia chat
+                document.getElementById('phase-info').innerHTML = `
+                    <div class="night-info">
+                        <h3>Mafia Planning Night (Round 1)</h3>
+                        <p>This is the second night of the game. Players should be asleep. The Mafia members open their eyes to discuss strategy, but no eliminations occur tonight.</p>
+                        <p>Click the "Reveal Results" button after Mafia discussion to continue to the first action night.</p>
+                    </div>
+                `;
+                
+                // Disable all role action buttons
+                document.getElementById('mafia-action-btn').disabled = true;
+                document.getElementById('detective-action-btn').disabled = true;
+                document.getElementById('doctor-action-btn').disabled = true;
+                document.getElementById('special-action-btn').disabled = true;
+                document.getElementById('zodiac-action-btn').disabled = true;
+                
+                // Hide all role action buttons completely to avoid confusion
+                document.getElementById('mafia-action-btn').style.display = 'none';
+                document.getElementById('detective-action-btn').style.display = 'none';
+                document.getElementById('doctor-action-btn').style.display = 'none';
+                document.getElementById('special-action-btn').style.display = 'none';
+                document.getElementById('zodiac-action-btn').style.display = 'none';
+                
+                // Hide all role call sections
+                document.querySelectorAll('.night-call-section').forEach(section => {
+                    section.style.display = 'none';
+                });
+                
+                // Show only mafia recognition section
+                document.getElementById('mafia-call').style.display = 'block';
+                
+                // Update the mafia section text
+                document.getElementById('mafia-call').querySelector('h3').textContent = 'Mafia Strategy Discussion';
+                document.getElementById('mafia-call').querySelector('p').textContent = 'The Mafia members should open their eyes to discuss strategy for 30 seconds. No elimination occurs tonight.';
+                
+                // Hide the mafia action elements
+                const mafiaActionElements = document.getElementById('mafia-call').querySelectorAll('.role-call, .action-result');
+                mafiaActionElements.forEach(element => {
+                    element.style.display = 'none';
+                });
+                
+                // Make the reveal results button more prominent
+                const revealResultsBtn = document.getElementById('reveal-results-btn');
+                if (revealResultsBtn) {
+                    revealResultsBtn.style.marginTop = '20px';
+                    revealResultsBtn.style.display = 'block';
+                    revealResultsBtn.textContent = 'Complete Mafia Planning';
+                    revealResultsBtn.classList.add('btn-success');
+                }
+                
+                // Add a button for Mafia timer
+                const mafiaTimerButton = document.createElement('button');
+                mafiaTimerButton.id = 'mafia-timer-btn';
+                mafiaTimerButton.className = 'btn btn-primary';
+                mafiaTimerButton.textContent = 'Start 30-Second Mafia Chat';
+                mafiaTimerButton.style.marginTop = '20px';
+                
+                // Add event listener for the timer button
+                mafiaTimerButton.addEventListener('click', function() {
+                    window.location.href = 'timer.html?returnTo=night-phase.html&duration=30&timerType=mafia';
+                });
+                
+                // Append the button to the Mafia call section
+                document.getElementById('mafia-call').appendChild(mafiaTimerButton);
             } else {
                 // Regular night, update game status display
                 updateGameStatus();
@@ -343,14 +448,13 @@ function handleRoleAction(roleType) {
 
 // Reveal night results
 function revealNightResults() {
-    // Check if this is the first night (round 0) with no actions
+    // Handle first identification night (round 0)
     if (gameState.currentRound === 0) {
-        // For first night, just enable the next phase button and show a simple message
         document.getElementById('night-results').innerHTML = `
             <div class="night-results">
-                <h3>First Night Results</h3>
-                <p>The Mafia members have seen each other. No eliminations occurred.</p>
-                <p>Click "Next Phase" to continue to the first day with voting.</p>
+                <h3>First Identification Night Results</h3>
+                <p>The Mafia members have seen each other and had time to talk. No eliminations occurred.</p>
+                <p>Click "Next Phase" to continue to the Second Day Phase.</p>
             </div>
         `;
         
@@ -364,8 +468,34 @@ function revealNightResults() {
         
         return;
     }
+    
+    // Handle second introductory night (round 1 with isSecondIntroNight flag)
+    if (gameState.currentRound === 1 && gameState.isSecondIntroNight) {
+        document.getElementById('night-results').innerHTML = `
+            <div class="night-results">
+                <h3>Mafia Planning Night Results</h3>
+                <p>The Mafia members have discussed their strategy for the game. No eliminations occurred.</p>
+                <p>Click "Next Phase" to continue to the Regular Day Phase.</p>
+            </div>
+        `;
+        
+        // Enable the next phase button
+        document.getElementById('next-phase-btn').disabled = false;
+        document.getElementById('reveal-results-btn').disabled = true;
+        
+        // Clear the second intro night flag to proceed to normal nights
+        gameState.isSecondIntroNight = false;
+        // Set flag to indicate we've completed the second intro night
+        gameState.hadSecondIntroNight = true;
+        
+        // Initialize night results for the gameState
+        gameState.nightResults = { deaths: [] };
+        localStorage.setItem('gameState', JSON.stringify(gameState));
+        
+        return;
+    }
 
-    // For regular nights (round > 0)
+    // For regular nights (round > 1 or not intro night)
     // Check if any actions were taken
     if (Object.keys(nightActionResults).length === 0) {
         alert('No night actions were recorded.');
@@ -634,7 +764,19 @@ function goToNextPhase() {
         return;
     }
     
-    // Increment round counter and go to day phase
+    // Special case for the first identification night (round 0)
+    // Do not increment round counter when going from first identification night to second day
+    if (gameState.currentRound === 0) {
+        // Keep the same round number when transitioning to day phase
+        gameState.gamePhase = 'day';
+        localStorage.setItem('gameState', JSON.stringify(gameState));
+        
+        // Redirect to day phase
+        window.location.href = 'day-phase.html';
+        return;
+    }
+    
+    // For all other cases, increment round counter and go to day phase
     gameState.currentRound++;
     gameState.gamePhase = 'day';
     localStorage.setItem('gameState', JSON.stringify(gameState));
@@ -732,8 +874,8 @@ function getRoleById(roleId) {
 
 // Function to check if Zodiac can act on the current night
 function canZodiacActTonight() {
-    // Zodiac can act every odd night (1, 3, 5, etc.)
-    return gameState.currentRound % 2 === 1;
+    // Zodiac can act only on even-numbered rounds (2, 4, 6, etc.)
+    return gameState.currentRound % 2 === 0 && gameState.currentRound >= 2;
 }
 
 // Update non-Mafia role sections based on game setup
@@ -830,7 +972,7 @@ function updateNonMafiaRoleSections() {
                     zodiacActionBtn.disabled = !canAct;
                     zodiacActionBtn.style.opacity = canAct ? '1' : '0.5';
                     if (!canAct) {
-                        zodiacActionBtn.title = "Zodiac can only act on odd-numbered nights (1, 3, 5, etc.)";
+                        zodiacActionBtn.title = "Zodiac can only act on even-numbered nights (2, 4, 6, etc.)";
                     } else {
                         zodiacActionBtn.title = "";
                     }
