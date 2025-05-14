@@ -110,6 +110,10 @@
                     </div>
                 </div>
                 
+                <div id="game-status-info" class="game-status-info" style="margin-top:20px;padding:15px;border-radius:8px;background-color:var(--card-bg);border:1px solid var(--border-color);">
+                    <!-- Game status will be inserted here -->
+                </div>
+                
                 <div id="game-actions" class="game-actions" style="margin-top:20px;">
                     <button id="next-phase-btn" class="btn btn-primary" style="width: 100%; margin-bottom: 15px;">Next Phase (Day Phase Round 1)</button>
                     <button id="show-roles-btn" class="btn" style="width: 100%; margin-bottom: 15px;">Show Role Assignments</button>
@@ -120,171 +124,13 @@
 
         <footer>
             <p>&copy; 2025 KRS Consulting Inc.</p>
-                <p>Version 1.0.1</p></footer>
+                <p>Version 1.0.2</p></footer>
     </div>
 
     <script>
-        // Simple navigation
-        function goToNextPage(page) {
-            console.log(`Navigating to: ${page}`);
-            window.location.href = page;
-        }
-        
-        // Timer variables
-        let timerInterval = null;
-        let secondsRemaining = 30;
-        let isTimerRunning = false;
-        let initialTimerValue = 30;
-        
-        // Go to the next phase
-        function goToNextPhase() {
-            console.log("goToNextPhase function called");
-            
-            // Get game state from localStorage
-            let gameState = null;
-            try {
-                const storedGameState = localStorage.getItem('gameState');
-                if (storedGameState) {
-                    gameState = JSON.parse(storedGameState);
-                    
-                    // Update game state to day phase
-                    gameState.gamePhase = 'day';
-                    
-                    // Increment round number to 1 for the Second Day Phase
-                    gameState.currentRound = 1;
-                    
-                    // Set a flag that we've already had the first identification night
-                    gameState.hadFirstIdenticationNight = true;
-                    
-                    localStorage.setItem('gameState', JSON.stringify(gameState));
-                    console.log("Game state updated to day phase, round incremented to 1");
-                    
-                    // Redirect to the day phase page for Round 1
-                    console.log("Redirecting to day-phase.html");
-                    window.location.href = 'day-phase.html';
-                } else {
-                    console.error("No game state available");
-                    alert("Error: No game state found");
-                }
-            } catch (error) {
-                console.error("Error navigating to next phase:", error);
-                alert("Error navigating to next phase: " + error.message);
-            }
-        }
-        
-        // Go to role assignments page
-        function goToRoleAssignments() {
-            window.location.href = 'role-assignments.html';
-        }
-        
-        // Reset the game and return to home
-        function resetGame() {
-            // Clear game state
-            localStorage.removeItem('gameState');
-            
-            // Redirect to home page
-            window.location.href = 'index.html';
-        }
-        
-        // Update timer display
-        function updateTimerDisplay() {
-            const timerDisplay = document.getElementById('timer-display');
-            const timerSection = document.getElementById('timer-section');
-            const timerBar = document.getElementById('timer-bar');
-            
-            // Update timer text
-            timerDisplay.textContent = secondsRemaining;
-            
-            // Calculate progress percentage
-            const progressPercentage = (secondsRemaining / initialTimerValue) * 100;
-            timerBar.style.width = `${progressPercentage}%`;
-            
-            // Update timer appearance based on time remaining
-            if (secondsRemaining <= 5) {
-                // Danger zone - less than 5 seconds
-                timerDisplay.style.color = 'var(--mafia-color, #e53935)';
-                timerSection.classList.remove('timer-warning');
-                timerSection.classList.add('timer-danger');
-            } else if (secondsRemaining <= 10) {
-                // Warning zone - less than 10 seconds
-                timerDisplay.style.color = 'var(--warning-color, #ff9800)';
-                timerSection.classList.add('timer-warning');
-                timerSection.classList.remove('timer-danger');
-            } else {
-                // Normal zone
-                timerDisplay.style.color = '';
-                timerSection.classList.remove('timer-warning', 'timer-danger');
-            }
-        }
-        
-        // Start timer
-        function startTimer() {
-            if (isTimerRunning) {
-                return;
-            }
-            
-            isTimerRunning = true;
-            document.getElementById('start-timer-btn').disabled = true;
-            document.getElementById('pause-timer-btn').disabled = false;
-            
-            timerInterval = setInterval(function() {
-                secondsRemaining--;
-                updateTimerDisplay();
-                
-                if (secondsRemaining <= 0) {
-                    clearInterval(timerInterval);
-                    isTimerRunning = false;
-                    document.getElementById('start-timer-btn').disabled = true;
-                    document.getElementById('pause-timer-btn').disabled = true;
-                    alert("Time's up!");
-                }
-            }, 1000);
-        }
-        
-        // Pause timer
-        function pauseTimer() {
-            if (!isTimerRunning) return;
-            
-            clearInterval(timerInterval);
-            isTimerRunning = false;
-            document.getElementById('start-timer-btn').disabled = false;
-            document.getElementById('pause-timer-btn').disabled = true;
-        }
-        
-        // Reset timer
-        function resetTimer() {
-            // Clear interval if running
-            if (isTimerRunning) {
-                clearInterval(timerInterval);
-                isTimerRunning = false;
-            }
-            
-            // Reset to initial time
-            secondsRemaining = initialTimerValue;
-            updateTimerDisplay();
-            
-            // Reset button states
-            document.getElementById('start-timer-btn').disabled = false;
-            document.getElementById('pause-timer-btn').disabled = true;
-        }
-        
-        // Show Mafia team
-        function showMafiaTeam() {
-            document.getElementById('mafia-actions').style.display = 'block';
-            alert('Mafia team has been called');
-        }
-        
-        // Show role alert
-        function showRoleAlert(roleId) {
-            alert(`${roleId.charAt(0).toUpperCase() + roleId.slice(1)} has been asked to show like`);
-        }
-        
-        // Initialize on page load
+        // Only keep the DOM event listeners for buttons - the functional code is in role-identification.js
         document.addEventListener('DOMContentLoaded', function() {
-            console.log("Role Identification page loaded");
-            
-            // Initialize timer display
-            updateTimerDisplay();
+            console.log("Role Identification page inline script loaded");
             
             // Set up event listeners for navigation buttons
             document.getElementById('next-phase-btn').addEventListener('click', function() {

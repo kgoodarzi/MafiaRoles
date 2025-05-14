@@ -132,6 +132,11 @@ function updateGameStatus() {
     if (!gameState) return;
     
     const gameStatusInfo = document.getElementById('game-status-info');
+    if (!gameStatusInfo) {
+        console.error("Element with ID 'game-status-info' not found");
+        return;
+    }
+    
     gameStatusInfo.innerHTML = `
         <div><strong>Current Phase:</strong> First Identification Night</div>
         <div><strong>Round:</strong> ${gameState.currentRound}</div>
@@ -384,4 +389,15 @@ function resetGame() {
     // Redirect to home page
     console.log("Redirecting to index.html");
     window.location.href = 'index.html';
+}
+
+// Show Mafia team
+function showMafiaTeam() {
+    document.getElementById('mafia-actions').style.display = 'block';
+    alert('Mafia team has been called');
+}
+
+// Show role alert
+function showRoleAlert(roleId) {
+    alert(`${roleId.charAt(0).toUpperCase() + roleId.slice(1)} has been asked to show like`);
 } 
