@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Role Assignment Test Runner</title>
+    <link rel="stylesheet" href="../styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jstat@latest/dist/jstat.min.js"></script>
+</head>
+<body>
+    <h1>Role Assignment Test Runner</h1>
+    <p>This page runs a simulation to test the randomness of the role assignment process.</p>
+    <p>Open the browser's developer console (F12) to see the progress.</p>
+    
+    <h2>Randomness Score</h2>
+    <div id="randomness-index-container" style="padding: 1rem; text-align: center; font-size: 2rem; background-color: #f0f0f0; border-radius: 8px;">
+        <h3 id="randomness-index">Calculating...</h3>
+    </div>
+
+    <h2>Test Results</h2>
+    <canvas id="results-chart" width="400" height="200"></canvas>
+
+    <!-- Game scripts -->
+    <script src="../roles.js"></script>
+    
+    <!-- Test script -->
+    <script src="test-runner.js"></script>
+</body>
+</html> 

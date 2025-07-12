@@ -352,7 +352,10 @@ function assignRoles() {
         }
         
         // Shuffle roles
-        rolesToAssign = shuffleArray(rolesToAssign);
+        let rolesToAssign = shuffleArray(rolesToAssign);
+        for (let j = 0; j < 2; j++) { // Shuffle 2 more times for a total of 3
+            shuffleArray(rolesToAssign);
+        }
         
         // Assign roles to players (store role id)
         const playersWithRoles = selectedPlayers.map((player, index) => {
@@ -381,12 +384,36 @@ function assignRoles() {
     }
 }
 
-// Fisher-Yates shuffle algorithm for randomizing roles
-function shuffleArray(array) {
-    const shuffled = [...array];
-    for (let i = shuffled.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+/**
+ * Returns a cryptographically secure random integer between 0 (inclusive) and max (exclusive).
+ * Uses rejection sampling to avoid modulo bias.
+ * @param {number} max The upper bound for the random number (exclusive).
+ * @returns {number} A random integer.
+ */
+function cryptoRandomInt(max) {
+    // Create a typed array to hold the random value.
+    const randomValues = new Uint32Array(1);
+    
+    // Generate a random 32-bit integer.
+    crypto.getRandomValues(randomValues);
+
+    // To avoid bias, we use rejection sampling. We find the largest multiple of `max`
+    // that fits in the 32-bit range. If the generated number is larger than this,
+    // we discard it and try again.
+    const maxValid = Math.floor(0xFFFFFFFF / max) * max;
+    
+    if (randomValues[0] > maxValid) {
+        return cryptoRandomInt(max); // Re-roll
     }
-    return shuffled;
+    
+    return randomValues[0] % max;
+}
+
+// Fisher-Yates shuffle using crypto.getRandomValues
+function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = cryptoRandomInt(i + 1);
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
 } 
