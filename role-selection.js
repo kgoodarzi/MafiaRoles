@@ -352,7 +352,7 @@ function assignRoles() {
         }
         
         // Shuffle roles
-        let rolesToAssign = shuffleArray(rolesToAssign);
+        shuffleArray(rolesToAssign); // First shuffle
         for (let j = 0; j < 2; j++) { // Shuffle 2 more times for a total of 3
             shuffleArray(rolesToAssign);
         }
