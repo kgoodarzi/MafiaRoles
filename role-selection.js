@@ -352,10 +352,9 @@ function assignRoles() {
         }
         
         // Shuffle roles
-        shuffleArray(rolesToAssign); // First shuffle
-        for (let j = 0; j < 2; j++) { // Shuffle 2 more times for a total of 3
-            shuffleArray(rolesToAssign);
-        }
+        rolesToAssign = shuffleArray(rolesToAssign);
+        shuffleArray(rolesToAssign);
+        shuffleArray(rolesToAssign);
         
         // Assign roles to players (store role id)
         const playersWithRoles = selectedPlayers.map((player, index) => {
