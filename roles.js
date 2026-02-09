@@ -107,6 +107,25 @@ const ROLES = [
         description: 'A special Town role with unique abilities (customize as needed).',
         image: 'images/Role - Ocean.jpg',
         isEnabled: true
+    },
+    // Traitor scenario roles
+    {
+        id: 'traitor',
+        name: 'Traitor',
+        nameRtl: 'خائن',
+        team: 'traitor',
+        description: 'A hidden member of the Traitor team. Work with fellow Traitors at night to murder or recruit Faithful players.',
+        image: 'images/Role - Traitor.jpg',
+        isEnabled: true
+    },
+    {
+        id: 'faithful',
+        name: 'Faithful',
+        nameRtl: 'وفادار',
+        team: 'faithful',
+        description: 'A member of the Faithful team. Identify and banish Traitors during the day to protect the group.',
+        image: 'images/Role - Faithful.jpg',
+        isEnabled: true
     }
 ];
 

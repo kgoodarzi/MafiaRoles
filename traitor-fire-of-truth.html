@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Traitor Game - Fire of Truth</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Mafia">
+    <meta name="theme-color" content="#e67e22">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="images/Splash.jpg">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="dark-theme.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-init.js"></script>
+    <script src="database.js"></script>
+    <script src="roles.js"></script>
+    <script src="connection-status.js"></script>
+    <style>
+        .fire-header { color: #e67e22; }
+        .fire-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        .fire-announcement {
+            text-align: center;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 8px;
+            background-color: rgba(230,126,34,0.15);
+            border: 2px solid #e67e22;
+        }
+        .fire-announcement h2 {
+            color: #e67e22;
+            margin-bottom: 10px;
+        }
+        .voter-card {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            margin: 8px 0;
+            border-radius: 6px;
+            background-color: var(--card-bg-darker, #1a1a2e);
+        }
+        .voter-card img {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-right: 12px;
+        }
+        .voter-card .voter-name {
+            flex-grow: 1;
+            font-weight: bold;
+        }
+        .vote-toggle {
+            display: flex;
+            gap: 5px;
+        }
+        .vote-toggle button {
+            padding: 6px 12px;
+            border-radius: 4px;
+            border: 2px solid var(--border-color);
+            background-color: var(--card-bg);
+            color: var(--text-color);
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+        .vote-toggle button.selected-yes {
+            background-color: rgba(231,76,60,0.3);
+            border-color: #e74c3c;
+            color: #e74c3c;
+        }
+        .vote-toggle button.selected-no {
+            background-color: rgba(46,204,113,0.3);
+            border-color: #2ecc71;
+            color: #2ecc71;
+        }
+        .result-banner {
+            text-align: center;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            font-size: 1.2rem;
+        }
+        .result-banner.traitors-win {
+            background-color: rgba(155,89,182,0.2);
+            border: 2px solid #9b59b6;
+            color: #9b59b6;
+        }
+        .result-banner.faithful-win {
+            background-color: rgba(46,204,113,0.2);
+            border: 2px solid #2ecc71;
+            color: #2ecc71;
+        }
+        .phase-step { display: none; }
+        .phase-step.active { display: block; }
+        .banishment-section {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        .vote-candidate-fot {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            margin: 8px 0;
+            border-radius: 6px;
+            background-color: var(--card-bg-darker, #1a1a2e);
+        }
+        .vote-candidate-fot img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-right: 10px;
+        }
+        .vote-candidate-fot .name { flex-grow: 1; font-weight: bold; }
+        .vote-candidate-fot .fot-vote-count {
+            font-size: 1.3rem;
+            font-weight: bold;
+            min-width: 35px;
+            text-align: center;
+            color: #e67e22;
+        }
+        .fot-vote-btn-group {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            margin-left: 6px;
+        }
+        .fot-vote-btn {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .fot-vote-btn.plus { background-color: #2ecc71; color: white; }
+        .fot-vote-btn.minus { background-color: #e74c3c; color: white; }
+        .banish-result-fot {
+            text-align: center;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body class="dark-theme">
+    <div id="connection-status"></div>
+    <div class="container">
+        <header>
+            <h1 class="fire-header">Fire of Truth</h1>
+            <p id="fot-subtitle">Endgame Decision</p>
+        </header>
+        <main>
+            <!-- Step 1: Fire of Truth Vote -->
+            <section id="step-fot-vote" class="phase-step active">
+                <div class="fire-announcement">
+                    <h2>Fire of Truth</h2>
+                    <p>With fewer than 5 players remaining, the game enters the Fire of Truth.</p>
+                    <p style="margin-top:10px;"><strong>Each player must vote:</strong></p>
+                    <p>"Are there still Traitors among us?"</p>
+                </div>
+                <div class="fire-card">
+                    <h3>Player Votes</h3>
+                    <p style="color:var(--text-secondary);margin-bottom:10px;">Record each player's vote:</p>
+                    <div id="fot-voters"></div>
+                </div>
+                <button id="tally-fot-btn" class="btn btn-primary" style="width:100%;background-color:#e67e22;">Tally Votes</button>
+            </section>
+
+            <!-- Step 2: FOT Result - Unanimous "No" -->
+            <section id="step-fot-result" class="phase-step">
+                <div id="fot-result-content"></div>
+                <button id="fot-action-btn" class="btn btn-primary" style="width:100%;margin-top:15px;background-color:#e67e22;">Continue</button>
+            </section>
+
+            <!-- Step 3: Banishment cycle (if not unanimous) -->
+            <section id="step-fot-banishment" class="phase-step">
+                <div class="banishment-section">
+                    <h2>Banishment Round</h2>
+                    <p style="color:var(--text-secondary);margin-bottom:10px;">Conduct a short talking phase, then vote to banish a player.</p>
+                    <div id="fot-banishment-candidates"></div>
+                </div>
+                <button id="apply-fot-banishment-btn" class="btn btn-primary" style="width:100%;background-color:#e67e22;">Apply Banishment</button>
+            </section>
+
+            <!-- Step 4: Banishment Result -->
+            <section id="step-fot-banish-result" class="phase-step">
+                <div id="fot-banish-result-content"></div>
+                <button id="fot-continue-btn" class="btn btn-primary" style="width:100%;margin-top:15px;background-color:#e67e22;">Continue</button>
+            </section>
+
+            <!-- Global -->
+            <div style="margin-top:20px;padding-top:15px;border-top:1px solid var(--border-color);">
+                <button id="reset-btn" class="btn btn-home" style="width:100%;">Back to Home</button>
+            </div>
+
+            <!-- Confirm Leave Modal -->
+            <div id="confirm-leave-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background-color:rgba(0,0,0,0.85);z-index:1100;">
+                <div style="max-width:400px;margin:25vh auto;padding:30px;background-color:var(--card-bg);border-radius:12px;text-align:center;">
+                    <h2 style="color:#e74c3c;margin-bottom:15px;">Leave Game?</h2>
+                    <p style="color:var(--text-secondary);margin-bottom:25px;">Are you sure you want to quit? All game progress will be lost.</p>
+                    <div style="display:flex;gap:12px;justify-content:center;">
+                        <button id="confirm-leave-yes" class="btn" style="background-color:#e74c3c;color:white;padding:10px 30px;">Yes, Leave</button>
+                        <button id="confirm-leave-no" class="btn" style="background-color:#2ecc71;color:white;padding:10px 30px;">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+        <footer>
+            <p>&copy; 2025 KRS Consulting Inc.</p>
+            <p>Version 1.0.0 - Traitor Scenario</p>
+        </footer>
+    </div>
+    <script src="traitor-fire-of-truth.js"></script>
+</body>
+</html>

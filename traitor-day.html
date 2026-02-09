@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Traitor Game - Day Phase</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Mafia">
+    <meta name="theme-color" content="#9b59b6">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="images/Splash.jpg">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="dark-theme.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-init.js"></script>
+    <script src="database.js"></script>
+    <script src="roles.js"></script>
+    <script src="connection-status.js"></script>
+    <style>
+        .traitor-header { color: #9b59b6; }
+        .morning-announcement {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        .murder-result {
+            padding: 10px;
+            border-radius: 6px;
+            margin: 10px 0;
+        }
+        .murder-result.killed {
+            background-color: rgba(231,76,60,0.2);
+            border-left: 4px solid #e74c3c;
+        }
+        .murder-result.safe {
+            background-color: rgba(46,204,113,0.2);
+            border-left: 4px solid #2ecc71;
+        }
+        .speaking-section {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        .speaking-player {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .speaking-player:hover {
+            background-color: rgba(155,89,182,0.1);
+        }
+        .speaking-player.current-speaker {
+            background-color: rgba(155,89,182,0.2);
+            border: 2px solid #9b59b6;
+        }
+        .speaking-player.has-spoken {
+            opacity: 0.6;
+        }
+        .speaking-player.challenge-taken {
+            border-right: 3px solid #e67e22;
+        }
+        .speaking-player.waiting {
+            opacity: 0.5;
+        }
+        .speaking-player.current-speaker {
+            border: 2px solid #9b59b6;
+            background-color: rgba(155,89,182,0.1);
+        }
+        .speaking-player.done {
+            opacity: 0.55;
+            background-color: rgba(46,204,113,0.05);
+        }
+        .challenge-dropdown {
+            background-color: var(--card-bg-darker, #1a1a2e);
+            color: var(--text-color, #fff);
+            border: 1px solid #e67e22;
+            border-radius: 6px;
+            padding: 8px 12px;
+            font-size: 1rem;
+            width: 100%;
+            margin: 8px 0;
+        }
+        .speaking-player img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-right: 10px;
+        }
+        .speaking-player .player-name {
+            flex-grow: 1;
+            font-weight: bold;
+        }
+        .speaking-player .challenge-badge {
+            font-size: 0.75rem;
+            padding: 2px 6px;
+            border-radius: 10px;
+            background-color: #e67e22;
+            color: white;
+        }
+        .timer-display {
+            text-align: center;
+            font-size: 3rem;
+            font-weight: bold;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 8px;
+            background-color: var(--card-bg);
+            border: 2px solid var(--border-color);
+        }
+        .timer-display.running { border-color: #2ecc71; color: #2ecc71; }
+        .timer-display.expired { border-color: #e74c3c; color: #e74c3c; }
+        .timer-controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin: 10px 0;
+        }
+        .voting-section {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        .vote-candidate {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            margin: 8px 0;
+            border-radius: 6px;
+            background-color: var(--card-bg-darker, #1a1a2e);
+            position: relative;
+        }
+        .vote-candidate img {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-right: 12px;
+        }
+        .vote-candidate .candidate-name {
+            flex-grow: 1;
+            font-weight: bold;
+        }
+        .vote-candidate .vote-count-display {
+            font-size: 1.5rem;
+            font-weight: bold;
+            min-width: 40px;
+            text-align: center;
+            color: #9b59b6;
+        }
+        .vote-btn-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            margin-left: 8px;
+        }
+        .vote-btn-small {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .vote-btn-small.plus { background-color: #2ecc71; color: white; }
+        .vote-btn-small.minus { background-color: #e74c3c; color: white; }
+        .banishment-result {
+            text-align: center;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 8px;
+        }
+        .banishment-result.traitor-banished {
+            background-color: rgba(155,89,182,0.2);
+            border: 2px solid #9b59b6;
+        }
+        .banishment-result.faithful-banished {
+            background-color: rgba(46,204,113,0.2);
+            border: 2px solid #2ecc71;
+        }
+        .players-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 10px;
+            margin: 15px 0;
+        }
+        .alive-player-card {
+            text-align: center;
+            padding: 8px;
+            border-radius: 6px;
+            background-color: var(--card-bg);
+        }
+        .alive-player-card img {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        .alive-player-card .name {
+            font-size: 0.8rem;
+            margin-top: 4px;
+            font-weight: bold;
+        }
+        .phase-step {
+            display: none;
+        }
+        .phase-step.active {
+            display: block;
+        }
+        .info-box {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        .shield-section {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        .shield-player {
+            display: flex;
+            align-items: center;
+            padding: 8px;
+            margin: 5px 0;
+            border-radius: 6px;
+            background-color: rgba(52,152,219,0.15);
+            border-left: 3px solid #3498db;
+        }
+        .shield-player img {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-right: 10px;
+        }
+        /* Mode 2 voting styles */
+        .mode2-voter {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            margin: 8px 0;
+            border-radius: 6px;
+            background-color: var(--card-bg-darker, #1a1a2e);
+        }
+        .mode2-voter img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-right: 10px;
+        }
+        .mode2-voter .voter-name { font-weight: bold; flex-grow: 1; }
+        .mode2-voter select {
+            background-color: var(--card-bg);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 5px 8px;
+        }
+    </style>
+</head>
+<body class="dark-theme">
+    <div id="connection-status"></div>
+    <div class="container">
+        <header>
+            <h1 class="traitor-header">Day Phase</h1>
+            <p id="day-subtitle">Day 1 - Blind Day</p>
+        </header>
+        <main>
+            <!-- Step 1: Morning Announcement -->
+            <section id="step-morning" class="phase-step active">
+                <div class="morning-announcement">
+                    <h2>Morning</h2>
+                    <div id="morning-content"></div>
+                </div>
+                <div class="info-box">
+                    <h3>Alive Players (<span id="alive-count-morning">0</span>)</h3>
+                    <div id="alive-players-morning" class="players-grid"></div>
+                </div>
+                <button id="go-speaking-btn" class="btn btn-primary" style="width:100%;background-color:#9b59b6;">Proceed to Speaking Phase</button>
+            </section>
+
+            <!-- Step 2: Speaking Turns & Challenges -->
+            <section id="step-speaking" class="phase-step">
+                <div class="speaking-section">
+                    <h2>Speaking Turns</h2>
+                    <p id="speaking-info" style="color:var(--text-secondary);margin-bottom:10px;"></p>
+
+                    <!-- Progress: list of all players and their status -->
+                    <div id="speaking-progress" style="margin-bottom:15px;"></div>
+
+                    <!-- Current Speaker Panel -->
+                    <div id="current-speaker-panel" style="display:none;">
+                        <div id="current-speaker-display" style="text-align:center;padding:15px;margin:10px 0;border-radius:8px;background-color:rgba(155,89,182,0.1);border:2px solid #9b59b6;">
+                        </div>
+
+                        <!-- Timer -->
+                        <div id="timer-display" class="timer-display">00:00</div>
+                        <div class="timer-controls">
+                            <button id="start-timer-btn" class="btn btn-success">Start Main Timer</button>
+                            <button id="stop-timer-btn" class="btn" style="background-color:#e74c3c;color:white;">Stop</button>
+                        </div>
+
+                        <!-- Challenge Section -->
+                        <div id="challenge-section" style="margin-top:15px;padding:15px;border-radius:8px;background-color:var(--card-bg);border:1px solid var(--border-color);">
+                            <h3 style="color:#e67e22;margin-bottom:10px;">Challenge</h3>
+                            <div id="challenge-controls"></div>
+                        </div>
+
+                        <!-- Next Speaker Button -->
+                        <button id="next-speaker-btn" class="btn" style="width:100%;margin-top:15px;">Next Speaker</button>
+                    </div>
+
+                    <!-- All Done Panel -->
+                    <div id="speaking-done-panel" style="display:none;text-align:center;padding:20px;">
+                        <h3 style="color:#2ecc71;">All players have spoken</h3>
+                        <p style="color:var(--text-secondary);">Proceed to shield assignment.</p>
+                    </div>
+                </div>
+                <button id="go-shields-btn" class="btn btn-primary" style="width:100%;margin-top:15px;background-color:#9b59b6;display:none;">Proceed to Shield Assignment</button>
+            </section>
+
+            <!-- Step 3: Shield Assignment -->
+            <section id="step-shields" class="phase-step">
+                <div class="shield-section">
+                    <h2>Shield Assignment for Tonight</h2>
+                    <p style="color:var(--text-secondary);margin-bottom:10px;" id="shield-info"></p>
+                    <div id="shield-players-list"></div>
+                </div>
+                <button id="go-voting-btn" class="btn btn-primary" style="width:100%;background-color:#9b59b6;">Proceed to Banishment Voting</button>
+            </section>
+
+            <!-- Step 4: Banishment Voting -->
+            <section id="step-voting" class="phase-step">
+                <div class="voting-section">
+                    <h2>Banishment Voting</h2>
+                    <p id="voting-mode-info" style="color:var(--text-secondary);margin-bottom:10px;"></p>
+                    <div id="voting-area"></div>
+                </div>
+                <button id="apply-banishment-btn" class="btn btn-primary" style="width:100%;margin-top:15px;background-color:#9b59b6;">Apply Banishment</button>
+            </section>
+
+            <!-- Step 5: Banishment Result -->
+            <section id="step-result" class="phase-step">
+                <div id="banishment-result-area"></div>
+                <div class="info-box" id="post-banishment-status" style="display:none;">
+                    <h3>Game Status</h3>
+                    <div id="post-banishment-info"></div>
+                </div>
+                <button id="go-night-btn" class="btn btn-primary" style="width:100%;margin-top:15px;background-color:#9b59b6;">Proceed to Night</button>
+            </section>
+
+            <!-- Global Actions -->
+            <div style="margin-top:20px;padding-top:15px;border-top:1px solid var(--border-color);">
+                <button id="show-narrator-info-btn" class="btn" style="width:100%;margin-bottom:10px;">Show Narrator Info</button>
+                <button id="reset-btn" class="btn btn-home" style="width:100%;">Back to Home</button>
+            </div>
+
+            <!-- Confirm Leave Modal -->
+            <div id="confirm-leave-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background-color:rgba(0,0,0,0.85);z-index:1100;">
+                <div style="max-width:400px;margin:25vh auto;padding:30px;background-color:var(--card-bg);border-radius:12px;text-align:center;">
+                    <h2 style="color:#e74c3c;margin-bottom:15px;">Leave Game?</h2>
+                    <p style="color:var(--text-secondary);margin-bottom:25px;">Are you sure you want to quit? All game progress will be lost.</p>
+                    <div style="display:flex;gap:12px;justify-content:center;">
+                        <button id="confirm-leave-yes" class="btn" style="background-color:#e74c3c;color:white;padding:10px 30px;">Yes, Leave</button>
+                        <button id="confirm-leave-no" class="btn" style="background-color:#2ecc71;color:white;padding:10px 30px;">Cancel</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Narrator Info Modal -->
+            <div id="narrator-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background-color:rgba(0,0,0,0.8);z-index:1000;overflow-y:auto;">
+                <div style="max-width:600px;margin:40px auto;padding:20px;background-color:var(--card-bg);border-radius:12px;">
+                    <h2 style="color:#9b59b6;margin-bottom:15px;">Narrator Info</h2>
+                    <div id="narrator-info-content"></div>
+                    <button id="close-narrator-btn" class="btn" style="width:100%;margin-top:15px;">Close</button>
+                </div>
+            </div>
+        </main>
+        <footer>
+            <p>&copy; 2025 KRS Consulting Inc.</p>
+            <p>Version 1.0.0 - Traitor Scenario</p>
+        </footer>
+    </div>
+    <script src="traitor-day.js"></script>
+</body>
+</html>

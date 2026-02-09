@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Traitor Game - Game Over</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Mafia">
+    <meta name="theme-color" content="#9b59b6">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="images/Splash.jpg">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="dark-theme.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-init.js"></script>
+    <script src="database.js"></script>
+    <script src="roles.js"></script>
+    <script src="connection-status.js"></script>
+    <style>
+        .winner-banner {
+            text-align: center;
+            padding: 25px;
+            margin: 20px 0;
+            border-radius: 12px;
+            font-size: 2rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+        .winner-banner.traitors-win {
+            background-color: rgba(155,89,182,0.2);
+            border: 2px solid #9b59b6;
+            color: #9b59b6;
+        }
+        .winner-banner.faithful-win {
+            background-color: rgba(46,204,113,0.2);
+            border: 2px solid #2ecc71;
+            color: #2ecc71;
+        }
+        .win-reason {
+            text-align: center;
+            padding: 15px;
+            margin: 15px 0;
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            font-size: 1.1rem;
+        }
+        .stats-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin: 20px 0;
+            justify-content: center;
+        }
+        .stat-card {
+            flex: 1;
+            min-width: 120px;
+            max-width: 180px;
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+        .stat-card .value {
+            font-size: 2rem;
+            font-weight: bold;
+        }
+        .stat-card .label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-top: 5px;
+        }
+        .player-row {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 6px;
+            border-left: 4px solid transparent;
+        }
+        .player-row.traitor-row {
+            background-color: rgba(155,89,182,0.1);
+            border-left-color: #9b59b6;
+        }
+        .player-row.faithful-row {
+            background-color: rgba(46,204,113,0.1);
+            border-left-color: #2ecc71;
+        }
+        .player-row.eliminated-row {
+            opacity: 0.6;
+        }
+        .player-row img {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-right: 12px;
+        }
+        .player-row .player-name {
+            flex-grow: 1;
+            font-weight: bold;
+        }
+        .player-row .role-badge {
+            font-weight: bold;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+        }
+        .player-row .role-badge.traitor-badge {
+            background-color: rgba(155,89,182,0.3);
+            color: #9b59b6;
+        }
+        .player-row .role-badge.faithful-badge {
+            background-color: rgba(46,204,113,0.3);
+            color: #2ecc71;
+        }
+        .player-row .status-badge {
+            font-size: 0.75rem;
+            padding: 2px 6px;
+            border-radius: 10px;
+            margin-left: 8px;
+        }
+        .status-badge.alive {
+            background-color: rgba(46,204,113,0.2);
+            color: #2ecc71;
+        }
+        .status-badge.dead {
+            background-color: rgba(231,76,60,0.2);
+            color: #e74c3c;
+        }
+        .section-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body class="dark-theme">
+    <div id="connection-status"></div>
+    <div class="container">
+        <header>
+            <h1 style="color:#9b59b6;">Game Over</h1>
+            <p id="game-over-subtitle">The Traitor Game Has Concluded</p>
+        </header>
+        <main>
+            <div id="winner-banner" class="winner-banner"></div>
+            <div id="win-reason" class="win-reason"></div>
+
+            <div id="stats-section" class="stats-grid"></div>
+
+            <div class="section-card">
+                <h2>All Players & Roles</h2>
+                <div id="all-players-list"></div>
+            </div>
+
+            <div class="section-card" id="elimination-timeline-section">
+                <h2>Elimination Timeline</h2>
+                <div id="elimination-timeline"></div>
+            </div>
+
+            <div style="margin-top:25px;text-align:center;">
+                <button id="new-game-btn" class="btn btn-primary" style="width:100%;margin-bottom:15px;background-color:#9b59b6;">Start New Traitor Game</button>
+                <button id="home-btn" class="btn btn-home" style="width:100%;">Back to Home</button>
+            </div>
+        </main>
+        <footer>
+            <p>&copy; 2025 KRS Consulting Inc.</p>
+            <p>Version 1.0.0 - Traitor Scenario</p>
+        </footer>
+    </div>
+    <script>
+        let gameState = null;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadGameState();
+            document.getElementById('home-btn').addEventListener('click', () => {
+                localStorage.removeItem('gameState');
+                window.location.href = 'index.html';
+            });
+            document.getElementById('new-game-btn').addEventListener('click', () => {
+                localStorage.removeItem('gameState');
+                localStorage.setItem('gameScenario', 'traitor');
+                window.location.href = 'player-selection.html';
+            });
+        });
+
+        function loadGameState() {
+            try {
+                const stored = localStorage.getItem('gameState');
+                if (!stored) {
+                    document.getElementById('winner-banner').textContent = 'No Game Data';
+                    return;
+                }
+                gameState = JSON.parse(stored);
+                displayResults();
+            } catch (error) {
+                console.error("Error:", error);
+                document.getElementById('winner-banner').textContent = 'Error Loading Game';
+            }
+        }
+
+        function displayResults() {
+            // Winner banner
+            const banner = document.getElementById('winner-banner');
+            const isTraitorWin = gameState.winner === 'traitors';
+            banner.textContent = isTraitorWin ? 'Traitors Win!' : 'Faithful Win!';
+            banner.className = 'winner-banner ' + (isTraitorWin ? 'traitors-win' : 'faithful-win');
+
+            // Win reason
+            document.getElementById('win-reason').textContent = gameState.winReason || 'The game has ended.';
+
+            // Stats
+            const eliminated = gameState.eliminatedPlayers || [];
+            const alive = gameState.players.filter(p => !eliminated.some(e => e.id === p.id));
+            const totalTraitors = gameState.players.filter(p => p.originalRole === 'traitor').length;
+            const totalFaithful = gameState.players.filter(p => p.originalRole === 'faithful').length;
+
+            document.getElementById('stats-section').innerHTML = `
+                <div class="stat-card">
+                    <div class="value">${gameState.currentRound || 0}</div>
+                    <div class="label">Rounds Played</div>
+                </div>
+                <div class="stat-card">
+                    <div class="value">${gameState.players.length}</div>
+                    <div class="label">Total Players</div>
+                </div>
+                <div class="stat-card">
+                    <div class="value" style="color:#9b59b6;">${totalTraitors}</div>
+                    <div class="label">Traitors</div>
+                </div>
+                <div class="stat-card">
+                    <div class="value" style="color:#2ecc71;">${totalFaithful}</div>
+                    <div class="label">Faithful</div>
+                </div>
+                <div class="stat-card">
+                    <div class="value">${eliminated.length}</div>
+                    <div class="label">Eliminated</div>
+                </div>
+                <div class="stat-card">
+                    <div class="value">${alive.length}</div>
+                    <div class="label">Survivors</div>
+                </div>
+            `;
+
+            // All players
+            const playersList = document.getElementById('all-players-list');
+            // Sort: alive first, then by role
+            const sortedPlayers = [...gameState.players].sort((a, b) => {
+                const aAlive = !eliminated.some(e => e.id === a.id);
+                const bAlive = !eliminated.some(e => e.id === b.id);
+                if (aAlive !== bAlive) return aAlive ? -1 : 1;
+                if (a.originalRole !== b.originalRole) return a.originalRole === 'traitor' ? -1 : 1;
+                return 0;
+            });
+
+            playersList.innerHTML = sortedPlayers.map(p => {
+                const isAlive = !eliminated.some(e => e.id === p.id);
+                const isTraitor = p.role === 'traitor';
+                const wasOrigTraitor = p.originalRole === 'traitor';
+                const wasRecruited = p.isConvertedTraitor;
+                const rowClass = wasOrigTraitor || isTraitor ? 'traitor-row' : 'faithful-row';
+                const eliminatedClass = isAlive ? '' : 'eliminated-row';
+                const badgeClass = wasOrigTraitor || isTraitor ? 'traitor-badge' : 'faithful-badge';
+                const roleName = wasOrigTraitor ? 'Traitor' : (wasRecruited ? 'Recruited Traitor' : 'Faithful');
+
+                const eliminationInfo = eliminated.find(e => e.id === p.id);
+                let eliminationText = '';
+                if (eliminationInfo) {
+                    const phase = eliminationInfo.eliminatedInPhase === 'murder' ? 'Murdered' :
+                                  eliminationInfo.eliminatedInPhase === 'banishment' ? 'Banished' :
+                                  eliminationInfo.eliminatedInPhase === 'fire-of-truth-banishment' ? 'Banished (FoT)' : 'Eliminated';
+                    eliminationText = `${phase} - Day ${eliminationInfo.eliminatedInRound}`;
+                }
+
+                return `
+                    <div class="player-row ${rowClass} ${eliminatedClass}">
+                        <img src="${p.photo_url || 'images/default-avatar.svg'}" alt="${p.name}" onerror="this.src='images/default-avatar.svg'">
+                        <span class="player-name">${p.name}</span>
+                        <span class="role-badge ${badgeClass}">${roleName}</span>
+                        <span class="status-badge ${isAlive ? 'alive' : 'dead'}">${isAlive ? 'Alive' : eliminationText}</span>
+                    </div>
+                `;
+            }).join('');
+
+            // Elimination timeline
+            const timeline = document.getElementById('elimination-timeline');
+            if (eliminated.length === 0) {
+                timeline.innerHTML = '<p style="color:var(--text-secondary);">No players were eliminated.</p>';
+            } else {
+                timeline.innerHTML = eliminated.map((e, idx) => {
+                    const phase = e.eliminatedInPhase === 'murder' ? 'Murdered at Night' :
+                                  e.eliminatedInPhase === 'banishment' ? 'Banished during Day' :
+                                  e.eliminatedInPhase === 'fire-of-truth-banishment' ? 'Banished (Fire of Truth)' : 'Eliminated';
+                    const roleColor = e.role === 'traitor' ? '#9b59b6' : '#2ecc71';
+                    const roleName = e.role === 'traitor' ? 'Traitor' : 'Faithful';
+                    const roleRevealed = e.roleRevealed;
+
+                    return `
+                        <div style="display:flex;align-items:center;padding:8px;margin:5px 0;border-radius:6px;background-color:var(--card-bg-darker, #1a1a2e);border-left:3px solid ${roleColor};">
+                            <span style="font-weight:bold;min-width:25px;color:var(--text-secondary);">${idx + 1}.</span>
+                            <span style="flex-grow:1;"><strong>${e.name}</strong> - ${phase} (Round ${e.eliminatedInRound})</span>
+                            <span style="color:${roleColor};font-weight:bold;">${roleRevealed ? roleName : '(Hidden)'}</span>
+                        </div>
+                    `;
+                }).join('');
+            }
+        }
+    </script>
+</body>
+</html>

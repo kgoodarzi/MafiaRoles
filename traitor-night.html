@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Traitor Game - Night Phase</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Mafia">
+    <meta name="theme-color" content="#2c3e50">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="images/Splash.jpg">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="dark-theme.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-init.js"></script>
+    <script src="database.js"></script>
+    <script src="roles.js"></script>
+    <script src="connection-status.js"></script>
+    <style>
+        .night-header { color: #3498db; }
+        .night-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        .traitor-list {
+            margin: 10px 0;
+        }
+        .traitor-item {
+            display: flex;
+            align-items: center;
+            padding: 8px;
+            margin: 5px 0;
+            border-radius: 6px;
+            background-color: rgba(155,89,182,0.15);
+            border-left: 3px solid #9b59b6;
+        }
+        .traitor-item img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-right: 10px;
+        }
+        .target-card {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            margin: 8px 0;
+            border-radius: 6px;
+            background-color: var(--card-bg-darker, #1a1a2e);
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: border-color 0.2s;
+        }
+        .target-card.selected {
+            border-color: #e74c3c;
+            background-color: rgba(231,76,60,0.1);
+        }
+        .target-card img {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-right: 12px;
+        }
+        .target-card .target-name {
+            font-weight: bold;
+            flex-grow: 1;
+        }
+        .choice-btn {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            margin: 8px 0;
+            border-radius: 8px;
+            border: 2px solid var(--border-color);
+            background-color: var(--card-bg);
+            color: var(--text-color);
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .choice-btn:hover {
+            transform: translateY(-2px);
+        }
+        .choice-btn.murder-btn { border-color: #e74c3c; }
+        .choice-btn.murder-btn:hover, .choice-btn.murder-btn.selected { background-color: rgba(231,76,60,0.2); color: #e74c3c; }
+        .choice-btn.recruit-btn { border-color: #9b59b6; }
+        .choice-btn.recruit-btn:hover, .choice-btn.recruit-btn.selected { background-color: rgba(155,89,182,0.2); color: #9b59b6; }
+        .result-card {
+            text-align: center;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 8px;
+        }
+        .result-card.murder-success {
+            background-color: rgba(231,76,60,0.2);
+            border: 2px solid #e74c3c;
+        }
+        .result-card.murder-blocked {
+            background-color: rgba(52,152,219,0.2);
+            border: 2px solid #3498db;
+        }
+        .result-card.recruit-success {
+            background-color: rgba(155,89,182,0.2);
+            border: 2px solid #9b59b6;
+        }
+        .result-card.recruit-rejected {
+            background-color: rgba(241,196,15,0.2);
+            border: 2px solid #f1c40f;
+        }
+        .phase-step { display: none; }
+        .phase-step.active { display: block; }
+        .shield-info-card {
+            background-color: rgba(52,152,219,0.1);
+            border: 1px solid #3498db;
+            border-radius: 6px;
+            padding: 10px;
+            margin: 10px 0;
+        }
+        .shield-info-card .shield-player {
+            display: flex;
+            align-items: center;
+            padding: 5px 0;
+        }
+        .shield-info-card .shield-player img {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-right: 8px;
+        }
+        .recruit-response-btns {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 15px;
+        }
+        .recruit-response-btns button {
+            padding: 12px 30px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body class="dark-theme">
+    <div id="connection-status"></div>
+    <div class="container">
+        <header>
+            <h1 class="night-header">Night Phase</h1>
+            <p id="night-subtitle">Night 1</p>
+        </header>
+        <main>
+            <!-- Step 1: Night Instructions -->
+            <section id="step-instructions" class="phase-step active">
+                <div class="night-card">
+                    <h2>Night Begins</h2>
+                    <p style="margin:10px 0;">Instruct all players to close their eyes.</p>
+                    <div id="shield-assignment-info"></div>
+                </div>
+                <div class="night-card">
+                    <h2>Current Traitors</h2>
+                    <p style="color:var(--text-secondary);margin-bottom:10px;">Wake these players (Traitors) to act:</p>
+                    <div id="traitor-list"></div>
+                </div>
+                <button id="go-action-btn" class="btn btn-primary" style="width:100%;background-color:#2c3e50;">Wake Traitors</button>
+            </section>
+
+            <!-- Step 2: Traitor Action Choice -->
+            <section id="step-action" class="phase-step">
+                <div class="night-card">
+                    <h2>Traitor Action</h2>
+                    <p id="action-info" style="color:var(--text-secondary);margin-bottom:15px;"></p>
+                    <div id="action-choice"></div>
+                </div>
+            </section>
+
+            <!-- Step 3: Select Target -->
+            <section id="step-target" class="phase-step">
+                <div class="night-card">
+                    <h2 id="target-title">Select Murder Target</h2>
+                    <p id="target-info" style="color:var(--text-secondary);margin-bottom:10px;"></p>
+                    <div id="target-list"></div>
+                </div>
+                <button id="confirm-target-btn" class="btn btn-primary" style="width:100%;background-color:#e74c3c;" disabled>Confirm Target</button>
+            </section>
+
+            <!-- Step 4: Recruitment Response (only if recruiting) -->
+            <section id="step-recruit-response" class="phase-step">
+                <div class="night-card">
+                    <h2>Recruitment Response</h2>
+                    <div id="recruit-response-content"></div>
+                </div>
+            </section>
+
+            <!-- Step 5: Night Resolution -->
+            <section id="step-resolution" class="phase-step">
+                <div id="resolution-content"></div>
+                <button id="go-day-btn" class="btn btn-primary" style="width:100%;margin-top:15px;background-color:#2c3e50;">Proceed to Day</button>
+            </section>
+
+            <!-- Global Actions -->
+            <div style="margin-top:20px;padding-top:15px;border-top:1px solid var(--border-color);">
+                <button id="reset-btn" class="btn btn-home" style="width:100%;">Back to Home</button>
+            </div>
+
+            <!-- Confirm Leave Modal -->
+            <div id="confirm-leave-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background-color:rgba(0,0,0,0.85);z-index:1100;">
+                <div style="max-width:400px;margin:25vh auto;padding:30px;background-color:var(--card-bg);border-radius:12px;text-align:center;">
+                    <h2 style="color:#e74c3c;margin-bottom:15px;">Leave Game?</h2>
+                    <p style="color:var(--text-secondary);margin-bottom:25px;">Are you sure you want to quit? All game progress will be lost.</p>
+                    <div style="display:flex;gap:12px;justify-content:center;">
+                        <button id="confirm-leave-yes" class="btn" style="background-color:#e74c3c;color:white;padding:10px 30px;">Yes, Leave</button>
+                        <button id="confirm-leave-no" class="btn" style="background-color:#2ecc71;color:white;padding:10px 30px;">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+        <footer>
+            <p>&copy; 2025 KRS Consulting Inc.</p>
+            <p>Version 1.0.0 - Traitor Scenario</p>
+        </footer>
+    </div>
+    <script src="traitor-night.js"></script>
+</body>
+</html>

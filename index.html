@@ -44,7 +44,8 @@
             </div>
             
             <div class="menu-buttons">
-                <a href="player-selection.html" class="btn btn-primary">Start Game</a>
+                <a href="player-selection.html" class="btn btn-primary" onclick="localStorage.setItem('gameScenario','classic')">Start Classic Game</a>
+                <a href="player-selection.html" class="btn btn-primary" style="background-color:#9b59b6;" onclick="localStorage.setItem('gameScenario','traitor')">Start Traitor Game</a>
                 <a href="roles.html" class="btn">Character Roles</a>
                 <a href="about.html" class="btn">About the Game</a>
             </div>

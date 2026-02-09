@@ -12,6 +12,15 @@ console.log('Player selection page loaded');
 document.addEventListener('DOMContentLoaded', async function() {
     console.log('DOM content loaded in player-selection.js');
     
+    // Update UI for scenario
+    const currentScenario = localStorage.getItem('gameScenario') || 'classic';
+    if (currentScenario === 'traitor') {
+        const header = document.querySelector('header p');
+        if (header) header.textContent = 'Select 7-16 players for the Traitor game';
+        const continueBtn = document.getElementById('continue-btn');
+        if (continueBtn) continueBtn.textContent = 'Continue to Traitor Setup';
+    }
+    
     // Initialize refresh button
     const refreshBtn = document.getElementById('refresh-btn');
     if (refreshBtn) {
@@ -270,7 +279,9 @@ function displayPlayers() {
     // Enable continue button if enough players are selected
     const continueBtn = document.getElementById('continue-btn');
     if (continueBtn) {
-        continueBtn.disabled = selectedPlayers.length < 4;
+        const scenarioCheck = localStorage.getItem('gameScenario') || 'classic';
+        const minCount = scenarioCheck === 'traitor' ? 7 : 4;
+        continueBtn.disabled = selectedPlayers.length < minCount;
     }
 }
 
@@ -373,7 +384,9 @@ function setupEventListeners() {
             // Update continue button state
             const continueBtn = document.getElementById('continue-btn');
             if (continueBtn) {
-                continueBtn.disabled = selectedCount < 4;
+                const scenarioCheck2 = localStorage.getItem('gameScenario') || 'classic';
+                const minCount2 = scenarioCheck2 === 'traitor' ? 7 : 4;
+                continueBtn.disabled = selectedCount < minCount2;
             }
         });
     });
@@ -472,8 +485,12 @@ function setupEventListeners() {
             const selectedPlayers = window.dbManager.getSelectedPlayers();
             console.log('DEBUG: Continue button clicked, selected players:', selectedPlayers);
             
-            if (selectedPlayers.length < 4) {
-                alert('Please select at least 4 players to continue');
+            // Determine scenario
+            const scenario = localStorage.getItem('gameScenario') || 'classic';
+            const minPlayers = scenario === 'traitor' ? 7 : 4;
+            
+            if (selectedPlayers.length < minPlayers) {
+                alert(`Please select at least ${minPlayers} players to continue`);
                 return;
             }
             
@@ -525,7 +542,9 @@ function setupEventListeners() {
             });
             
             // Save selected players with updated sequence and redirect
-            console.log('DEBUG: Saving selected players with sequence before navigating to role-selection.html');
+            // Determine the next page based on scenario
+            const nextPage = scenario === 'traitor' ? 'traitor-setup.html' : 'role-selection.html';
+            console.log(`DEBUG: Saving selected players with sequence before navigating to ${nextPage}`);
             
             // Create a function to update players in Supabase
             const updatePlayersInSupabase = async (retryCount = 0) => {
@@ -644,7 +663,7 @@ function setupEventListeners() {
                             await Promise.resolve(window.dbManager.saveSelectedPlayers());
                             localStorage.setItem('selectedPlayers', JSON.stringify(selectedPlayers));
                             // Only redirect after saving is complete
-                            window.location.href = 'role-selection.html';
+                            window.location.href = nextPage;
                         } else {
                             // User chose to cancel
                             console.log('User cancelled after database errors');
@@ -655,21 +674,21 @@ function setupEventListeners() {
                         // Make sure saveSelectedPlayers completes before navigation
                         await Promise.resolve(window.dbManager.saveSelectedPlayers());
                         // Only redirect after saving is complete
-                        window.location.href = 'role-selection.html';
+                        window.location.href = nextPage;
                     }
                 } else {
                     // Second attempt succeeded
                     // Make sure saveSelectedPlayers completes before navigation
                     await Promise.resolve(window.dbManager.saveSelectedPlayers());
                     // Only redirect after saving is complete
-                    window.location.href = 'role-selection.html';
+                    window.location.href = nextPage;
                 }
             } else {
                 // First attempt succeeded
                 // Make sure saveSelectedPlayers completes before navigation
                 await Promise.resolve(window.dbManager.saveSelectedPlayers());
                 // Only redirect after saving is complete
-                window.location.href = 'role-selection.html';
+                window.location.href = nextPage;
             }
         });
     }
